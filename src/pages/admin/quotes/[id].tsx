@@ -383,7 +383,7 @@ export default function QuoteEdit() {
     //check if any quote destination is_saved_address and populate setSavedAddresses
   };
   //handleDelete
-  const [handleDeleteQuoteDestination, { }] = useMutation(
+  const [handleDeleteQuoteDestination, {}] = useMutation(
     DELETE_QUOTE_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
@@ -412,7 +412,7 @@ export default function QuoteEdit() {
     CREATE_QUOTE_DESTINATION_MUTATION,
   );
   //handleUpdateQuoteDestinations
-  const [handleUpdateQuoteDestination, { }] = useMutation(
+  const [handleUpdateQuoteDestination, {}] = useMutation(
     UPDATE_QUOTE_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
@@ -659,7 +659,7 @@ export default function QuoteEdit() {
     },
   );
 
-  const [handleDeleteQuote, { }] = useMutation(DELETE_QUOTE_MUTATION, {
+  const [handleDeleteQuote, {}] = useMutation(DELETE_QUOTE_MUTATION, {
     variables: {
       id: id,
     },
@@ -747,7 +747,7 @@ export default function QuoteEdit() {
   );
   const [handleSendConsignmentDocket] = useMutation(SEND_CONSIGNMENT_DOCKET);
   //deleteMedia
-  const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
+  const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
     onCompleted: (data) => {
       toast({
         title: "Attachment deleted",
@@ -807,7 +807,7 @@ export default function QuoteEdit() {
     _items[index] = value;
     setQuoteItems(_items);
   };
-  const [handleCreateQuoteItem, { }] = useMutation(CREATE_QUOTE_ITEM_MUTATION, {
+  const [handleCreateQuoteItem, {}] = useMutation(CREATE_QUOTE_ITEM_MUTATION, {
     onCompleted: (data) => {
       console.log("Quote item created");
     },
@@ -815,7 +815,7 @@ export default function QuoteEdit() {
       showGraphQLErrorToast(error);
     },
   });
-  const [handleUpdateQuoteItem, { }] = useMutation(UPDATE_QUOTE_ITEM_MUTATION, {
+  const [handleUpdateQuoteItem, {}] = useMutation(UPDATE_QUOTE_ITEM_MUTATION, {
     onCompleted: (data) => {
       console.log("Quote item updated");
     },
@@ -823,7 +823,7 @@ export default function QuoteEdit() {
       showGraphQLErrorToast(error);
     },
   });
-  const [handleDeleteQuoteItem, { }] = useMutation(DELETE_QUOTE_ITEM_MUTATION, {
+  const [handleDeleteQuoteItem, {}] = useMutation(DELETE_QUOTE_ITEM_MUTATION, {
     onCompleted: (data) => {
       console.log("Quote Item Deleted", data);
     },
@@ -832,7 +832,7 @@ export default function QuoteEdit() {
     },
   });
 
-  const [handleDeleteQuoteLineItem, { }] = useMutation(
+  const [handleDeleteQuoteLineItem, {}] = useMutation(
     DELETE_QUOTE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -918,9 +918,9 @@ export default function QuoteEdit() {
                       {quote.is_approved
                         ? "Approved"
                         : quote.quote_status?.name +
-                        (quote.job
-                          ? " and Booked"
-                          : quote.is_quote_send
+                          (quote.job
+                            ? " and Booked"
+                            : quote.is_quote_send
                             ? " - Quote Sent"
                             : "")}
                     </Tag>
@@ -1162,6 +1162,38 @@ export default function QuoteEdit() {
                           setQuote({
                             ...quote,
                             is_stackable_freight: e === "1" ? true : false,
+                          });
+                        }}
+                        isDisabled={!isEnableEdit}
+                      >
+                        <Stack direction="row">
+                          <Radio value="0">No</Radio>
+                          <Radio value="1" pl={6}>
+                            Yes
+                          </Radio>
+                        </Stack>
+                      </RadioGroup>
+                    </Box>
+                  </Flex>
+
+                  <Flex alignItems="center" mb="16px">
+                    <FormLabel
+                      display="flex"
+                      mb="0"
+                      width="200px"
+                      fontSize="sm"
+                      fontWeight="500"
+                      _hover={{ cursor: "pointer" }}
+                    >
+                      Hand Unloading?
+                    </FormLabel>
+                    <Box width="100%">
+                      <RadioGroup
+                        value={quote.is_hand_unloading ? "1" : "0"}
+                        onChange={(e) => {
+                          setQuote({
+                            ...quote,
+                            is_hand_unloading: e === "1" ? true : false,
                           });
                         }}
                         isDisabled={!isEnableEdit}
@@ -1868,7 +1900,6 @@ export default function QuoteEdit() {
                           : "Process and Book"}
                       </Button>
                     </Box>
-
                     <Box hidden={!isAdmin || !isEnableEdit}>
                       <Button
                         variant="primary"
