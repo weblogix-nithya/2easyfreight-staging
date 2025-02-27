@@ -138,8 +138,8 @@ function CustomerAddressEdit() {
               <FormControl>
                 <FormLabel
                   display="flex"
-                  ms="4px"
-                  fontSize="sm"
+                  // ms="4px"
+                  fontSize="lg"
                   fontWeight="700"
                   color={textColor}
                   mb="8px"
