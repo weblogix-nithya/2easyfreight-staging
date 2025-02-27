@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  swcMinify: true,
-  experimental: {
-    appDir: false,
+  swcMinify: true, // Keep minification enabled
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
   },
 };
 
