@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  swcMinify: true,
-  experimental: {
-    appDir: false,
-  },
+  swcMinify: true, 
 };
 
 module.exports = nextConfig;
