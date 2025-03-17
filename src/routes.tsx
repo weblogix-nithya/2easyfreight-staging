@@ -12,6 +12,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Clients from "pages/admin/clients/index";
 import Companies from "pages/admin/companies/index";
 import Customers from "pages/admin/customers/index";
+import Vendors from "pages/admin/vendors/index";
+
 // Admin Imports
 import MainDashboard from "pages/admin/dashboard";
 import Drivers from "pages/admin/drivers/index";
@@ -164,6 +166,18 @@ const routes: IRoute[] = [
     isAdmin: true,
     isCompany: false,
     isPrivate: false,
+  },
+  {
+    name: "Vendors",
+    layout: "/admin",
+    icon: <FontAwesomeIcon icon={faBriefcase} className="mr-1" />,
+    // icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+    path: "/vendors",
+    component: Vendors,
+    sidebar: true,
+    isAdmin: true,
+    isCompany: false,
+    isPrivate: true,
   },
   {
     name: "Profile",
