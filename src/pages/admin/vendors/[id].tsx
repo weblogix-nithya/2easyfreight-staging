@@ -22,6 +22,7 @@ import {
   RadioGroup,
   SimpleGrid,
   Stack,
+  Switch,
   Text,
   Textarea,
   useColorModeValue,
@@ -31,8 +32,10 @@ import {
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
 import { faFileInvoiceDollar, faGear, faUserLock } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { current } from "@reduxjs/toolkit";
 import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
+import FileInput from "components/fileInput/FileInput";
 // import InvoiceTab from "components/companies/InvoiceTab";
 import FileInputLink from "components/fileInput/FileInputLink";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
@@ -64,10 +67,13 @@ function VendorEdit() {
   const textColor = useColorModeValue("navy.700", "white");
   const textColorSecondary = "gray.400";
   const [vendor, setVendor] = useState(defaultVendor);
+  const [originalVendor, setOriginalVendor] = useState(defaultVendor); // Track the original vendor data
+
   const [isVendorSetting, setIsVendorSetting] = useState(0);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const { id } = router.query;
+  const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const {
     loading: vendorLoading,
@@ -82,7 +88,10 @@ function VendorEdit() {
       if (data?.vendor == null) {
         // router.push("/admin/vendors");
       }
-      setVendor({ ...vendor, ...data?.vendor });
+      const vendorWithDate = { ...data.vendor, updated_at: new Date(data.vendor.updated_at) };
+      setVendor(vendorWithDate); // Ensure updated_at is a Date object
+      setOriginalVendor(vendorWithDate); // Set the original vendor data
+      console.log(data.vendor, 'ck');
     },
     onError(error) {
       console.log("onError");
@@ -91,8 +100,10 @@ function VendorEdit() {
   });
 
   const [handleUpdateVendor, { }] = useMutation(UPDATE_VENDOR_MUTATION, {
+
     variables: {
-      input: { ...vendor },
+      id: id,
+      input: { ...vendor, updated_at: currentDateTime }
     },
     onCompleted: (data) => {
       toast({
@@ -101,16 +112,24 @@ function VendorEdit() {
         duration: 3000,
         isClosable: true,
       });
+      setVendor({ ...vendor, updated_at: new Date(currentDateTime) }); // Update vendor's updated_at to current date
+      setOriginalVendor(vendor); // Reset the original vendor data after successful update
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
     },
   });
 
-  function handleUpdateVendorWrapper() {
-    console.log("Vendor data before API call:", vendor);
-    // handleUpdateVendor(); // Invoke the mutation function
-  }
+  const isFormDirty = useMemo(() => {
+    return JSON.stringify(vendor) !== JSON.stringify(originalVendor);
+  }, [vendor, originalVendor]);
+
+
+//     function handleUpdateVendorWrapper() {
+// let ven={ ...vendor, updated_at:currentDateTime }
+//     console.log("Vendor data before API call:", ven);
+//     // handleUpdateVendor(); // Invoke the mutation function
+//   }
 
   const [handleDeleteVendor, { }] = useMutation(DELETE_VENDOR_MUTATION, {
     variables: {
@@ -129,10 +148,42 @@ function VendorEdit() {
       showGraphQLErrorToast(error);
     },
   });
+  const [temporaryMedia, setTemporaryMedia] = useState([]);
 
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const attachmentColumns = useMemo(
+    () => [
+      {
+        Header: "Document",
+        accessor: "path" as const,
+      },
+      {
+        Header: "uploaded by",
+        accessor: "uploaded_by" as const,
+      },
+      {
+        Header: "date uploaded",
+        accessor: "created_at" as const,
+      },
+      {
+        Header: "Actions",
+        accessor: "downloadable_url" as const,
+        isDelete: true,
+        isEdit: false,
+        isDownload: true,
+      },
+    ],
+    [],
+  );
+
+  const handleRemoveFromTemporaryMedia = (id: number) => {
+    let _temporaryMedia = [...temporaryMedia];
+    _temporaryMedia = _temporaryMedia.filter((e) => e.id !== id);
+    setTemporaryMedia(_temporaryMedia);
+  };
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -216,11 +267,11 @@ function VendorEdit() {
     console.error("Error getting vendor services", vendorServicesError);
   }
 
-  const vendorServiceOptions = vendorServicesData?.vendorServices.map((service:any) => ({
+  const vendorServiceOptions = vendorServicesData?.vendorServices.map((service: any) => ({
     label: service.service_name,
     value: service.id,
   }));
-  
+
 
   // const {
   //   loading: availableCustomersLoading,
@@ -413,8 +464,9 @@ function VendorEdit() {
                             mb="0"
                             ms="10px"
                             className="!h-[39px]"
-                            onClick={() => handleUpdateVendorWrapper()}
+                            onClick={() => handleUpdateVendor()}
                             isLoading={vendorLoading}
+                            disabled={!isFormDirty} // Disable button if form is not dirty
                           >
                             Update
                           </Button>
@@ -596,19 +648,19 @@ function VendorEdit() {
                             isLoading={vendorServicesLoading}
                             placeholder="Select Vendor Service"
                             value={vendorServiceOptions?.find(
-                              (service:any) => service.value === vendor?.vendor_service_id
+                              (service: any) => service.value === vendor?.vendor_service_id
                             )}
                             options={vendorServiceOptions}
                             onChange={selectedOption => {
-                              const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
-                              setVendor({ 
-                                ...vendor, 
-                                vendor_service_id: selectedOption?.value, 
+                              setVendor({
+                                ...vendor,
+                                vendor_service_id: selectedOption?.value,
                                 vendor_service: {
-                                  ...vendor.vendor_service,
+                                  ...vendor?.vendor_service,
                                   service_name: selectedOption?.label,
-                                  created_at: currentDateTime
-                                }                              });
+                                  updated_at: currentDateTime
+                                }
+                              });
                               console.log("Selected:", selectedOption);
                             }}
                             size="lg"
@@ -913,6 +965,134 @@ function VendorEdit() {
                       </Flex>
                       <Divider />
 
+                      <h3 className="mt-6 mb-4">Payment Details</h3>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Account Name
+                        </FormLabel>
+                        <Input
+                          isRequired={true}
+                          type="text"
+                          name="account_name"
+                          value={vendor?.account_name}
+                          onChange={(e) =>
+                            setVendor({
+                              ...vendor,
+                              [e.target.name]: e.target.value,
+                            })
+                          }
+                          placeholder=""
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          ms={{ base: "0px", md: "0px" }}
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          BSB
+                        </FormLabel>
+                        <Input
+                          isRequired={true}
+                          type="text"
+                          name="bsb_code"
+                          value={vendor?.bsb_code}
+                          onChange={(e) =>
+                            setVendor({
+                              ...vendor,
+                              [e.target.name]: e.target.value,
+                            })
+                          }
+                          placeholder=""
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          ms={{ base: "0px", md: "0px" }}
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Account Number
+                        </FormLabel>
+                        <Input
+                          isRequired={true}
+                          type="text"
+                          name="account_number"
+                          value={vendor?.account_number}
+                          onChange={(e) =>
+                            setVendor({
+                              ...vendor,
+                              [e.target.name]: e.target.value,
+                            })
+                          }
+                          placeholder=""
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          ms={{ base: "0px", md: "0px" }}
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px" className="max-w-md">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color="textColor"
+                        >
+                          On Hold
+                        </FormLabel>
+                        <Switch
+                          mt="auto"
+                          mb="auto"
+                          isChecked={vendor.on_hold} // No need for `vendor?.on_hold || false`
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            setVendor((prevVendor) => ({
+                              ...prevVendor,
+                              on_hold: isChecked,
+                            }));
+                          }}
+                        />
+                      </Flex>
+
+                      <Divider />
+
                       <h3 className="mt-6 mb-4">Rates</h3>
 
                       <Flex alignItems="center" mb="16px">
@@ -947,8 +1127,39 @@ function VendorEdit() {
                           size="lg"
                         />
                       </Flex>
-                      <Divider />
+                      <Divider className="my-12" />
 
+                      {/* Attachments */}
+                      <Box mb="16px">
+                        <h3 className="mb-5 mt-3">Attachments</h3>
+                        <Flex width="100%" className="mb-6">
+                          <FileInput
+                            entity="Job"
+                            entityId={vendor.id}
+                            onTemporaryUpload={(_temporaryMedia) => {
+                              setTemporaryMedia(_temporaryMedia);
+                            }}
+                            isTemporary={true}
+                            defaulTemporaryFiles={temporaryMedia}
+                            description="Browse or drop your files here to upload"
+                            height="80px"
+                            bg="primary.100"
+                          ></FileInput>
+                        </Flex>
+
+                        {/* foreach jobAttachments */}
+                        {temporaryMedia.length >= 0 && (
+                          <PaginationTable
+                            columns={attachmentColumns}
+                            data={temporaryMedia}
+                            onDelete={(mediaId) => {
+                              handleRemoveFromTemporaryMedia(mediaId);
+                            }}
+                          />
+                        )}
+                      </Box>
+
+                      <Divider className="my-12" />
                       <h3 className="mt-6 mb-4">Notifications</h3>
                       <Flex className="w-full" alignItems="center">
                         <FormLabel
