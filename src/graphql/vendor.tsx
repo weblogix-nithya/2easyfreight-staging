@@ -154,6 +154,15 @@ export const DELETE_VENDOR_MUTATION = gql`
   }
 `;
 
+export const GET_VENDOR_SERVICES_QUERY = gql`
+  query VendorServices {
+    vendorServices {
+      id
+      service_name
+    }
+  }
+`;
+
 // Vendor Service Type
 export interface VendorService {
   id: string; 

@@ -29,7 +29,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
-import { faFileInvoiceDollar,faGear, faUserLock } from "@fortawesome/pro-solid-svg-icons";
+import { faFileInvoiceDollar, faGear, faUserLock } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
@@ -45,6 +45,7 @@ import {
   GET_VENDOR_QUERY,
   paymentTerms,
   UPDATE_VENDOR_MUTATION,
+  GET_VENDOR_SERVICES_QUERY,
 } from "graphql/vendor";
 // import {
 //   GET_CUSTOMERS_QUERY,
@@ -76,7 +77,7 @@ function VendorEdit() {
     variables: {
       id: id,
     },
-    skip: typeof id === 'undefined' || id === null, 
+    skip: typeof id === 'undefined' || id === null,
     onCompleted: (data) => {
       if (data?.vendor == null) {
         // router.push("/admin/vendors");
@@ -91,7 +92,7 @@ function VendorEdit() {
 
   const [handleUpdateVendor, { }] = useMutation(UPDATE_VENDOR_MUTATION, {
     variables: {
-      input: { ...vendor, rate_card_url: undefined, logo_url: undefined },
+      input: { ...vendor },
     },
     onCompleted: (data) => {
       toast({
@@ -105,6 +106,11 @@ function VendorEdit() {
       showGraphQLErrorToast(error);
     },
   });
+
+  function handleUpdateVendorWrapper() {
+    console.log("Vendor data before API call:", vendor);
+    // handleUpdateVendor(); // Invoke the mutation function
+  }
 
   const [handleDeleteVendor, { }] = useMutation(DELETE_VENDOR_MUTATION, {
     variables: {
@@ -199,6 +205,22 @@ function VendorEdit() {
     ],
     [],
   );
+
+  const {
+    loading: vendorServicesLoading,
+    error: vendorServicesError,
+    data: vendorServicesData,
+  } = useQuery(GET_VENDOR_SERVICES_QUERY);
+
+  if (vendorServicesError) {
+    console.error("Error getting vendor services", vendorServicesError);
+  }
+
+  const vendorServiceOptions = vendorServicesData?.vendorServices.map((service:any) => ({
+    label: service.service_name,
+    value: service.id,
+  }));
+  
 
   // const {
   //   loading: availableCustomersLoading,
@@ -391,7 +413,7 @@ function VendorEdit() {
                             mb="0"
                             ms="10px"
                             className="!h-[39px]"
-                            onClick={() => handleUpdateVendor()}
+                            onClick={() => handleUpdateVendorWrapper()}
                             isLoading={vendorLoading}
                           >
                             Update
@@ -548,6 +570,45 @@ function VendorEdit() {
                             options={paymentTerms}
                             onChange={(selectedOption) => {
                               setVendor({ ...vendor, payment_term: selectedOption?.value });
+                              console.log("Selected:", selectedOption);
+                            }}
+                            size="lg"
+                            className="select mb-0"
+                            classNamePrefix="two-easy-select"
+                          />
+                        </Box>
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Vendor Service
+                        </FormLabel>
+
+                        <Box className="!max-w-md w-full">
+                          <Select
+                            isLoading={vendorServicesLoading}
+                            placeholder="Select Vendor Service"
+                            value={vendorServiceOptions?.find(
+                              (service:any) => service.value === vendor?.vendor_service_id
+                            )}
+                            options={vendorServiceOptions}
+                            onChange={selectedOption => {
+                              const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                              setVendor({ 
+                                ...vendor, 
+                                vendor_service_id: selectedOption?.value, 
+                                vendor_service: {
+                                  ...vendor.vendor_service,
+                                  service_name: selectedOption?.label,
+                                  created_at: currentDateTime
+                                }                              });
                               console.log("Selected:", selectedOption);
                             }}
                             size="lg"
