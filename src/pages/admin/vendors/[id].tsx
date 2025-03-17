@@ -33,23 +33,23 @@ import { faFileInvoiceDollar,faGear, faUserLock } from "@fortawesome/pro-solid-s
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
-import InvoiceTab from "components/companies/InvoiceTab";
+// import InvoiceTab from "components/companies/InvoiceTab";
 import FileInputLink from "components/fileInput/FileInputLink";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 // GraphQL imports
 import {
-  defaultCompany,
-  DELETE_COMPANY_MUTATION,
-  GET_COMPANY_QUERY,
+  defaultVendor,
+  DELETE_VENDOR_MUTATION,
+  GET_VENDOR_QUERY,
   paymentTerms,
-  UPDATE_COMPANY_MUTATION,
-} from "graphql/company";
-import {
-  GET_CUSTOMERS_QUERY,
-  UPDATE_CUSTOMER_MUTATION,
-} from "graphql/customer";
+  UPDATE_VENDOR_MUTATION,
+} from "graphql/vendor";
+// import {
+//   GET_CUSTOMERS_QUERY,
+//   UPDATE_CUSTOMER_MUTATION,
+// } from "graphql/customer";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 // Next.js and React imports
@@ -57,34 +57,31 @@ import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 
 
-function CompanyEdit() {
+function VendorEdit() {
   const toast = useToast();
   let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
   const textColorSecondary = "gray.400";
-  const [company, setCompany] = useState(defaultCompany);
-  const [isCompanySetting, setIsCompanySetting] = useState(0);
+  const [vendor, setVendor] = useState(defaultVendor);
+  const [isVendorSetting, setIsVendorSetting] = useState(0);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const { id } = router.query;
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [rateCardUrl, setRateCardUrl] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
   const {
-    loading: companyLoading,
-    data: companyData,
-    refetch: getCompany,
-  } = useQuery(GET_COMPANY_QUERY, {
+    loading: vendorLoading,
+    data: vendorData,
+    refetch: getVendor,
+  } = useQuery(GET_VENDOR_QUERY, {
     variables: {
       id: id,
     },
+    skip: typeof id === 'undefined' || id === null, 
     onCompleted: (data) => {
-      if (data?.company == null) {
-        router.push("/admin/companies");
+      if (data?.vendor == null) {
+        // router.push("/admin/vendors");
       }
-      setCompany({ ...company, ...data?.company });
-      setRateCardUrl(data?.company.rate_card_url);
-      setLogoUrl(data?.company.logo_url);
+      setVendor({ ...vendor, ...data?.vendor });
     },
     onError(error) {
       console.log("onError");
@@ -92,13 +89,13 @@ function CompanyEdit() {
     },
   });
 
-  const [handleUpdateCompany, { }] = useMutation(UPDATE_COMPANY_MUTATION, {
+  const [handleUpdateVendor, { }] = useMutation(UPDATE_VENDOR_MUTATION, {
     variables: {
-      input: { ...company, rate_card_url: undefined, logo_url: undefined },
+      input: { ...vendor, rate_card_url: undefined, logo_url: undefined },
     },
     onCompleted: (data) => {
       toast({
-        title: "Company updated",
+        title: "Vendor updated",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -109,18 +106,18 @@ function CompanyEdit() {
     },
   });
 
-  const [handleDeleteCompany, { }] = useMutation(DELETE_COMPANY_MUTATION, {
+  const [handleDeleteVendor, { }] = useMutation(DELETE_VENDOR_MUTATION, {
     variables: {
       id: id,
     },
     onCompleted: (data) => {
       toast({
-        title: "Company deleted",
+        title: "Vendor deleted",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      router.push("/admin/companies");
+      router.push("/admin/vendors");
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
@@ -167,8 +164,8 @@ function CompanyEdit() {
         accessor: "phone_no" as const,
       },
       {
-        Header: "Company Role",
-        accessor: "is_company_admin" as const,
+        Header: "Vendor Role",
+        accessor: "is_vendor_admin" as const,
         trueLabel: "Admin",
         falseLabel: "User",
         type: "boolean",
@@ -203,103 +200,103 @@ function CompanyEdit() {
     [],
   );
 
-  const {
-    loading: availableCustomersLoading,
-    data: availableCustomers,
-    refetch: getAvailableCustomers,
-  } = useQuery(GET_CUSTOMERS_QUERY, {
-    variables: {
-      query: searchQuery,
-      page: queryPageIndex + 1,
-      first: queryPageSize,
-      orderByColumn: "id",
-      orderByOrder: "ASC",
-      company_id: null,
-    },
-    onCompleted: (data) => {
-      setAvailableCustomersOptions([]);
-      data.customers.data.map((customer: any) => {
-        setAvailableCustomersOptions((availableCustomersOptions) => [
-          ...availableCustomersOptions,
-          { value: parseInt(customer.id), label: customer.email },
-        ]);
-      });
-    },
-  });
+  // const {
+  //   loading: availableCustomersLoading,
+  //   data: availableCustomers,
+  //   refetch: getAvailableCustomers,
+  // } = useQuery(GET_CUSTOMERS_QUERY, {
+  //   variables: {
+  //     query: searchQuery,
+  //     page: queryPageIndex + 1,
+  //     first: queryPageSize,
+  //     orderByColumn: "id",
+  //     orderByOrder: "ASC",
+  //     vendor_id: null,
+  //   },
+  //   onCompleted: (data) => {
+  //     setAvailableCustomersOptions([]);
+  //     data.customers.data.map((customer: any) => {
+  //       setAvailableCustomersOptions((availableCustomersOptions) => [
+  //         ...availableCustomersOptions,
+  //         { value: parseInt(customer.id), label: customer.email },
+  //       ]);
+  //     });
+  //   },
+  // });
 
-  const {
-    loading,
-    error,
-    data: customers,
-    refetch: getCustomers,
-  } = useQuery(GET_CUSTOMERS_QUERY, {
-    variables: {
-      query: searchQuery,
-      page: queryPageIndex + 1,
-      first: queryPageSize,
-      orderByColumn: "id",
-      orderByOrder: "ASC",
-      company_id: id,
-    },
-  });
+  // const {
+  //   loading,
+  //   error,
+  //   data: customers,
+  //   refetch: getCustomers,
+  // } = useQuery(GET_CUSTOMERS_QUERY, {
+  //   variables: {
+  //     query: searchQuery,
+  //     page: queryPageIndex + 1,
+  //     first: queryPageSize,
+  //     orderByColumn: "id",
+  //     orderByOrder: "ASC",
+  //     vendor_id: id,
+  //   },
+  // });
 
-  const [addCustomerToCompany, { }] = useMutation(UPDATE_CUSTOMER_MUTATION, {
-    variables: {
-      input: {
-        id: selectCustomerId,
-        company_id: id,
-      },
-    },
-    onCompleted: (data) => {
-      toast({
-        title: "Customer updated",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      onClose();
-      getCustomers();
-      getAvailableCustomers();
-    },
-    onError: (error) => {
-      showGraphQLErrorToast(error);
-    },
-  });
+  // const [addCustomerToVendor, { }] = useMutation(UPDATE_CUSTOMER_MUTATION, {
+  //   variables: {
+  //     input: {
+  //       id: selectCustomerId,
+  //       vendor_id: id,
+  //     },
+  //   },
+  //   onCompleted: (data) => {
+  //     toast({
+  //       title: "Customer updated",
+  //       status: "success",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //     onClose();
+  //     getCustomers();
+  //     getAvailableCustomers();
+  //   },
+  //   onError: (error) => {
+  //     showGraphQLErrorToast(error);
+  //   },
+  // });
 
-  const [removeCustomerFromCompany, { }] = useMutation(
-    UPDATE_CUSTOMER_MUTATION,
-    {
-      variables: {
-        input: {
-          id: selectCustomerId,
-          company_id: null,
-        },
-      },
-      onCompleted: (data) => {
-        toast({
-          title: "Customer removed",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        getCustomers();
-        getAvailableCustomers();
-      },
-      onError: (error) => {
-        showGraphQLErrorToast(error);
-      },
-    },
-  );
+  // const [removeCustomerFromVendor, { }] = useMutation(
+  //   UPDATE_CUSTOMER_MUTATION,
+  //   {
+  //     variables: {
+  //       input: {
+  //         id: selectCustomerId,
+  //         vendor_id: null,
+  //       },
+  //     },
+  //     onCompleted: (data) => {
+  //       toast({
+  //         title: "Customer removed",
+  //         status: "success",
+  //         duration: 3000,
+  //         isClosable: true,
+  //       });
+  //       getCustomers();
+  //       getAvailableCustomers();
+  //     },
+  //     onError: (error) => {
+  //       showGraphQLErrorToast(error);
+  //     },
+  //   },
+  // );
 
   return (
     <AdminLayout>
       <Box
-        className="mk-companies-id"
+        className="mk-vendors-id"
         pt={{ base: "130px", md: "97px", xl: "97px" }}
       >
         {/* Main Fields */}
         <Grid pr="24px">
-          {!companyLoading && (
+          {!vendorLoading && (
             <>
               <Grid
                 templateAreas={`"nav main"`}
@@ -316,65 +313,65 @@ function CompanyEdit() {
                   className="border-r border-[var(--chakra-colors-gray-200)]"
                 >
                   <Box mx="26px">
-                    <h2 className="mt-10 mb-4">{company.name}</h2>
+                    <h2 className="mt-10 mb-4">{vendor?.name}</h2>
                   </Box>
 
                   {/* Left side buttons */}
                   <Flex mt={8} flexDirection="column" className="border-b">
                     <Button
-                      disabled={isCompanySetting == 0}
-                      onClick={() => setIsCompanySetting(0)}
+                      disabled={isVendorSetting == 0}
+                      onClick={() => setIsVendorSetting(0)}
                       alignItems="start"
                       h={45}
                       fontSize="14px"
                       className={
-                        isCompanySetting == 0
+                        isVendorSetting == 0
                           ? "!items-center !justify-start !font-medium text-white !bg-[var(--chakra-colors-primary-400)] !rounded-none"
                           : "!items-center !justify-start !font-medium text-[var(--chakra-colors-black-400)] !bg-white !rounded-none"
                       }
                     >
                       <FontAwesomeIcon icon={faGear} className="mr-1" />
-                      Company Settings
+                      Vendor Settings
                     </Button>
 
-                    <Button
-                      disabled={isCompanySetting == 1}
-                      onClick={() => setIsCompanySetting(1)}
+                    {/* <Button
+                      disabled={isVendorSetting == 1}
+                      onClick={() => setIsVendorSetting(1)}
                       alignItems="start"
                       h={45}
                       fontSize="14px"
                       className={
-                        isCompanySetting == 1
+                        isVendorSetting == 1
                           ? "!items-center !justify-start !font-medium !text-left text-white !bg-[var(--chakra-colors-primary-400)] !rounded-none"
                           : "!items-center !justify-start !font-medium text-[var(--chakra-colors-black-400)] !bg-white !rounded-none"
                       }
                     >
                       <FontAwesomeIcon icon={faUserLock} className="mr-1" />
-                      Company Users
+                      Vendor Users
                     </Button>
 
                     <Button
-                      disabled={isCompanySetting == 2}
-                      onClick={() => setIsCompanySetting(2)}
+                      disabled={isVendorSetting == 2}
+                      onClick={() => setIsVendorSetting(2)}
                       alignItems="start"
                       h={45}
                       fontSize="14px"
                       className={
-                        isCompanySetting == 2
+                        isVendorSetting == 2
                           ? "!items-center !justify-start !font-medium !text-left text-white !bg-[var(--chakra-colors-primary-400)] !rounded-none"
                           : "!items-center !justify-start !font-medium text-[var(--chakra-colors-black-400)] !bg-white !rounded-none"
                       }
                     >
                       <FontAwesomeIcon icon={faFileInvoiceDollar} className="mr-1" />
                       Invoices
-                    </Button>
+                    </Button> */}
                   </Flex>
                 </GridItem>
 
                 {/* Right side */}
                 <GridItem pl="2" area={"main"}>
-                  {/* Company Settings */}
-                  {isCompanySetting == 0 && (
+                  {/* Vendor Settings */}
+                  {isVendorSetting == 0 && (
                     <FormControl className="pb-10">
                       <Flex
                         justifyContent="space-between"
@@ -382,7 +379,7 @@ function CompanyEdit() {
                         mb="24px"
                         className="mt-8"
                       >
-                        <h2 className="mb-0">Company Settings</h2>
+                        <h2 className="mb-0">Vendor Settings</h2>
                         <Flex>
                           <Button
                             fontSize="sm"
@@ -394,8 +391,8 @@ function CompanyEdit() {
                             mb="0"
                             ms="10px"
                             className="!h-[39px]"
-                            onClick={() => handleUpdateCompany()}
-                            isLoading={companyLoading}
+                            onClick={() => handleUpdateVendor()}
+                            isLoading={vendorLoading}
                           >
                             Update
                           </Button>
@@ -417,10 +414,10 @@ function CompanyEdit() {
                         <Input
                           isRequired={true}
                           variant="main"
-                          value={company.name}
+                          value={vendor?.name}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -449,10 +446,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="abn"
-                          value={company.abn}
+                          value={vendor?.abn}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -481,10 +478,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="contact_phone"
-                          value={company.contact_phone}
+                          value={vendor?.contact_phone}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -514,10 +511,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="contact_email"
-                          value={company.contact_email}
+                          value={vendor?.contact_email}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -547,10 +544,10 @@ function CompanyEdit() {
                         <Box className="!max-w-md w-full">
                           <Select
                             placeholder="Select Payment Terms"
-                            value={paymentTerms.find((term) => term.value === company.payment_term)}
+                            value={paymentTerms?.find((term) => term.value === vendor?.payment_term)}
                             options={paymentTerms}
                             onChange={(selectedOption) => {
-                              setCompany({ ...company, payment_term: selectedOption?.value });
+                              setVendor({ ...vendor, payment_term: selectedOption?.value });
                               console.log("Selected:", selectedOption);
                             }}
                             size="lg"
@@ -558,93 +555,6 @@ function CompanyEdit() {
                             classNamePrefix="two-easy-select"
                           />
                         </Box>
-                      </Flex>
-
-                      <Flex alignItems="center" mb="16px">
-                        <FormLabel
-                          display="flex"
-                          width="200px"
-                          fontSize="sm"
-                          mb="0"
-                          fontWeight="500"
-                          color={textColor}
-                        >
-                          Company Logo
-                        </FormLabel>
-                        <Flex
-                          alignItems={"center"}
-                          ms={{ base: "0px", md: "0px" }}
-                        >
-                          {logoUrl && (
-                            <Button
-                              onClick={() => {
-                                if (logoUrl) {
-                                  window.open(
-                                    logoUrl,
-                                    "_blank",
-                                    "noopener,noreferrer",
-                                  );
-                                }
-                              }}
-                              fontSize="sm"
-                              variant="outline"
-                              fontWeight="500"
-                              lineHeight="19px"
-                              w="80%"
-                              h="50"
-                              mb="0"
-                              className="!h-[39px]"
-                            >
-                              View Logo
-                            </Button>
-                          )}
-                          <FileInputLink
-                            width="60px"
-                            height="50px"
-                            entity="Company"
-                            collection_name="companyLogo"
-                            description="Upload Logo"
-                            entityId={company.id}
-                            onUpload={(new_url: string) => {
-                              setLogoUrl(new_url);
-                              getCompany();
-                            }}
-                            accept="image/*"
-                          ></FileInputLink>
-                        </Flex>
-                      </Flex>
-
-                      <Flex alignItems="center" mb="16px">
-                        <FormLabel
-                          display="flex"
-                          width="200px"
-                          fontSize="sm"
-                          mb="0"
-                          fontWeight="500"
-                          color={textColor}
-                        >
-                          Integration email
-                        </FormLabel>
-                        <Input
-                          isRequired={true}
-                          type="text"
-                          name="integration_email"
-                          value={company.integration_email}
-                          onChange={(e) =>
-                            setCompany({
-                              ...company,
-                              [e.target.name]: e.target.value,
-                            })
-                          }
-                          placeholder=""
-                          className="max-w-md"
-                          variant="main"
-                          fontSize="sm"
-                          ms={{ base: "0px", md: "0px" }}
-                          mb="0"
-                          fontWeight="500"
-                          size="lg"
-                        />
                       </Flex>
 
                       <Flex alignItems="start" mb="16px">
@@ -661,10 +571,10 @@ function CompanyEdit() {
 
                         <Textarea
                           name="admin_notes"
-                          value={company.admin_notes}
+                          value={vendor?.admin_notes}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -690,10 +600,10 @@ function CompanyEdit() {
                         <Flex className="flex-col w-full max-w-md">
                           <Textarea
                             name="base_notes"
-                            value={company.base_notes}
+                            value={vendor?.base_notes}
                             onChange={(e) =>
-                              setCompany({
-                                ...company,
+                              setVendor({
+                                ...vendor,
                                 [e.target.name]: e.target.value,
                               })
                             }
@@ -726,10 +636,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="account_email"
-                          value={company.account_email}
+                          value={vendor?.account_email}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -759,7 +669,7 @@ function CompanyEdit() {
                         <Input
                           type="text"
                           name="address"
-                          value={company.address}
+                          value={vendor?.address}
                           placeholder=""
                           className="max-w-md"
                           variant="main"
@@ -772,12 +682,12 @@ function CompanyEdit() {
                         />
                       </Flex>
                       <AddressesModal
-                        defaultAddress={company}
+                        defaultAddress={vendor}
                         isModalOpen={isAddressModalOpen}
                         description="Billing address"
                         onModalClose={(e) => setIsAddressModalOpen(e)}
                         onSetAddress={(target) => {
-                          setCompany({ ...company, ...target });
+                          setVendor({ ...vendor, ...target });
                         }}
                       />
                       <Flex alignItems="center" mb="16px">
@@ -795,10 +705,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="address_line_1"
-                          value={company.address_line_1}
+                          value={vendor?.address_line_1}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -827,10 +737,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="address_line_2"
-                          value={company.address_line_2}
+                          value={vendor?.address_line_2}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -859,10 +769,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="address_city"
-                          value={company.address_city}
+                          value={vendor?.address_city}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -891,10 +801,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="address_state"
-                          value={company.address_state}
+                          value={vendor?.address_state}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -923,10 +833,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="text"
                           name="address_postal_code"
-                          value={company.address_postal_code}
+                          value={vendor?.address_postal_code}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: e.target.value,
                             })
                           }
@@ -943,59 +853,7 @@ function CompanyEdit() {
                       <Divider />
 
                       <h3 className="mt-6 mb-4">Rates</h3>
-                      <Flex alignItems="center" mb="16px">
-                        <FormLabel
-                          display="flex"
-                          width="200px"
-                          fontSize="sm"
-                          mb="0"
-                          fontWeight="500"
-                          color={textColor}
-                        >
-                          Rate Card
-                        </FormLabel>
-                        <Flex
-                          alignItems={"center"}
-                          ms={{ base: "0px", md: "0px" }}
-                        >
-                          {rateCardUrl && (
-                            <Button
-                              onClick={() => {
-                                if (rateCardUrl) {
-                                  window.open(
-                                    rateCardUrl,
-                                    "_blank",
-                                    "noopener,noreferrer",
-                                  );
-                                }
-                              }}
-                              fontSize="sm"
-                              variant="outline"
-                              fontWeight="500"
-                              lineHeight="19px"
-                              w="80%"
-                              h="50"
-                              mb="0"
-                              className="!h-[39px]"
-                            >
-                              Download Rate Card
-                            </Button>
-                          )}
-                          <FileInputLink
-                            width="60px"
-                            height="50px"
-                            entity="Company"
-                            collection_name="rate_card_url"
-                            description="Upload Rate Card"
-                            entityId={company.id}
-                            onUpload={(new_url: string) => {
-                              setRateCardUrl(new_url);
-                              getCompany();
-                            }}
-                            accept="application/pdf"
-                          ></FileInputLink>
-                        </Flex>
-                      </Flex>
+
                       <Flex alignItems="center" mb="16px">
                         <FormLabel
                           display="flex"
@@ -1011,10 +869,10 @@ function CompanyEdit() {
                           isRequired={true}
                           type="number"
                           name="lcl_rate"
-                          value={company.lcl_rate}
+                          value={vendor?.lcl_rate}
                           onChange={(e) =>
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               [e.target.name]: parseFloat(e.target.value),
                             })
                           }
@@ -1044,10 +902,10 @@ function CompanyEdit() {
                         </FormLabel>
 
                         <RadioGroup
-                          value={company.is_pod_sendable ? "1" : "0"}
+                          value={vendor?.is_pod_sendable ? "1" : "0"}
                           onChange={(e) => {
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               is_pod_sendable: e === "1" ? true : false,
                             });
                           }}
@@ -1073,10 +931,10 @@ function CompanyEdit() {
                         </FormLabel>
 
                         <RadioGroup
-                          value={company.is_invoice_sendable ? "1" : "0"}
+                          value={vendor?.is_invoice_sendable ? "1" : "0"}
                           onChange={(e) => {
-                            setCompany({
-                              ...company,
+                            setVendor({
+                              ...vendor,
                               is_invoice_sendable: e === "1" ? true : false,
                             });
                           }}
@@ -1092,8 +950,8 @@ function CompanyEdit() {
                     </FormControl>
                   )}
 
-                  {/* Company Users */}
-                  {isCompanySetting == 1 && (
+                  {/* Vendor Users */}
+                  {isVendorSetting == 1 && (
                     <>
                       <Flex
                         justifyContent="space-between"
@@ -1101,10 +959,10 @@ function CompanyEdit() {
                         mb="24px"
                         className="mt-8"
                       >
-                        <h2 className="mb-0">Company Users</h2>
+                        <h2 className="mb-0">Vendor Users</h2>
                         <Flex>
                           <Link
-                            href={`/admin/customers/create?company_id=${id}`}
+                            href={`/admin/customers/create?vendor_id=${id}`}
                             me="8px"
                           >
                             <Button
@@ -1122,7 +980,7 @@ function CompanyEdit() {
                             </Button>
                           </Link>
 
-                          <Button
+                          {/* <Button
                             fontSize="sm"
                             variant="brand"
                             fontWeight="500"
@@ -1148,7 +1006,7 @@ function CompanyEdit() {
                                 <Divider mb="24px" />
                                 <Text mb="24px">
                                   Search existing customers to add to this
-                                  company
+                                  vendor
                                 </Text>
                                 <Box className="!max-w-md w-full">
                                   <Select
@@ -1174,13 +1032,13 @@ function CompanyEdit() {
                                 </Button>
                                 <Button
                                   variant="primary"
-                                  onClick={() => addCustomerToCompany()}
+                                  onClick={() => addCustomerToVendor()}
                                 >
-                                  Add to company
+                                  Add to vendor
                                 </Button>
                               </ModalFooter>
                             </ModalContent>
-                          </Modal>
+                          </Modal> */}
                         </Flex>
                       </Flex>
 
@@ -1201,7 +1059,7 @@ function CompanyEdit() {
                             />
                           </Flex>
 
-                          {!loading &&
+                          {/* {!loading &&
                             customers?.customers.data.length >= 0 && (
                               <PaginationTable
                                 columns={columns}
@@ -1220,23 +1078,23 @@ function CompanyEdit() {
                                 setQueryPageSize={setQueryPageSize}
                                 onDelete={(id: any) => {
                                   setSelectCustomerId(id);
-                                  removeCustomerFromCompany();
+                                  removeCustomerFromVendor();
                                 }}
                                 isServerSide
                                 path="/admin/customers"
                               />
-                            )}
+                            )} */}
                         </SimpleGrid>
                       </Box>
                     </>
                   )}
                   {/* Invoice */}
-                  {isCompanySetting == 2 && (
+                  {/* {isVendorSetting == 2 && (
                     <>
-                      {company.id !== null && <InvoiceTab company_id={company.id} />}
+                      {vendor?.id !== null && <InvoiceTab vendor_id={vendor?.id} />}
 
                     </>
-                  )}
+                  )} */}
                 </GridItem>
               </Grid>
             </>
@@ -1247,4 +1105,4 @@ function CompanyEdit() {
   );
 }
 
-export default CompanyEdit;
+export default VendorEdit;
