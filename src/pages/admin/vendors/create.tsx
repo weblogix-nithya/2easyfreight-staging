@@ -1,5 +1,6 @@
-// Chakra imports
+// External Libraries
 import { useMutation, useQuery } from "@apollo/client";
+// Chakra UI Components
 import {
   Box,
   Button,
@@ -17,21 +18,24 @@ import {
   useColorModeValue,
   useToast
 } from "@chakra-ui/react";
+// Custom Components
 import AddressesModal from "components/addresses/AddressesModal";
 import FileInput from "components/fileInput/FileInput";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { CREATE_VENDOR_MUTATION, defaultVendor, paymentTerms, GET_VENDOR_SERVICES_QUERY } from "graphql/vendor";
+// GraphQL Queries & Constants
+import { CREATE_VENDOR_MUTATION, defaultVendor, GET_VENDOR_SERVICES_QUERY,paymentTerms } from "graphql/vendor";
+// Layouts
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import Select from "react-select";
-import { isNull } from "util";
+
 
 function VendorCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // const textColorSecondary = "gray.400";
   const [vendor, setVendor] = useState(defaultVendor);
   const router = useRouter();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
