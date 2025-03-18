@@ -63,9 +63,6 @@ export const GET_VENDOR_QUERY = gql`
       account_number
       bsb_code
       swift_code
-      deleted_at
-      created_at
-      updated_at
     }
   }
 `;
@@ -101,16 +98,13 @@ export const CREATE_VENDOR_MUTATION = gql`
       account_number
       bsb_code
       swift_code
-      deleted_at
-      created_at
-      updated_at
     }
   }
 `;
 
 export const UPDATE_VENDOR_MUTATION = gql`
-  mutation updateVendor($input: UpdateVendorInput!) {
-    updateVendor(input: $input) {
+  mutation updateVendor($id: ID!, $input: UpdateVendorInput!) {
+    updateVendor(id: $id, input: $input) {
       id
       name
       abn
@@ -313,11 +307,11 @@ export const defaultVendor: Vendor = {
   account_number: "",
   bsb_code: "",
   swift_code: "",
-  deleted_at: null,
-  created_at: null,
-  updated_at: null,
   payment_term: "",
   vendor_service: null,
+  deleted_at: undefined,
+  created_at: undefined,
+  updated_at: undefined
 };
 
 export const paymentTerms = [

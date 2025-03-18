@@ -88,7 +88,7 @@ function VendorEdit() {
       if (data?.vendor == null) {
         // router.push("/admin/vendors");
       }
-      const vendorWithDate = { ...data.vendor, updated_at: new Date(data.vendor.updated_at) };
+      const vendorWithDate = { ...data.vendor };
       setVendor(vendorWithDate); // Ensure updated_at is a Date object
       setOriginalVendor(vendorWithDate); // Set the original vendor data
       console.log(data.vendor, 'ck');
@@ -99,11 +99,17 @@ function VendorEdit() {
     },
   });
 
-  const [handleUpdateVendor, { }] = useMutation(UPDATE_VENDOR_MUTATION, {
-
+  const currentVendorId = 10;
+  const [handleUpdateVendor] = useMutation(UPDATE_VENDOR_MUTATION, {
     variables: {
-      id: id,
-      input: { ...vendor, updated_at: currentDateTime }
+      id: currentVendorId, // Pass ID separately
+      input: {
+        ...vendor,
+        vendor_service_id:
+          typeof vendor?.vendor_service_id === "string"
+            ? parseInt(vendor?.vendor_service_id, 10)
+            : vendor?.vendor_service_id, // Ensure this is an Int
+      },
     },
     onCompleted: (data) => {
       toast({
@@ -112,13 +118,13 @@ function VendorEdit() {
         duration: 3000,
         isClosable: true,
       });
-      setVendor({ ...vendor, updated_at: new Date(currentDateTime) }); // Update vendor's updated_at to current date
+      setVendor({ ...vendor}); // Update vendor's updated_at to current date
       setOriginalVendor(vendor); // Reset the original vendor data after successful update
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
     },
-  });
+  });  
 
   const isFormDirty = useMemo(() => {
     return JSON.stringify(vendor) !== JSON.stringify(originalVendor);
@@ -126,7 +132,8 @@ function VendorEdit() {
 
 
 //     function handleUpdateVendorWrapper() {
-// let ven={ ...vendor, updated_at:currentDateTime }
+// let ven={ ...vendor, updated_at: currentDateTime, id: id }
+
 //     console.log("Vendor data before API call:", ven);
 //     // handleUpdateVendor(); // Invoke the mutation function
 //   }
@@ -658,7 +665,7 @@ function VendorEdit() {
                                 vendor_service: {
                                   ...vendor?.vendor_service,
                                   service_name: selectedOption?.label,
-                                  updated_at: currentDateTime
+                                  // updated_at: currentDateTime
                                 }
                               });
                               console.log("Selected:", selectedOption);
