@@ -27,42 +27,40 @@ import GooglePlacesAutocomplete, {
   geocodeByPlaceId,
 } from "react-google-places-autocomplete";
 
-
 function CustomerAddressEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // const textColorSecondary = "gray.400";
   const [customerAddress, setCustomerAddress] = useState(
     defaultCustomerAddress,
   );
   const [originalCustomerAddress, setOriginalCustomerAddress] = useState(null);
 
-  const [customerAddressStatuses, setCustomerAddressStatuses] = useState([]);
-  const [customerAddressTypes, setCustomerAddressTypes] = useState([]);
+  // const [customerAddressStatuses, setCustomerAddressStatuses] = useState([]);
+  // const [customerAddressTypes, setCustomerAddressTypes] = useState([]);
   const router = useRouter();
   const { id } = router.query;
-  const [googleAddress, setGoogleAddress] = useState(null);
+  // const [googleAddress, setGoogleAddress] = useState(null);
 
-  const {
-    loading: customerAddressLoading,
-    data: customerAddressData,
-    refetch: getCustomerAddress,
-  } = useQuery(GET_CUSTOMER_ADDRESS_QUERY, {
-    variables: {
-      id: id,
-    },
-    onCompleted: (data) => {
-      if (data?.customerAddress == null) {
-        router.push("/admin/customer-addresses");
-      }
-      setCustomerAddress({ ...customerAddress, ...data?.customerAddress });
-      setOriginalCustomerAddress({ ...data?.customerAddress });
-    },
-    onError(error) {
-      console.log("onError");
-      console.log(error);
-    },
-  });
+ const {
+  loading: customerAddressLoading,
+} = useQuery(GET_CUSTOMER_ADDRESS_QUERY, {
+  variables: {
+    id: id,
+  },
+  onCompleted: (data) => {
+    if (data?.customerAddress == null) {
+      router.push("/admin/customer-addresses");
+    }
+    setCustomerAddress({ ...customerAddress, ...data?.customerAddress });
+    setOriginalCustomerAddress({ ...data?.customerAddress });
+  },
+  onError(error) {
+    console.log("onError");
+    console.log(error);
+  },
+});
+
 
   const hasChanges = () => {
     return (
@@ -93,7 +91,7 @@ function CustomerAddressEdit() {
           lat: customerAddress.lat,
         },
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "CustomerAddress updated successfully",
           status: "success",
@@ -114,7 +112,7 @@ function CustomerAddressEdit() {
       variables: {
         id: id,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "CustomerAddress deleted",
           status: "success",
