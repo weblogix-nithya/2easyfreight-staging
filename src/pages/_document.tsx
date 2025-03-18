@@ -8,7 +8,7 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <link rel="apple-touch-icon" href="/logo192.png" />
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="/manifest.json"/>
         <link rel="icon" href="/favicon.ico" />
 
         {/* Add google fonts */}
@@ -37,3 +37,4 @@ export default function Document() {
     </Html>
   );
 }
+
