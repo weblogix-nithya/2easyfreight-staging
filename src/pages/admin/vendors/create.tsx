@@ -746,6 +746,7 @@ function VendorCreate() {
 
             <Flex alignItems="center" mb="16px" className="max-w-md">
               <FormLabel
+                htmlFor="on-hold-switch"
                 display="flex"
                 mb="0"
                 width="200px"
@@ -756,18 +757,19 @@ function VendorCreate() {
                 On Hold
               </FormLabel>
               <Switch
+                id="on-hold-switch"
                 mt="auto"
                 mb="auto"
-                isChecked={vendor?.on_hold} // No need for `vendor?.on_hold || false`
+                isChecked={vendor?.on_hold ?? false} // Ensure it's always a boolean
                 onChange={(e) => {
-                  const isChecked = e.target.checked;
                   setVendor((prevVendor) => ({
                     ...prevVendor,
-                    on_hold: isChecked,
+                    on_hold: e.target.checked,
                   }));
                 }}
               />
             </Flex>
+
 
             <Divider />
 

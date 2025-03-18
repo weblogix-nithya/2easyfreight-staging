@@ -63,6 +63,7 @@ export const GET_VENDOR_QUERY = gql`
       account_number
       bsb_code
       swift_code
+      payment_term
     }
   }
 `;
@@ -98,6 +99,15 @@ export const CREATE_VENDOR_MUTATION = gql`
       account_number
       bsb_code
       swift_code
+      payment_term
+      vendor_service {  
+        id
+        service_name
+        description
+        created_at
+        updated_at
+      }
+
     }
   }
 `;
@@ -136,6 +146,7 @@ export const UPDATE_VENDOR_MUTATION = gql`
       deleted_at
       created_at
       updated_at
+      payment_term
     }
   }
 `;
