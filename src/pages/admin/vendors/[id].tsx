@@ -45,7 +45,7 @@ import {
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function VendorEdit() {
   const toast = useToast();
@@ -85,16 +85,41 @@ function VendorEdit() {
     },
   });
 
-  const currentVendorId = 10;
+  const currentVendorId = Number(vendorData?.vendor?.id);
+  console.log(currentVendorId, 'ck')
   const [handleUpdateVendor] = useMutation(UPDATE_VENDOR_MUTATION, {
     variables: {
-      id: currentVendorId, // Pass ID separately
+      id: currentVendorId!, // Pass ID separately
       input: {
-        ...vendor,
-        vendor_service_id:
-          typeof vendor?.vendor_service_id === "string"
-            ? parseInt(vendor?.vendor_service_id, 10)
-            : vendor?.vendor_service_id, // Ensure this is an Int
+        name: vendor?.name,
+        abn: vendor?.abn,
+        contact_phone: vendor?.contact_phone,
+        contact_email: vendor?.contact_email,
+        account_email: vendor?.account_email,
+        address: vendor?.address,
+        address_business_name: vendor?.address_business_name,
+        address_line_1: vendor?.address_line_1,
+        address_line_2: vendor?.address_line_2,
+        address_city: vendor?.address_city,
+        address_postal_code: vendor?.address_postal_code,
+        address_state: vendor?.address_state,
+        address_country: vendor?.address_country,
+        lng: vendor?.lng,
+        lat: vendor?.lat,
+        lcl_rate: vendor?.lcl_rate,
+        is_pod_sendable: vendor?.is_pod_sendable,
+        is_invoice_sendable: vendor?.is_invoice_sendable,
+        admin_notes: vendor?.admin_notes,
+        base_notes: vendor?.base_notes,
+        account_name: vendor?.account_name,
+        account_number: vendor?.account_number,
+        bsb_code: vendor?.bsb_code,
+        on_hold: vendor?.on_hold,
+        payment_term: vendor?.payment_term ?? null,
+        vendor_service_id: typeof vendor?.vendor_service_id === "string"
+          ? parseInt(vendor.vendor_service_id, 10)
+          : vendor?.vendor_service_id, // Ensure this is an Int
+        // Remove vendor_service if it exists in the object
       },
     },
     onCompleted: (data) => {
@@ -104,13 +129,14 @@ function VendorEdit() {
         duration: 3000,
         isClosable: true,
       });
-      setVendor({ ...vendor}); // Update vendor's updated_at to current date
+      setVendor({ ...vendor }); // Update vendor's updated_at to current date
       setOriginalVendor(vendor); // Reset the original vendor data after successful update
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
     },
-  });  
+  });
+  
 
   const isFormDirty = useMemo(() => {
     return JSON.stringify(vendor) !== JSON.stringify(originalVendor);
@@ -266,6 +292,17 @@ function VendorEdit() {
   }));
 
 
+  useEffect(() => {
+    if (vendorData?.vendor) {
+      setVendor((prev) => ({
+        ...prev,
+        ...vendorData.vendor,
+        vendor_service_id: String(vendorData.vendor.vendor_service_id), // Convert to string
+      }));
+    }
+  }, [vendorData]);
+  
+  
   // const {
   //   loading: availableCustomersLoading,
   //   data: availableCustomers,
@@ -637,29 +674,25 @@ function VendorEdit() {
                         </FormLabel>
 
                         <Box className="!max-w-md w-full">
-                          <Select
-                            isLoading={vendorServicesLoading}
-                            placeholder="Select Vendor Service"
-                            value={vendorServiceOptions?.find(
-                              (service: any) => service.value === vendor?.vendor_service_id
-                            )}
-                            options={vendorServiceOptions}
-                            onChange={selectedOption => {
-                              setVendor({
-                                ...vendor,
-                                vendor_service_id: selectedOption?.value,
-                                vendor_service: {
-                                  ...vendor?.vendor_service,
-                                  service_name: selectedOption?.label,
-                                  // updated_at: currentDateTime
-                                }
-                              });
-                              console.log("Selected:", selectedOption);
-                            }}
-                            size="lg"
-                            className="select mb-0"
-                            classNamePrefix="two-easy-select"
-                          />
+                        <Select
+  key={vendor?.vendor_service_id}
+  isLoading={vendorServicesLoading}
+  placeholder="Select Vendor Service"
+  value={vendorServiceOptions?.find(
+    (service: any) => Number(service.value) === Number(vendor?.vendor_service_id)
+  )}
+  options={vendorServiceOptions}
+  onChange={(selectedOption) => {
+    setVendor((prev) => ({
+      ...prev,
+      vendor_service_id: selectedOption?.value,
+    }));
+  }}
+  size="lg"
+  className="select mb-0"
+  classNamePrefix="two-easy-select"
+/>
+
                         </Box>
                       </Flex>
 
@@ -1060,29 +1093,31 @@ function VendorEdit() {
                       </Flex>
 
                       <Flex alignItems="center" mb="16px" className="max-w-md">
-                        <FormLabel
-                          display="flex"
-                          mb="0"
-                          width="200px"
-                          fontSize="sm"
-                          fontWeight="500"
-                          color="textColor"
-                        >
-                          On Hold
-                        </FormLabel>
-                        <Switch
-                          mt="auto"
-                          mb="auto"
-                          isChecked={vendor.on_hold} // No need for `vendor?.on_hold || false`
-                          onChange={(e) => {
-                            const isChecked = e.target.checked;
-                            setVendor((prevVendor) => ({
-                              ...prevVendor,
-                              on_hold: isChecked,
-                            }));
-                          }}
-                        />
-                      </Flex>
+  <FormLabel
+    htmlFor="on-hold-switch"
+    display="flex"
+    mb="0"
+    width="200px"
+    fontSize="sm"
+    fontWeight="500"
+    color="textColor"
+  >
+    On Hold
+  </FormLabel>
+  <Switch
+    id="on-hold-switch"
+    mt="auto"
+    mb="auto"
+    isChecked={Boolean(vendor?.on_hold)} // Ensuring it's always boolean
+    onChange={(e) => {
+      setVendor((prevVendor) => ({
+        ...prevVendor,
+        on_hold: e.target.checked,
+      }));
+    }}
+  />
+</Flex>
+
 
                       <Divider />
 
