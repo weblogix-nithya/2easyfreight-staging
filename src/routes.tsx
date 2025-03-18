@@ -1,4 +1,4 @@
-// Icons
+// External Imports
 import {
   faBriefcase,
   faFileInvoiceDollar,
@@ -9,12 +9,10 @@ import {
   faUserLock,
 } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// Admin Page Imports
 import Clients from "pages/admin/clients/index";
 import Companies from "pages/admin/companies/index";
 import Customers from "pages/admin/customers/index";
-import Vendors from "pages/admin/vendors/index";
-
-// Admin Imports
 import MainDashboard from "pages/admin/dashboard";
 import Drivers from "pages/admin/drivers/index";
 import Invoices from "pages/admin/invoices/index";
@@ -25,8 +23,10 @@ import Quote from "pages/admin/quotes/index";
 import Rctis from "pages/admin/rctis/index";
 import Users from "pages/admin/users/index";
 import VehicleHire from "pages/admin/vehicle-hires";
-// Auth Imports
+import Vendors from "pages/admin/vendors/index";
+// Types
 import { IRoute } from "types/navigation";
+
 
 const routes: IRoute[] = [
   {

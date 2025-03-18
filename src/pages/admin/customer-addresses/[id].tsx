@@ -1,5 +1,6 @@
-// Chakra imports
+// External Imports
 import { useMutation, useQuery } from "@apollo/client";
+// Chakra UI Imports
 import {
   Box,
   Button,
@@ -9,10 +10,8 @@ import {
   Input,
   useColorModeValue,
   useToast,
-  Flex,
-  Divider,
-  Textarea,
 } from "@chakra-ui/react";
+// Local Imports
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
@@ -21,12 +20,13 @@ import {
   GET_CUSTOMER_ADDRESS_QUERY,
   UPDATE_CUSTOMER_ADDRESS_MUTATION,
 } from "graphql/customerAddress";
-import GooglePlacesAutocomplete, {
-  geocodeByPlaceId,
-} from "react-google-places-autocomplete";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import GooglePlacesAutocomplete, {
+  geocodeByPlaceId,
+} from "react-google-places-autocomplete";
+
 
 function CustomerAddressEdit() {
   const toast = useToast();

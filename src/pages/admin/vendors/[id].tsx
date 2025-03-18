@@ -1,5 +1,6 @@
-
+// External Library Imports
 import { useMutation, useQuery } from "@apollo/client";
+// Chakra UI Imports
 import {
   Box,
   Button,
@@ -11,69 +12,54 @@ import {
   GridItem,
   Input,
   Link,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Radio,
   RadioGroup,
   SimpleGrid,
   Stack,
   Switch,
-  Text,
   Textarea,
   useColorModeValue,
-  useDisclosure,
+  // useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+// FontAwesome Imports
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
-import { faFileInvoiceDollar, faGear, faUserLock } from "@fortawesome/pro-solid-svg-icons";
+import { faGear } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { current } from "@reduxjs/toolkit";
 import { Select } from "chakra-react-select";
+// Component Imports
 import AddressesModal from "components/addresses/AddressesModal";
 import FileInput from "components/fileInput/FileInput";
-// import InvoiceTab from "components/companies/InvoiceTab";
-import FileInputLink from "components/fileInput/FileInputLink";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-// GraphQL imports
+// GraphQL Imports
 import {
   defaultVendor,
   DELETE_VENDOR_MUTATION,
   GET_VENDOR_QUERY,
+  GET_VENDOR_SERVICES_QUERY,
   paymentTerms,
   UPDATE_VENDOR_MUTATION,
-  GET_VENDOR_SERVICES_QUERY,
 } from "graphql/vendor";
-// import {
-//   GET_CUSTOMERS_QUERY,
-//   UPDATE_CUSTOMER_MUTATION,
-// } from "graphql/customer";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
-// Next.js and React imports
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
-
 
 function VendorEdit() {
   const toast = useToast();
   let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // const textColorSecondary = "gray.400";
   const [vendor, setVendor] = useState(defaultVendor);
   const [originalVendor, setOriginalVendor] = useState(defaultVendor); // Track the original vendor data
 
   const [isVendorSetting, setIsVendorSetting] = useState(0);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  // const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const { id } = router.query;
-  const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  // const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const {
     loading: vendorLoading,
