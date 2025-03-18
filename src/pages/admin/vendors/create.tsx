@@ -1,5 +1,5 @@
 // Chakra imports
-import { useMutation } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -9,108 +9,173 @@ import {
   FormLabel,
   Grid,
   Input,
+  Radio,
+  RadioGroup,
+  Stack,
+  Switch,
+  Textarea,
   useColorModeValue,
   useToast
 } from "@chakra-ui/react";
 import AddressesModal from "components/addresses/AddressesModal";
+import FileInput from "components/fileInput/FileInput";
+import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { CREATE_COMPANY_MUTATION, defaultCompany, paymentTerms } from "graphql/company";
+import { CREATE_VENDOR_MUTATION, defaultVendor, paymentTerms, GET_VENDOR_SERVICES_QUERY } from "graphql/vendor";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
-import {useState } from "react";
+import { useMemo, useState } from "react";
 import Select from "react-select";
+import { isNull } from "util";
 
-function CompanyCreate() {
+function VendorCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
   const textColorSecondary = "gray.400";
-  const [company, setCompany] = useState(defaultCompany);
+  const [vendor, setVendor] = useState(defaultVendor);
   const router = useRouter();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
-  const [handleCreateCompany, { }] = useMutation(CREATE_COMPANY_MUTATION, {
+  const [handleCreateVendor, { }] = useMutation(CREATE_VENDOR_MUTATION, {
     variables: {
       input: {
-        name: company.name,
-        abn: company.abn,
-        contact_phone: company.contact_phone,
-        contact_email: company.contact_email,
-        account_email: company.account_email,
-        address: company.address,
-        address_business_name: company.address_business_name,
-        address_line_1: company.address_line_1,
-        address_line_2: company.address_line_2,
-        address_city: company.address_city,
-        address_postal_code: company.address_postal_code,
-        address_state: company.address_state,
-        address_country: company.address_country,
-        lng: company.lng,
-        lat: company.lat,
-        lcl_rate: company.lcl_rate,
-        rate_card_url: undefined,
-        logo_url: undefined,
-        payment_term: company.payment_term ?? '7_days',
+        name: vendor?.name,
+        abn: vendor?.abn,
+        contact_phone: vendor?.contact_phone,
+        contact_email: vendor?.contact_email,
+        account_email: vendor?.account_email,
+        address: vendor?.address,
+        address_business_name: vendor?.address_business_name,
+        address_line_1: vendor?.address_line_1,
+        address_line_2: vendor?.address_line_2,
+        address_city: vendor?.address_city,
+        address_postal_code: vendor?.address_postal_code,
+        address_state: vendor?.address_state,
+        address_country: vendor?.address_country,
+        lng: vendor?.lng,
+        lat: vendor?.lat,
+        lcl_rate: vendor?.lcl_rate,
+        is_pod_sendable: vendor?.is_pod_sendable,
+        is_invoice_sendable: vendor?.is_invoice_sendable,
+        admin_notes: vendor?.admin_notes,
+        base_notes: vendor?.base_notes,
+        account_name: vendor?.account_name,
+        account_number: vendor?.account_number,
+        bsb_code: vendor?.bsb_code,
+        on_hold: vendor?.on_hold,
+        payment_term: vendor?.payment_term ?? null,
+        vendor_service_id: Number(vendor?.vendor_service_id),
+        // vendor_service: vendor?.vendor_service?.service_name,
       },
     },
     onCompleted: (data) => {
       toast({
-        title: "Company created",
+        title: "Vendor created",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      router.push(`/admin/companies/${data.createCompany.id}`);
+      router.push(`/admin/vendors/${data.createVendor.id}`);
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
     },
   });
+
+  const {
+    loading: vendorServicesLoading,
+    error: vendorServicesError,
+    data: vendorServicesData,
+  } = useQuery(GET_VENDOR_SERVICES_QUERY);
+
+  if (vendorServicesError) {
+    console.error("Error getting vendor services", vendorServicesError);
+  }
+
+  const vendorServiceOptions = vendorServicesData?.vendorServices.map((service: any) => ({
+    label: service.service_name,
+    value: service.id,
+  }));
+
+  const [temporaryMedia, setTemporaryMedia] = useState([]);
+
+  const attachmentColumns = useMemo(
+    () => [
+      {
+        Header: "Document",
+        accessor: "path" as const,
+      },
+      {
+        Header: "uploaded by",
+        accessor: "uploaded_by" as const,
+      },
+      {
+        Header: "date uploaded",
+        accessor: "created_at" as const,
+      },
+      {
+        Header: "Actions",
+        accessor: "downloadable_url" as const,
+        isDelete: true,
+        isEdit: false,
+        isDownload: true,
+      },
+    ],
+    [],
+  );
+
+  const handleRemoveFromTemporaryMedia = (id: number) => {
+    let _temporaryMedia = [...temporaryMedia];
+    _temporaryMedia = _temporaryMedia.filter((e) => e.id !== id);
+    setTemporaryMedia(_temporaryMedia);
+  };
+
   return (
     <AdminLayout>
       <Box
-        className="mk-companyCreate"
+        className="mk-vendorCreate"
         pt={{ base: "130px", md: "97px", xl: "97px" }}
       >
         {/* Main Fields */}
         <Grid pt="32px" px="24px">
           <FormControl>
             <Flex justifyContent="space-between" alignItems="center">
-              <h1 className="mb-0">New Company</h1>
+              <h1 className="mb-0">New Vendor</h1>
               <Button
                 fontSize="sm"
                 variant="brand"
-                onClick={() => handleCreateCompany()}
+                onClick={() => handleCreateVendor()}
               >
                 Create
               </Button>
             </Flex>
 
             <Divider className="my-6" />
-
-            <h3 className="mb-4">Details</h3>
-
+            <h3 className="mt-6 mb-4">Details</h3>
             <Flex alignItems="center" mb="16px">
               <FormLabel
                 display="flex"
+                mb="0"
                 width="200px"
                 fontSize="sm"
-                mb="0"
                 fontWeight="500"
                 color={textColor}
               >
-                Company Name
+                Name
               </FormLabel>
               <Input
                 isRequired={true}
+                variant="main"
+                value={vendor?.name}
+                onChange={(e) =>
+                  setVendor({
+                    ...vendor,
+                    [e.target.name]: e.target.value,
+                  })
+                }
                 type="text"
                 name="name"
-                value={company.name}
-                onChange={(e) =>
-                  setCompany({ ...company, [e.target.name]: e.target.value })
-                }
-                placeholder=""
                 className="max-w-md"
-                variant="main"
                 fontSize="sm"
                 ms={{ base: "0px", md: "0px" }}
                 mb="0"
@@ -118,7 +183,6 @@ function CompanyCreate() {
                 size="lg"
               />
             </Flex>
-
             <Flex alignItems="center" mb="16px">
               <FormLabel
                 display="flex"
@@ -134,9 +198,12 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="abn"
-                value={company.abn}
+                value={vendor?.abn}
                 onChange={(e) =>
-                  setCompany({ ...company, [e.target.name]: e.target.value })
+                  setVendor({
+                    ...vendor,
+                    [e.target.name]: e.target.value,
+                  })
                 }
                 placeholder=""
                 className="max-w-md"
@@ -148,7 +215,6 @@ function CompanyCreate() {
                 size="lg"
               />
             </Flex>
-
             <Flex alignItems="center" mb="16px">
               <FormLabel
                 display="flex"
@@ -164,9 +230,12 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="contact_phone"
-                value={company.contact_phone}
+                value={vendor?.contact_phone}
                 onChange={(e) =>
-                  setCompany({ ...company, [e.target.name]: e.target.value })
+                  setVendor({
+                    ...vendor,
+                    [e.target.name]: e.target.value,
+                  })
                 }
                 placeholder="+61"
                 className="max-w-md"
@@ -194,9 +263,12 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="contact_email"
-                value={company.contact_email}
+                value={vendor?.contact_email}
                 onChange={(e) =>
-                  setCompany({ ...company, [e.target.name]: e.target.value })
+                  setVendor({
+                    ...vendor,
+                    [e.target.name]: e.target.value,
+                  })
                 }
                 placeholder=""
                 className="max-w-md"
@@ -224,10 +296,10 @@ function CompanyCreate() {
               <Box className="!max-w-md w-full">
                 <Select
                   placeholder="Select Payment Terms"
-                  value={paymentTerms.find((term) => term.value === company.payment_term)}
+                  value={paymentTerms?.find((term) => term.value === vendor?.payment_term)}
                   options={paymentTerms}
                   onChange={(selectedOption) => {
-                    setCompany({ ...company, payment_term: selectedOption?.value });
+                    setVendor({ ...vendor, payment_term: selectedOption?.value });
                     console.log("Selected:", selectedOption);
                   }}
                   size="lg"
@@ -237,6 +309,106 @@ function CompanyCreate() {
               </Box>
             </Flex>
 
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                Vendor Service
+              </FormLabel>
+
+              <Box className="!max-w-md w-full">
+                <Select
+                  isLoading={vendorServicesLoading}
+                  placeholder="Select Vendor Service"
+                  value={vendorServiceOptions?.find(
+                    (service: any) => service.value === vendor?.vendor_service_id
+                  )}
+                  options={vendorServiceOptions}
+                  onChange={selectedOption => {
+                    setVendor({
+                      ...vendor,
+                      vendor_service_id: selectedOption?.value,
+                      vendor_service: {
+                        ...vendor?.vendor_service,
+                        service_name: selectedOption?.label,
+                        // updated_at: currentDateTime
+                      }
+                    });
+                    console.log("Selected:", selectedOption);
+                  }}
+                  size="lg"
+                  className="select mb-0"
+                  classNamePrefix="two-easy-select"
+                />
+              </Box>
+            </Flex>
+
+            <Flex alignItems="start" mb="16px">
+              <FormLabel
+                display="flex"
+                width="200px"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                color={textColor}
+              >
+                Admin Notes
+              </FormLabel>
+
+              <Textarea
+                name="admin_notes"
+                value={vendor?.admin_notes}
+                onChange={(e) =>
+                  setVendor({
+                    ...vendor,
+                    [e.target.name]: e.target.value,
+                  })
+                }
+                className="mb-4 max-w-md"
+                fontSize="sm"
+                rows={4}
+                placeholder="Admin Notes"
+              />
+            </Flex>
+
+            <Flex alignItems="start" mb="16px">
+              <FormLabel
+                display="flex"
+                width="200px"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                color={textColor}
+              >
+                Base Notes
+              </FormLabel>
+
+              <Flex className="flex-col w-full max-w-md">
+                <Textarea
+                  name="base_notes"
+                  value={vendor?.base_notes}
+                  onChange={(e) =>
+                    setVendor({
+                      ...vendor,
+                      [e.target.name]: e.target.value,
+                    })
+                  }
+                  fontSize="sm"
+                  className="w-full max-w-md"
+                  rows={4}
+                  placeholder="Base Notes"
+                />
+                <p className=" bottom-[0] mt-2 text-[10px] text-[var(--chakra-colors-black-500)] font-medium">
+                  Base notes are displayed to drivers on all jobs
+                  placed by this customer
+                </p>
+              </Flex>
+            </Flex>
 
             <Divider />
             <h3 className="mt-6 mb-4">Billing</h3>
@@ -255,10 +427,10 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="account_email"
-                value={company.account_email}
+                value={vendor?.account_email}
                 onChange={(e) =>
-                  setCompany({
-                    ...company,
+                  setVendor({
+                    ...vendor,
                     [e.target.name]: e.target.value,
                   })
                 }
@@ -272,6 +444,7 @@ function CompanyCreate() {
                 size="lg"
               />
             </Flex>
+
             <h4 className="mt-6 mb-4">Billing Address</h4>
             <Flex alignItems="center" mb="16px">
               <FormLabel
@@ -287,7 +460,7 @@ function CompanyCreate() {
               <Input
                 type="text"
                 name="address"
-                value={company.address}
+                value={vendor?.address}
                 placeholder=""
                 className="max-w-md"
                 variant="main"
@@ -299,14 +472,13 @@ function CompanyCreate() {
                 onClick={() => setIsAddressModalOpen(true)}
               />
             </Flex>
-
             <AddressesModal
-              defaultAddress={company}
+              defaultAddress={vendor}
               isModalOpen={isAddressModalOpen}
               description="Billing address"
               onModalClose={(e) => setIsAddressModalOpen(e)}
               onSetAddress={(target) => {
-                setCompany({ ...company, ...target });
+                setVendor({ ...vendor, ...target });
               }}
             />
             <Flex alignItems="center" mb="16px">
@@ -324,10 +496,10 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="address_line_1"
-                value={company.address_line_1}
+                value={vendor?.address_line_1}
                 onChange={(e) =>
-                  setCompany({
-                    ...company,
+                  setVendor({
+                    ...vendor,
                     [e.target.name]: e.target.value,
                   })
                 }
@@ -356,10 +528,10 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="address_line_2"
-                value={company.address_line_2}
+                value={vendor?.address_line_2}
                 onChange={(e) =>
-                  setCompany({
-                    ...company,
+                  setVendor({
+                    ...vendor,
                     [e.target.name]: e.target.value,
                   })
                 }
@@ -388,10 +560,10 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="address_city"
-                value={company.address_city}
+                value={vendor?.address_city}
                 onChange={(e) =>
-                  setCompany({
-                    ...company,
+                  setVendor({
+                    ...vendor,
                     [e.target.name]: e.target.value,
                   })
                 }
@@ -420,10 +592,10 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="address_state"
-                value={company.address_state}
+                value={vendor?.address_state}
                 onChange={(e) =>
-                  setCompany({
-                    ...company,
+                  setVendor({
+                    ...vendor,
                     [e.target.name]: e.target.value,
                   })
                 }
@@ -452,10 +624,10 @@ function CompanyCreate() {
                 isRequired={true}
                 type="text"
                 name="address_postal_code"
-                value={company.address_postal_code}
+                value={vendor?.address_postal_code}
                 onChange={(e) =>
-                  setCompany({
-                    ...company,
+                  setVendor({
+                    ...vendor,
                     [e.target.name]: e.target.value,
                   })
                 }
@@ -471,7 +643,136 @@ function CompanyCreate() {
             </Flex>
             <Divider />
 
+            <h3 className="mt-6 mb-4">Payment Details</h3>
+
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                Account Name
+              </FormLabel>
+              <Input
+                isRequired={true}
+                type="text"
+                name="account_name"
+                value={vendor?.account_name}
+                onChange={(e) =>
+                  setVendor({
+                    ...vendor,
+                    [e.target.name]: e.target.value,
+                  })
+                }
+                placeholder=""
+                className="max-w-md"
+                variant="main"
+                fontSize="sm"
+                ms={{ base: "0px", md: "0px" }}
+                mb="0"
+                fontWeight="500"
+                size="lg"
+              />
+            </Flex>
+
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                BSB
+              </FormLabel>
+              <Input
+                isRequired={true}
+                type="text"
+                name="bsb_code"
+                value={vendor?.bsb_code}
+                onChange={(e) =>
+                  setVendor({
+                    ...vendor,
+                    [e.target.name]: e.target.value,
+                  })
+                }
+                placeholder=""
+                className="max-w-md"
+                variant="main"
+                fontSize="sm"
+                ms={{ base: "0px", md: "0px" }}
+                mb="0"
+                fontWeight="500"
+                size="lg"
+              />
+            </Flex>
+
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                Account Number
+              </FormLabel>
+              <Input
+                isRequired={true}
+                type="text"
+                name="account_number"
+                value={vendor?.account_number}
+                onChange={(e) =>
+                  setVendor({
+                    ...vendor,
+                    [e.target.name]: e.target.value,
+                  })
+                }
+                placeholder=""
+                className="max-w-md"
+                variant="main"
+                fontSize="sm"
+                ms={{ base: "0px", md: "0px" }}
+                mb="0"
+                fontWeight="500"
+                size="lg"
+              />
+            </Flex>
+
+            <Flex alignItems="center" mb="16px" className="max-w-md">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color="textColor"
+              >
+                On Hold
+              </FormLabel>
+              <Switch
+                mt="auto"
+                mb="auto"
+                isChecked={vendor?.on_hold} // No need for `vendor?.on_hold || false`
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  setVendor((prevVendor) => ({
+                    ...prevVendor,
+                    on_hold: isChecked,
+                  }));
+                }}
+              />
+            </Flex>
+
+            <Divider />
+
             <h3 className="mt-6 mb-4">Rates</h3>
+
             <Flex alignItems="center" mb="16px">
               <FormLabel
                 display="flex"
@@ -487,10 +788,10 @@ function CompanyCreate() {
                 isRequired={true}
                 type="number"
                 name="lcl_rate"
-                value={company.lcl_rate}
+                value={vendor?.lcl_rate}
                 onChange={(e) =>
-                  setCompany({
-                    ...company,
+                  setVendor({
+                    ...vendor,
                     [e.target.name]: parseFloat(e.target.value),
                   })
                 }
@@ -504,6 +805,98 @@ function CompanyCreate() {
                 size="lg"
               />
             </Flex>
+            <Divider className="my-12" />
+
+            {/* Attachments */}
+            <Box mb="16px">
+              <h3 className="mb-5 mt-3">Attachments</h3>
+              <Flex width="100%" className="mb-6">
+                <FileInput
+                  entity="Job"
+                  entityId={vendor?.id}
+                  onTemporaryUpload={(_temporaryMedia) => {
+                    setTemporaryMedia(_temporaryMedia);
+                  }}
+                  isTemporary={true}
+                  defaulTemporaryFiles={temporaryMedia}
+                  description="Browse or drop your files here to upload"
+                  height="80px"
+                  bg="primary.100"
+                ></FileInput>
+              </Flex>
+
+              {/* foreach jobAttachments */}
+              {temporaryMedia.length >= 0 && (
+                <PaginationTable
+                  columns={attachmentColumns}
+                  data={temporaryMedia}
+                  onDelete={(mediaId) => {
+                    handleRemoveFromTemporaryMedia(mediaId);
+                  }}
+                />
+              )}
+            </Box>
+
+            <Divider className="my-12" />
+            <h3 className="mt-6 mb-4">Notifications</h3>
+            <Flex className="w-full" alignItems="center">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                Send POD
+              </FormLabel>
+
+              <RadioGroup
+                value={vendor?.is_pod_sendable ? "1" : "0"}
+                onChange={(e) => {
+                  setVendor({
+                    ...vendor,
+                    is_pod_sendable: e === "1" ? true : false,
+                  });
+                }}
+              >
+                <Stack direction="row" pt={3}>
+                  <Radio value="0">No</Radio>
+                  <Radio value="1" pl={6}>
+                    Yes
+                  </Radio>
+                </Stack>
+              </RadioGroup>
+            </Flex>
+            <Flex className="w-full" alignItems="center">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                Send Invoice
+              </FormLabel>
+
+              <RadioGroup
+                value={vendor?.is_invoice_sendable ? "1" : "0"}
+                onChange={(e) => {
+                  setVendor({
+                    ...vendor,
+                    is_invoice_sendable: e === "1" ? true : false,
+                  });
+                }}
+              >
+                <Stack direction="row" pt={3}>
+                  <Radio value="0">No</Radio>
+                  <Radio value="1" pl={6}>
+                    Yes
+                  </Radio>
+                </Stack>
+              </RadioGroup>
+            </Flex>
           </FormControl>
         </Grid>
       </Box>
@@ -511,4 +904,4 @@ function CompanyCreate() {
   );
 }
 
-export default CompanyCreate;
+export default VendorCreate;
