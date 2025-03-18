@@ -1,5 +1,6 @@
-// Chakra imports
+// External Imports
 import { useMutation, useQuery } from "@apollo/client";
+// Chakra UI Imports
 import {
   Box,
   Button,
@@ -10,6 +11,7 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
+// Local Imports
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
