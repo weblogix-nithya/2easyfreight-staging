@@ -536,6 +536,7 @@ type Job = {
   booked_by: string;
   //notes: string;
   job_category_id: number;
+  job_category_name: string;
   job_status_id: number;
   job_type_id: number;
   //decline_reason_id: number;
@@ -564,6 +565,8 @@ type Job = {
   //is_hand_unloading: boolean;
   //is_dangerous_goods: boolean;
   //is_tailgate_required: boolean;
+  transport_type: string;
+  transport_location: string;
   media: any[] | null;
   [key: string]:
     | string
@@ -583,6 +586,7 @@ export const defaultJob: Job = {
   booked_by: "",
   //notes: "",
   job_category_id: 1,
+  job_category_name: "",
   job_status_id: null,
   job_type_id: 1,
   //decline_reason_id: 0,
@@ -611,4 +615,6 @@ export const defaultJob: Job = {
   //is_dangerous_goods: false,
   //is_tailgate_required: false,
   media: [],
+  transport_type: "",
+  transport_location: ""
 };

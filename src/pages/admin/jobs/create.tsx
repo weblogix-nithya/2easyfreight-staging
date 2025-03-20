@@ -13,11 +13,14 @@ import {
   RadioGroup,
   SimpleGrid,
   Stack,
+  Text,
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
 import { faTrashCan } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import { Select } from "chakra-react-select";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
 import FileInput from "components/fileInput/FileInput";
@@ -351,7 +354,7 @@ function JobEdit() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: (data) => {
       /*toast({
         title: "Media updated",
@@ -697,7 +700,7 @@ function JobEdit() {
       });
       return false;
     }
-  
+
     if (jobDestinations.some((destination) => !destination.address)) {
       toast({
         title: "Delivery address is required.",
@@ -708,16 +711,130 @@ function JobEdit() {
       });
       return false;
     }
-  
+
     return true;
   };
-  
+
   const handleJobCreation = () => {
     if (!validateAddresses()) return;
-  
+
     setIsSaving(true);
     handleCreateJob();
   };
+
+  const logAllFormElements = () => {
+    const formValues = {
+      jobCategory: job.job_category_id,
+      job_category_name:job.job_category_name,
+      company: job.company_id,
+      customer: job.customer_id,
+      operatorPhone: customerSelected.phone_no,
+      operatorEmail: customerSelected.email,
+      additionalEmails: jobCcEmailTags,
+      date: jobDateAt,
+      readyBy: readyAt,
+      dropBy: dropAt,
+      timeslot: job.timeslot,
+      lastFreeDay: job.last_free_at,
+      type: job.job_type_id,
+      reference: job.reference_no,
+      bookedBy: job.booked_by,
+      quotedPrice: job.quoted_price,
+      adminNotes: job.admin_notes,
+      pickupAddress: pickUpDestination,
+      deliveryAddresses: jobDestinations,
+      jobItems: jobItems,
+      attachments: temporaryMedia,
+      customerNotes: job.customer_notes,
+      baseNotes: job.base_notes,
+      transportType: job.transportType,
+      location: job.location,
+      inboundConnect: job.is_inbound_connect,
+      handUnload: job.is_hand_unloading,
+      dangerousGoods: job.is_dangerous_goods,
+      tailLiftRequired: job.is_tailgate_required,
+      buttonResponse: job.buttonResponse,
+    };
+  
+    console.log("All Form Elements and Their Values:", formValues);
+    
+  };
+  
+  
+  const sendFreightData = async () => {
+    const apiUrl = "http://2easyfreight.weblogix.com.au/wp-json/custom-api/v1/calculate-price";
+  
+    const payload = {
+      freight_type: "Air Freight",
+      transport_type: "import",
+      state: "Victoria",
+      state_code: "VIC",
+      job_pickup_address: {
+        state: "Victoria",
+        suburb: "Melbourne Airport",
+        postcode: "3045",
+        address: "door 21/47 Watson Drive, Melbourne Airport Victoria 3045, Australia"
+      },
+      job_destination_address: {
+        state: "Victoria",
+        suburb: "Tullamarine",
+        postcode: "3043",
+        address: "130 Melrose Drive, Tullamarine Victoria 3043, Australia"
+      },
+      pickup_time: { ready_by: "2025-03-20T08:00:00Z" },
+      delivery_time: { drop_by: "2025-03-20T18:00:00Z" },
+      surcharges: {
+        hand_unload: true,
+        dangerous_goods: true,
+        // time_slot: null,
+        // tail_lift: null,
+        // stackable: null
+      },
+      job_items: [
+        {
+          id: "29104",
+          name: "",
+          notes: "",
+          quantity: 4,
+          volume: 0.14,
+          weight: 67,
+          dimension_height: 0.39,
+          dimension_width: 0.39,
+          dimension_depth: 0.23,
+          // job_destination: null,
+          item_type: { id: "1", name: "Box" },
+          created_at: "2025-03-18 10:16:17",
+          updated_at: "2025-03-19 11:51:07"
+        },
+        {
+          id: "29105",
+          name: "",
+          notes: "",
+          quantity: 1,
+          volume: 0.06,
+          weight: 0,
+          dimension_height: 1.08,
+          dimension_width: 0.24,
+          dimension_depth: 0.22,
+          // job_destination: null,
+          item_type: { id: "1", name: "Box" },
+          created_at: "2025-03-18 10:16:17",
+          updated_at: "2025-03-19 11:51:07"
+        }
+      ]
+    };
+  
+    try {
+      const response = await axios.post(apiUrl, payload, {
+        headers: { "Content-Type": "application/json" }
+      });
+  
+      console.log("Response Data:", response.data);
+    } catch (error) {
+      // console.error("Error:", error.response?.data || error.message);
+    }
+  };
+
   return (
     <AdminLayout>
       <Box
@@ -755,9 +872,13 @@ function JobEdit() {
                     placeholder=""
                     onChange={(e) => {
                       const selectedCategory = e.value;
+                      const selectedCategoryName = jobCategories.find(
+                        (job_category) => job_category.value === selectedCategory,
+                      )?.label;
                       setJob({
                         ...job,
                         job_category_id: selectedCategory || null,
+                        job_category_name: selectedCategoryName || null, 
                       });
                     }}
                   />
@@ -816,7 +937,7 @@ function JobEdit() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -831,7 +952,7 @@ function JobEdit() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -881,11 +1002,11 @@ function JobEdit() {
                       setIsSameDayJob(today === e.target.value);
                       setIsTomorrowJob(
                         new Date(e.target.value).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
+                        new Date(
+                          new Date(today).setDate(
+                            new Date(today).getDate() + 1,
+                          ),
+                        ).toDateString(),
                       );
                     }}
                   />
@@ -1238,155 +1359,323 @@ function JobEdit() {
                       />
                     )}
                   </Box>
+                  {/* Transport Type Select */}
+                  <CustomInputField
+                    key="transportTypeKey"
+                    isSelect={true}
+                    optionsArray={[
+                      { value: "import", label: "Import" },
+                      { value: "export", label: "Export" },
+                    ]}
+                    label="Transport Type"
+                    name="transportType"
+                    value={[
+                      { value: "import", label: "Import" },
+                      { value: "export", label: "Export" },
+                    ].find((_e) => _e.value === job.transportType)}
+                    placeholder=""
+                    onChange={(e) => {
+                      setJob({ ...job, transportType: e.value });
+                    }}
+                  />
+
+                  {/* Location Select */}
+                  <CustomInputField
+                    key="locationKey"
+                    isSelect={true}
+                    optionsArray={[
+                      { value: "VIC", label: "VIC - Victoria" },
+                      { value: "QLD", label: "QLD - Queensland" },
+                    ]}
+                    label="Location"
+                    name="location"
+                    value={[
+                      { value: "VIC", label: "VIC - Victoria" },
+                      { value: "QLD", label: "QLD - Queensland" },
+                    ].find((_e) => _e.value === job.location)}
+                    placeholder=""
+                    onChange={(e) => {
+                      setJob({ ...job, location: e.value });
+                    }}
+                  />
+
+
 
                   <Box mb="16px">
-                    <Flex alignItems="center" width="100%" pt={7}>
-                      <SimpleGrid columns={{ sm: 1 }} width="100%">
+                    <h3 className="mb-5 mt-3">Additional Info</h3>
+
+                    <Box mb="16px">
+                      <CustomInputField
+                        label="Customer Notes"
+                        placeholder=""
+                        extra="Visible to driver"
+                        isTextArea={true}
+                        name="customer_notes"
+                        value={job.customer_notes}
+                        onChange={(e) =>
+                          setJob({
+                            ...job,
+                            [e.target.name]: e.target.value,
+                          })
+                        }
+                      />
+                      {isAdmin && (
+                        <CustomInputField
+                          isTextArea={true}
+                          label="Base notes"
+                          placeholder=""
+                          name="base_notes"
+                          value={job.base_notes}
+                          onChange={(e) =>
+                            setJob({
+                              ...job,
+                              [e.target.name]: e.target.value,
+                            })
+                          }
+                        />
+                      )}
+                    </Box>
+                    {/* Transport Type Select */}
+                    <CustomInputField
+                      key="transportTypeKey"
+                      isSelect={true}
+                      optionsArray={[
+                        { value: "import", label: "Import" },
+                        { value: "export", label: "Export" },
+                      ]}
+                      label="Transport Type"
+                      name="transportType"
+                      value={[
+                        { value: "import", label: "Import" },
+                        { value: "export", label: "Export" },
+                      ].find((_e) => _e.value === job.transportType)}
+                      placeholder=""
+                      onChange={(e) => {
+                        setJob({ ...job, transportType: e.value });
+                      }}
+                    />
+
+                    {/* Location Select */}
+                    <CustomInputField
+                      key="locationKey"
+                      isSelect={true}
+                      optionsArray={[
+                        { value: "VIC", label: "VIC - Victoria" },
+                        { value: "QLD", label: "QLD - Queensland" },
+                      ]}
+                      label="Location"
+                      name="location"
+                      value={[
+                        { value: "VIC", label: "VIC - Victoria" },
+                        { value: "QLD", label: "QLD - Queensland" },
+                      ].find((_e) => _e.value === job.location)}
+                      placeholder=""
+                      onChange={(e) => {
+                        setJob({ ...job, location: e.value });
+                      }}
+                    />
+
+                    <Box mb="16px">
+                      <SimpleGrid columns={{ sm: 2, md: 2 }} spacing={10} width="100%">
                         <GridItem>
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
-                          >
-                            Does this job require a timeslot booking through
-                            Inbound Connect?
-                          </FormLabel>
+                          <Flex alignItems="center" width="100%" pt={7}>
+                            <FormLabel
+                              display="flex"
+                              mb="0"
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Does this job require a timeslot booking through Inbound Connect?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_inbound_connect: e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row" pt={3}>
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
+
+                          <Flex alignItems="center" width="100%" pt={7}>
+                            <FormLabel
+                              display="flex"
+                              mb="0"
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Does this job require hand unloading?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_hand_unloading: e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row" pt={3}>
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
+
+                          <Flex alignItems="center" width="100%" pt={7}>
+                            <FormLabel
+                              display="flex"
+                              mb="0"
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Are there dangerous goods being transported?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_dangerous_goods: e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row" pt={3}>
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
+                          <Flex alignItems="center" width="100%" pt={7}>
+                            <FormLabel
+                              display="flex"
+                              mb="0"
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Is a Tail Lift vehicle required?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_tailgate_required: e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row" pt={3}>
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
                         </GridItem>
 
                         <GridItem>
-                          <RadioGroup
-                            defaultValue={"0"}
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                is_inbound_connect: e === "1" ? true : false,
-                              });
-                            }}
-                          >
-                            <Stack direction="row" pt={3}>
-                              <Radio value="0">No</Radio>
-                              <Radio value="1" pl={6}>
-                                Yes
-                              </Radio>
-                            </Stack>
-                          </RadioGroup>
+                          <Flex height="100%" justifyContent="flex-start" pt={7} direction="column">
+                            <Button
+                              bg="#3b82f6" /* Match the blue color */
+                              color="white"
+                              _hover={{
+                                bg: "#2563eb", // Slightly darker blue for hover
+                              }}
+                              _active={{
+                                bg: "#2563eb", // Active state
+                                transform: "scale(0.95)", // Slightly shrink button when activated
+                              }}
+                              borderRadius="8px" /* Rounded corners */
+                              px={6}
+                              py={3}
+                              fontWeight="500"
+                              fontSize="sm"
+                              onClick={() => {
+                                logAllFormElements()
+                                // sendFreightData()
+                                // Handle button click response here
+                                // For demonstration, setting a mock response
+                                setJob({
+                                  ...job,
+                                  buttonResponse: {
+                                    state: "Victoria",
+                                    state_code: "VIC",
+                                    job_pickup_address: {
+                                      state: "Victoria",
+                                      suburb: "Melbourne Airport",
+                                      postcode: "3045",
+                                      address: "door 21/47 Watson Drive, Melbourne Airport Victoria 3045, Australia"
+                                    },
+                                    job_destination_address: {
+                                      state: "Victoria",
+                                      suburb: "Tullamarine",
+                                      postcode: "3043",
+                                      address: "130 Melrose Drive, Tullamarine Victoria 3043, Australia"
+                                    },
+                                    cbm_auto: 0.200000000000000011102230246251565404236316680908203125,
+                                    total_weight: 268,
+                                    freight: 9.8499999999999996447286321199499070644378662109375,
+                                    fuel: 1.479999999999999982236431605997495353221893310546875,
+                                    hand_unload: 20,
+                                    dangerous_goods: 30,
+                                    stackable: 0,
+                                    total: 61.32000000000000028421709430404007434844970703125
+                                  }
+                                });
+                              }}
+                            >
+                              Get A Quote
+                            </Button>
+                            {job.buttonResponse && (
+                              <Box mt={4}>
+                                <Stack spacing={3}>
+                                  {/* <Text fontSize="sm" fontWeight="500">State: {job.buttonResponse.state}</Text>
+              <Text fontSize="sm" fontWeight="500">State Code: {job.buttonResponse.state_code}</Text>
+              <Text fontSize="sm" fontWeight="500">Job Pickup Address: {job.buttonResponse.job_pickup_address.address}</Text>
+              <Text fontSize="sm" fontWeight="500">Job Destination Address: {job.buttonResponse.job_destination_address.address}</Text> */}
+                                  <Text fontSize="sm" fontWeight="500">CBM Auto: {job.buttonResponse.cbm_auto}</Text>
+                                  <Text fontSize="sm" fontWeight="500">Total Weight: {job.buttonResponse.total_weight}</Text>
+                                  <Text fontSize="sm" fontWeight="500">Freight: {job.buttonResponse.freight}</Text>
+                                  <Text fontSize="sm" fontWeight="500">Fuel: {job.buttonResponse.fuel}</Text>
+                                  <Text fontSize="sm" fontWeight="500">Hand Unload: {job.buttonResponse.hand_unload}</Text>
+                                  <Text fontSize="sm" fontWeight="500">Dangerous Goods: {job.buttonResponse.dangerous_goods}</Text>
+                                  <Text fontSize="sm" fontWeight="500">Stackable: {job.buttonResponse.stackable}</Text>
+                                  <Text fontSize="sm" fontWeight="500">Total: {job.buttonResponse.total}</Text>
+                                </Stack>
+                              </Box>
+                            )}
+                          </Flex>
                         </GridItem>
                       </SimpleGrid>
-                    </Flex>
 
-                    <Flex alignItems="center" width="100%" pt={7}>
-                      <SimpleGrid columns={{ sm: 1 }} width="100%">
-                        <GridItem>
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
-                          >
-                            Does this job require hand unloading?
-                          </FormLabel>
-                        </GridItem>
-
-                        <GridItem>
-                          <RadioGroup
-                            defaultValue={"0"}
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                is_hand_unloading: e === "1" ? true : false,
-                              });
-                            }}
-                          >
-                            <Stack direction="row" pt={3}>
-                              <Radio value="0">No</Radio>
-                              <Radio value="1" pl={6}>
-                                Yes
-                              </Radio>
-                            </Stack>
-                          </RadioGroup>
-                        </GridItem>
-                      </SimpleGrid>
-                    </Flex>
-
-                    <Flex alignItems="center" width="100%" pt={7}>
-                      <SimpleGrid columns={{ sm: 1 }} width="100%">
-                        <GridItem>
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
-                          >
-                            Are there dangerous goods being transported?
-                          </FormLabel>
-                        </GridItem>
-
-                        <GridItem>
-                          <RadioGroup
-                            defaultValue={"0"}
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                is_dangerous_goods: e === "1" ? true : false,
-                              });
-                            }}
-                          >
-                            <Stack direction="row" pt={3}>
-                              <Radio value="0">No</Radio>
-                              <Radio value="1" pl={6}>
-                                Yes
-                              </Radio>
-                            </Stack>
-                          </RadioGroup>
-                        </GridItem>
-                      </SimpleGrid>
-                    </Flex>
-                    <Flex alignItems="center" width="100%" pt={7}>
-                      <SimpleGrid columns={{ sm: 1 }} width="100%">
-                        <GridItem>
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
-                          >
-                            Is a Tail Lift vehicle required?
-                          </FormLabel>
-                        </GridItem>
-
-                        <GridItem>
-                          <RadioGroup
-                            defaultValue={"0"}
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                is_tailgate_required: e === "1" ? true : false,
-                              });
-                            }}
-                          >
-                            <Stack direction="row" pt={3}>
-                              <Radio value="0">No</Radio>
-                              <Radio value="1" pl={6}>
-                                Yes
-                              </Radio>
-                            </Stack>
-                          </RadioGroup>
-                        </GridItem>
-                      </SimpleGrid>
-                    </Flex>
+                      {/* Display response of the button click */}
+                    </Box>
                   </Box>
+
                 </Box>
 
                 <Divider className="mt-12 mb-6" />
 
                 {/* Create Job Button */}
                 <Flex alignItems="center" className="mb-6">
-                {/* <Button
+                  {/* <Button
                   variant="primary"
                   onClick={() => {
                     setIsSaving(true);
@@ -1396,9 +1685,9 @@ function JobEdit() {
                 >
                   Create Job
                 </Button> */}
-                <Button variant="primary" onClick={handleJobCreation} isDisabled={isSaving}>
-                  Create Job
-                </Button>
+                  <Button variant="primary" onClick={handleJobCreation} isDisabled={isSaving}>
+                    Create Job
+                  </Button>
                 </Flex>
               </FormControl>
             </Grid>
