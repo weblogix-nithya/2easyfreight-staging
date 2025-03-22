@@ -17,6 +17,7 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
+import { t } from "@chakra-ui/styled-system/dist/types/utils";
 import { faTrashCan } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
@@ -38,6 +39,7 @@ import {
   defaultJob,
   SEND_CONSIGNMENT_DOCKET,
 } from "graphql/job";
+import defaultJobQuoteData from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import { CREATE_JOB_CC_EMAIL_MUTATION } from "graphql/jobCcEmails";
 import {
@@ -73,7 +75,7 @@ function JobEdit() {
     (state: RootState) => state.user,
   );
 
-  const textColor = useColorModeValue("navy.700", "white");
+  // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
   const [customerSelected, setCustomerSelected] = useState(defaultCustomer);
@@ -104,6 +106,7 @@ function JobEdit() {
   const [isSameDayJob, setIsSameDayJob] = useState(true);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
+  const [refinedData, setRefinedData] = useState(defaultJobQuoteData);
 
   let re =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -250,6 +253,8 @@ function JobEdit() {
         ...job,
         id: undefined,
         job_status_id: 1,
+        transport_type: "",
+        transport_location: "",
         media: undefined,
       },
     },
@@ -354,7 +359,7 @@ function JobEdit() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: (data) => {
       /*toast({
         title: "Media updated",
@@ -704,7 +709,8 @@ function JobEdit() {
     if (jobDestinations.some((destination) => !destination.address)) {
       toast({
         title: "Delivery address is required.",
-        description: "Please ensure all delivery addresses are properly entered.",
+        description:
+          "Please ensure all delivery addresses are properly entered.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -723,113 +729,155 @@ function JobEdit() {
   };
 
   const logAllFormElements = () => {
-    const formValues = {
-      jobCategory: job.job_category_id,
-      job_category_name:job.job_category_name,
-      company: job.company_id,
-      customer: job.customer_id,
-      operatorPhone: customerSelected.phone_no,
-      operatorEmail: customerSelected.email,
-      additionalEmails: jobCcEmailTags,
-      date: jobDateAt,
-      readyBy: readyAt,
-      dropBy: dropAt,
-      timeslot: job.timeslot,
-      lastFreeDay: job.last_free_at,
-      type: job.job_type_id,
-      reference: job.reference_no,
-      bookedBy: job.booked_by,
-      quotedPrice: job.quoted_price,
-      adminNotes: job.admin_notes,
-      pickupAddress: pickUpDestination,
-      deliveryAddresses: jobDestinations,
-      jobItems: jobItems,
-      attachments: temporaryMedia,
-      customerNotes: job.customer_notes,
-      baseNotes: job.base_notes,
-      transportType: job.transportType,
-      location: job.location,
-      inboundConnect: job.is_inbound_connect,
-      handUnload: job.is_hand_unloading,
-      dangerousGoods: job.is_dangerous_goods,
-      tailLiftRequired: job.is_tailgate_required,
-      buttonResponse: job.buttonResponse,
-    };
-  
-    console.log("All Form Elements and Their Values:", formValues);
-    
-  };
-  
-  
-  const sendFreightData = async () => {
-    const apiUrl = "http://2easyfreight.weblogix.com.au/wp-json/custom-api/v1/calculate-price";
-  
+    if (!validateAddresses()) return;
+
+    const today = new Date().toISOString(); // Gets current date and time in ISO format
+
+    const jobDestination1 =
+      jobDestinations.length > 0
+        ? {
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
+        : null;
+
     const payload = {
-      freight_type: "Air Freight",
-      transport_type: "import",
-      state: "Victoria",
-      state_code: "VIC",
+      freight_type: refinedData.freight_type,
+      transport_type: job.transport_type,
+      state: refinedData.state,
+      state_code: refinedData.state_code,
       job_pickup_address: {
-        state: "Victoria",
-        suburb: "Melbourne Airport",
-        postcode: "3045",
-        address: "door 21/47 Watson Drive, Melbourne Airport Victoria 3045, Australia"
+        state: pickUpDestination?.address_state,
+        suburb: pickUpDestination?.address_city,
+        postcode: pickUpDestination?.address_postal_code,
+        address: pickUpDestination?.address,
       },
-      job_destination_address: {
-        state: "Victoria",
-        suburb: "Tullamarine",
-        postcode: "3043",
-        address: "130 Melrose Drive, Tullamarine Victoria 3043, Australia"
+      job_destination_address:
+        jobDestinations.length > 0
+          ? {
+              state: jobDestinations[0]?.address_state,
+              suburb: jobDestinations[0]?.address_city,
+              postcode: jobDestinations[0]?.address_postal_code,
+              address: jobDestinations[0]?.address,
+            }
+          : {},
+      pickup_time: {
+        ready_by: readyAt,
       },
-      pickup_time: { ready_by: "2025-03-20T08:00:00Z" },
-      delivery_time: { drop_by: "2025-03-20T18:00:00Z" },
+      delivery_time: {
+        drop_by: dropAt,
+      },
       surcharges: {
-        hand_unload: true,
-        dangerous_goods: true,
-        // time_slot: null,
-        // tail_lift: null,
-        // stackable: null
+        hand_unload: job.is_hand_unloading || false,
+        dangerous_goods: job.is_dangerous_goods || false,
+        time_slot: job.timeslot || null,
+        tail_lift: job.is_tailgate_required || null,
+        stackable: false, // If applicable, update this
       },
-      job_items: [
-        {
-          id: "29104",
-          name: "",
-          notes: "",
-          quantity: 4,
-          volume: 0.14,
-          weight: 67,
-          dimension_height: 0.39,
-          dimension_width: 0.39,
-          dimension_depth: 0.23,
-          // job_destination: null,
-          item_type: { id: "1", name: "Box" },
-          created_at: "2025-03-18 10:16:17",
-          updated_at: "2025-03-19 11:51:07"
+      job_items: jobItems.map((item) => ({
+        id: item.id,
+        name: item.name || "",
+        notes: item.notes || "",
+        quantity: item.quantity,
+        volume: item.volume,
+        weight: item.weight,
+        dimension_height: item.dimension_height,
+        dimension_width: item.dimension_width,
+        dimension_depth: item.dimension_depth,
+        job_destination: jobDestination1 || null,
+        item_type: {
+          id: item.item_type?.id || "",
+          name: item.item_type?.name || "",
         },
-        {
-          id: "29105",
-          name: "",
-          notes: "",
-          quantity: 1,
-          volume: 0.06,
-          weight: 0,
-          dimension_height: 1.08,
-          dimension_width: 0.24,
-          dimension_depth: 0.22,
-          // job_destination: null,
-          item_type: { id: "1", name: "Box" },
-          created_at: "2025-03-18 10:16:17",
-          updated_at: "2025-03-19 11:51:07"
-        }
-      ]
+        created_at: refinedData.created_at || today,
+        // updated_at: item.updated_at || today,
+      })),
     };
-  
+
+    console.log(payload);
+  };
+
+  const sendFreightData = async () => {
+    const apiUrl =process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL
+
+    if (!validateAddresses()) return;
+
+    const today = new Date().toISOString(); // Gets current date and time in ISO format
+
+    const jobDestination1 =
+      jobDestinations.length > 0
+        ? {
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
+        : null;
+
+    const payload = {
+      freight_type: refinedData.freight_type,
+      transport_type: job.transport_type,
+      state: refinedData.state,
+      state_code: refinedData.state_code,
+      job_pickup_address: {
+        state: pickUpDestination?.address_state,
+        suburb: pickUpDestination?.address_city,
+        postcode: pickUpDestination?.address_postal_code,
+        address: pickUpDestination?.address,
+      },
+      job_destination_address:
+        jobDestinations.length > 0
+          ? {
+              state: jobDestinations[0]?.address_state,
+              suburb: jobDestinations[0]?.address_city,
+              postcode: jobDestinations[0]?.address_postal_code,
+              address: jobDestinations[0]?.address,
+            }
+          : {},
+      pickup_time: {
+        ready_by: readyAt,
+      },
+      delivery_time: {
+        drop_by: dropAt,
+      },
+      surcharges: {
+        hand_unload: job.is_hand_unloading || false,
+        dangerous_goods: job.is_dangerous_goods || false,
+        time_slot: job.timeslot || null,
+        tail_lift: job.is_tailgate_required || null,
+        stackable: false, // If applicable, update this
+      },
+      job_items: jobItems.map((item) => ({
+        id: item.id,
+        name: item.name || "",
+        notes: item.notes || "",
+        quantity: item.quantity,
+        volume: item.volume,
+        weight: item.weight,
+        dimension_height: item.dimension_height,
+        dimension_width: item.dimension_width,
+        dimension_depth: item.dimension_depth,
+        job_destination: jobDestination1 || null,
+        item_type: {
+          id: item.item_type?.id || "",
+          name: item.item_type?.name || "",
+        },
+        created_at: refinedData.created_at || today,
+        // updated_at: item.updated_at || today,
+      })),
+    };
+
+    console.log(payload);
+
     try {
       const response = await axios.post(apiUrl, payload, {
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "applic  ation/json" },
       });
-  
+
       console.log("Response Data:", response.data);
+
     } catch (error) {
       // console.error("Error:", error.response?.data || error.message);
     }
@@ -873,13 +921,20 @@ function JobEdit() {
                     onChange={(e) => {
                       const selectedCategory = e.value;
                       const selectedCategoryName = jobCategories.find(
-                        (job_category) => job_category.value === selectedCategory,
+                        (job_category) =>
+                          job_category.value === selectedCategory,
                       )?.label;
+
                       setJob({
                         ...job,
                         job_category_id: selectedCategory || null,
-                        job_category_name: selectedCategoryName || null, 
                       });
+
+                      setRefinedData({
+                        ...refinedData,
+                        freight_type: selectedCategoryName || null,
+                      });
+                      console.log(refinedData, "n");
                     }}
                   />
                   {!isCompany && (
@@ -937,7 +992,7 @@ function JobEdit() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (e) => { }
+                      (e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -952,7 +1007,7 @@ function JobEdit() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (e) => { }
+                      (e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1002,11 +1057,11 @@ function JobEdit() {
                       setIsSameDayJob(today === e.target.value);
                       setIsTomorrowJob(
                         new Date(e.target.value).toDateString() ===
-                        new Date(
-                          new Date(today).setDate(
-                            new Date(today).getDate() + 1,
-                          ),
-                        ).toDateString(),
+                          new Date(
+                            new Date(today).setDate(
+                              new Date(today).getDate() + 1,
+                            ),
+                          ).toDateString(),
                       );
                     }}
                   />
@@ -1361,21 +1416,25 @@ function JobEdit() {
                   </Box>
                   {/* Transport Type Select */}
                   <CustomInputField
-                    key="transportTypeKey"
+                    key="transport_typeKey"
                     isSelect={true}
                     optionsArray={[
                       { value: "import", label: "Import" },
                       { value: "export", label: "Export" },
                     ]}
                     label="Transport Type"
-                    name="transportType"
+                    name="transport_type"
                     value={[
                       { value: "import", label: "Import" },
                       { value: "export", label: "Export" },
-                    ].find((_e) => _e.value === job.transportType)}
+                    ].find((_e) => _e.value === job.transport_type)}
                     placeholder=""
                     onChange={(e) => {
-                      setJob({ ...job, transportType: e.value });
+                      setJob({ ...job, transport_type: e.value });
+                      setRefinedData({
+                        ...refinedData,
+                        transport_type: e.value,
+                      });
                     }}
                   />
 
@@ -1384,109 +1443,50 @@ function JobEdit() {
                     key="locationKey"
                     isSelect={true}
                     optionsArray={[
-                      { value: "VIC", label: "VIC - Victoria" },
-                      { value: "QLD", label: "QLD - Queensland" },
+                      { value: "VIC", label: "Victoria" },
+                      { value: "QLD", label: "Queensland" },
                     ]}
                     label="Location"
-                    name="location"
+                    name="transport_location"
                     value={[
-                      { value: "VIC", label: "VIC - Victoria" },
-                      { value: "QLD", label: "QLD - Queensland" },
-                    ].find((_e) => _e.value === job.location)}
+                      { value: "VIC", label: "Victoria" },
+                      { value: "QLD", label: "Queensland" },
+                    ].find((_e) => _e.value === job.transport_location)}
                     placeholder=""
                     onChange={(e) => {
-                      setJob({ ...job, location: e.value });
+                      const newState = {
+                        ...refinedData,
+                        state_code: e.value,
+                        state: e.label,
+                      };
+                      setJob({ ...job, transport_location: e.value });
+                      setRefinedData(newState);
                     }}
                   />
 
-
-
                   <Box mb="16px">
-                    <h3 className="mb-5 mt-3">Additional Info</h3>
-
-                    <Box mb="16px">
-                      <CustomInputField
-                        label="Customer Notes"
-                        placeholder=""
-                        extra="Visible to driver"
-                        isTextArea={true}
-                        name="customer_notes"
-                        value={job.customer_notes}
-                        onChange={(e) =>
-                          setJob({
-                            ...job,
-                            [e.target.name]: e.target.value,
-                          })
-                        }
-                      />
-                      {isAdmin && (
-                        <CustomInputField
-                          isTextArea={true}
-                          label="Base notes"
-                          placeholder=""
-                          name="base_notes"
-                          value={job.base_notes}
-                          onChange={(e) =>
-                            setJob({
-                              ...job,
-                              [e.target.name]: e.target.value,
-                            })
-                          }
-                        />
-                      )}
-                    </Box>
-                    {/* Transport Type Select */}
-                    <CustomInputField
-                      key="transportTypeKey"
-                      isSelect={true}
-                      optionsArray={[
-                        { value: "import", label: "Import" },
-                        { value: "export", label: "Export" },
-                      ]}
-                      label="Transport Type"
-                      name="transportType"
-                      value={[
-                        { value: "import", label: "Import" },
-                        { value: "export", label: "Export" },
-                      ].find((_e) => _e.value === job.transportType)}
-                      placeholder=""
-                      onChange={(e) => {
-                        setJob({ ...job, transportType: e.value });
-                      }}
-                    />
-
-                    {/* Location Select */}
-                    <CustomInputField
-                      key="locationKey"
-                      isSelect={true}
-                      optionsArray={[
-                        { value: "VIC", label: "VIC - Victoria" },
-                        { value: "QLD", label: "QLD - Queensland" },
-                      ]}
-                      label="Location"
-                      name="location"
-                      value={[
-                        { value: "VIC", label: "VIC - Victoria" },
-                        { value: "QLD", label: "QLD - Queensland" },
-                      ].find((_e) => _e.value === job.location)}
-                      placeholder=""
-                      onChange={(e) => {
-                        setJob({ ...job, location: e.value });
-                      }}
-                    />
-
-                    <Box mb="16px">
-                      <SimpleGrid columns={{ sm: 2, md: 2 }} spacing={10} width="100%">
+                    <Flex alignItems="center" width="100%" pt={7}>
+                      <SimpleGrid
+                        columns={{ sm: 2, md: 2 }}
+                        spacing={10}
+                        width="100%"
+                      >
                         <GridItem>
-                          <Flex alignItems="center" width="100%" pt={7}>
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                          >
                             <FormLabel
                               display="flex"
-                              mb="0"
+                              // mb={2}  // Added margin-bottom for spacing
                               fontSize="sm"
                               fontWeight="500"
                               _hover={{ cursor: "pointer" }}
+                              pr={3}
                             >
-                              Does this job require a timeslot booking through Inbound Connect?
+                              Does this job require a timeslot booking through
+                              Inbound Connect?
                             </FormLabel>
                             <RadioGroup
                               defaultValue={"0"}
@@ -1497,7 +1497,7 @@ function JobEdit() {
                                 });
                               }}
                             >
-                              <Stack direction="row" pt={3}>
+                              <Stack direction="row">
                                 <Radio value="0">No</Radio>
                                 <Radio value="1" pl={6}>
                                   Yes
@@ -1506,10 +1506,15 @@ function JobEdit() {
                             </RadioGroup>
                           </Flex>
 
-                          <Flex alignItems="center" width="100%" pt={7}>
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                            pt={7}
+                          >
                             <FormLabel
                               display="flex"
-                              mb="0"
+                              mb={2} // Added margin-bottom for spacing
                               fontSize="sm"
                               fontWeight="500"
                               _hover={{ cursor: "pointer" }}
@@ -1525,7 +1530,7 @@ function JobEdit() {
                                 });
                               }}
                             >
-                              <Stack direction="row" pt={3}>
+                              <Stack direction="row">
                                 <Radio value="0">No</Radio>
                                 <Radio value="1" pl={6}>
                                   Yes
@@ -1534,10 +1539,15 @@ function JobEdit() {
                             </RadioGroup>
                           </Flex>
 
-                          <Flex alignItems="center" width="100%" pt={7}>
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                            pt={7}
+                          >
                             <FormLabel
                               display="flex"
-                              mb="0"
+                              mb={2} // Added margin-bottom for spacing
                               fontSize="sm"
                               fontWeight="500"
                               _hover={{ cursor: "pointer" }}
@@ -1553,7 +1563,7 @@ function JobEdit() {
                                 });
                               }}
                             >
-                              <Stack direction="row" pt={3}>
+                              <Stack direction="row">
                                 <Radio value="0">No</Radio>
                                 <Radio value="1" pl={6}>
                                   Yes
@@ -1561,10 +1571,16 @@ function JobEdit() {
                               </Stack>
                             </RadioGroup>
                           </Flex>
-                          <Flex alignItems="center" width="100%" pt={7}>
+
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                            pt={7}
+                          >
                             <FormLabel
                               display="flex"
-                              mb="0"
+                              mb={2} // Added margin-bottom for spacing
                               fontSize="sm"
                               fontWeight="500"
                               _hover={{ cursor: "pointer" }}
@@ -1576,11 +1592,12 @@ function JobEdit() {
                               onChange={(e) => {
                                 setJob({
                                   ...job,
-                                  is_tailgate_required: e === "1" ? true : false,
+                                  is_tailgate_required:
+                                    e === "1" ? true : false,
                                 });
                               }}
                             >
-                              <Stack direction="row" pt={3}>
+                              <Stack direction="row">
                                 <Radio value="0">No</Radio>
                                 <Radio value="1" pl={6}>
                                   Yes
@@ -1591,7 +1608,12 @@ function JobEdit() {
                         </GridItem>
 
                         <GridItem>
-                          <Flex height="100%" justifyContent="flex-start" pt={7} direction="column">
+                          <Flex
+                            height="100%"
+                            justifyContent="flex-start"
+                            pt={7}
+                            direction="column"
+                          >
                             <Button
                               bg="#3b82f6" /* Match the blue color */
                               color="white"
@@ -1608,37 +1630,39 @@ function JobEdit() {
                               fontWeight="500"
                               fontSize="sm"
                               onClick={() => {
-                                logAllFormElements()
-                                // sendFreightData()
+                                // logAllFormElements();
+                                sendFreightData()
                                 // Handle button click response here
                                 // For demonstration, setting a mock response
-                                setJob({
-                                  ...job,
-                                  buttonResponse: {
-                                    state: "Victoria",
-                                    state_code: "VIC",
-                                    job_pickup_address: {
-                                      state: "Victoria",
-                                      suburb: "Melbourne Airport",
-                                      postcode: "3045",
-                                      address: "door 21/47 Watson Drive, Melbourne Airport Victoria 3045, Australia"
-                                    },
-                                    job_destination_address: {
-                                      state: "Victoria",
-                                      suburb: "Tullamarine",
-                                      postcode: "3043",
-                                      address: "130 Melrose Drive, Tullamarine Victoria 3043, Australia"
-                                    },
-                                    cbm_auto: 0.200000000000000011102230246251565404236316680908203125,
-                                    total_weight: 268,
-                                    freight: 9.8499999999999996447286321199499070644378662109375,
-                                    fuel: 1.479999999999999982236431605997495353221893310546875,
-                                    hand_unload: 20,
-                                    dangerous_goods: 30,
-                                    stackable: 0,
-                                    total: 61.32000000000000028421709430404007434844970703125
-                                  }
-                                });
+                                // setJob({
+                                //   ...job,
+                                //   buttonResponse: {
+                                //     state: "Victoria",
+                                //     state_code: "VIC",
+                                //     job_pickup_address: {
+                                //       state: "Victoria",
+                                //       suburb: "Melbourne Airport",
+                                //       postcode: "3045",
+                                //       address:
+                                //         "door 21/47 Watson Drive, Melbourne Airport Victoria 3045, Australia",
+                                //     },
+                                //     job_destination_address: {
+                                //       state: "Victoria",
+                                //       suburb: "Tullamarine",
+                                //       postcode: "3043",
+                                //       address:
+                                //         "130 Melrose Drive, Tullamarine Victoria 3043, Australia",
+                                //     },
+                                //     cbm_auto: 0.200000000000000011102230246251565404236316680908203125,
+                                //     total_weight: 268,
+                                //     freight: 9.8499999999999996447286321199499070644378662109375,
+                                //     fuel: 1.479999999999999982236431605997495353221893310546875,
+                                //     hand_unload: 20,
+                                //     dangerous_goods: 30,
+                                //     stackable: 0,
+                                //     total: 61.32000000000000028421709430404007434844970703125,
+                                //   },
+                                // });
                               }}
                             >
                               Get A Quote
@@ -1650,25 +1674,42 @@ function JobEdit() {
               <Text fontSize="sm" fontWeight="500">State Code: {job.buttonResponse.state_code}</Text>
               <Text fontSize="sm" fontWeight="500">Job Pickup Address: {job.buttonResponse.job_pickup_address.address}</Text>
               <Text fontSize="sm" fontWeight="500">Job Destination Address: {job.buttonResponse.job_destination_address.address}</Text> */}
-                                  <Text fontSize="sm" fontWeight="500">CBM Auto: {job.buttonResponse.cbm_auto}</Text>
-                                  <Text fontSize="sm" fontWeight="500">Total Weight: {job.buttonResponse.total_weight}</Text>
-                                  <Text fontSize="sm" fontWeight="500">Freight: {job.buttonResponse.freight}</Text>
-                                  <Text fontSize="sm" fontWeight="500">Fuel: {job.buttonResponse.fuel}</Text>
-                                  <Text fontSize="sm" fontWeight="500">Hand Unload: {job.buttonResponse.hand_unload}</Text>
-                                  <Text fontSize="sm" fontWeight="500">Dangerous Goods: {job.buttonResponse.dangerous_goods}</Text>
-                                  <Text fontSize="sm" fontWeight="500">Stackable: {job.buttonResponse.stackable}</Text>
-                                  <Text fontSize="sm" fontWeight="500">Total: {job.buttonResponse.total}</Text>
+                                  <Text fontSize="sm" fontWeight="500">
+                                    CBM Auto: {job.buttonResponse.cbm_auto}
+                                  </Text>
+                                  <Text fontSize="sm" fontWeight="500">
+                                    Total Weight:{" "}
+                                    {job.buttonResponse.total_weight}
+                                  </Text>
+                                  <Text fontSize="sm" fontWeight="500">
+                                    Freight: {job.buttonResponse.freight}
+                                  </Text>
+                                  <Text fontSize="sm" fontWeight="500">
+                                    Fuel: {job.buttonResponse.fuel}
+                                  </Text>
+                                  <Text fontSize="sm" fontWeight="500">
+                                    Hand Unload:{" "}
+                                    {job.buttonResponse.hand_unload}
+                                  </Text>
+                                  <Text fontSize="sm" fontWeight="500">
+                                    Dangerous Goods:{" "}
+                                    {job.buttonResponse.dangerous_goods}
+                                  </Text>
+                                  <Text fontSize="sm" fontWeight="500">
+                                    Stackable: {job.buttonResponse.stackable}
+                                  </Text>
+                                  <Text fontSize="sm" fontWeight="500">
+                                    Total: {job.buttonResponse.total}
+                                  </Text>
                                 </Stack>
                               </Box>
                             )}
                           </Flex>
                         </GridItem>
                       </SimpleGrid>
-
-                      {/* Display response of the button click */}
-                    </Box>
+                    </Flex>
+                    {/* Display response of the button click */}
                   </Box>
-
                 </Box>
 
                 <Divider className="mt-12 mb-6" />
@@ -1685,7 +1726,11 @@ function JobEdit() {
                 >
                   Create Job
                 </Button> */}
-                  <Button variant="primary" onClick={handleJobCreation} isDisabled={isSaving}>
+                  <Button
+                    variant="primary"
+                    onClick={handleJobCreation}
+                    isDisabled={isSaving}
+                  >
                     Create Job
                   </Button>
                 </Flex>
