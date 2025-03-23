@@ -47,6 +47,7 @@ import {
   defaultJobDestination,
 } from "graphql/jobDestination";
 import { CREATE_JOB_ITEM_MUTATION, defaultJobItem } from "graphql/jobItem";
+import { CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION, CreateJobPriceCalculationDetailInput, defaultJobPriceCalculationDetail } from "graphql/JobPriceCalculationDetail";
 import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
 import { ADD_MEDIA_MUTATION } from "graphql/media";
 import {
@@ -86,6 +87,9 @@ function JobEdit() {
     ...defaultJobDestination,
     ...{ id: 1, address_line_1: "" },
   });
+  const [refinedData, setRefinedData] = useState(defaultJobQuoteData);
+  const [quoteCalculationRes, setQuoteCalculationRes] =
+    useState(defaultJobPriceCalculationDetail);
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -106,7 +110,6 @@ function JobEdit() {
   const [isSameDayJob, setIsSameDayJob] = useState(true);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
-  const [refinedData, setRefinedData] = useState(defaultJobQuoteData);
 
   let re =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -288,6 +291,20 @@ function JobEdit() {
           },
         });
       }
+      // save job price calculation detail
+      await handleCreateJobPriceCalculationDetail({
+        job_id: Number(data.createJob.id),
+        customer_id: quoteCalculationRes.customer_id,
+        cbm_auto: Number(quoteCalculationRes.cbm_auto), // Ensure type casting
+        total_weight: Number(quoteCalculationRes.total_weight),
+        freight: Number(quoteCalculationRes.freight),
+        fuel: Number(quoteCalculationRes.fuel),
+        hand_unload: Number(quoteCalculationRes.hand_unload),
+        dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
+        stackable: Number(quoteCalculationRes.stackable),
+        total: Number(quoteCalculationRes.total),
+      });
+      
       // save job destinations
       const resultPickup = await handleCreateJobDestination({
         input: {
@@ -349,7 +366,7 @@ function JobEdit() {
         reader.readAsArrayBuffer(media.file);
       });
 
-      router.push(`/admin/jobs/${data.createJob.id}`);
+      router.push(`/admin/jobs/${data.createJob.id}/#invoice`);
       setIsSaving(false);
     },
     onError: (error) => {
@@ -388,6 +405,22 @@ function JobEdit() {
 
   const [createJobItem] = useMutation(CREATE_JOB_ITEM_MUTATION);
 
+  const handleCreateJobPriceCalculationDetail = (jobPriceDetail: CreateJobPriceCalculationDetailInput) => {
+    return new Promise((resolve, reject) => {
+      createJobPriceCalculationDetail({ variables: { input: jobPriceDetail } })
+        .then(({ data }) => {
+          resolve(data);
+        })
+        .catch((error) => {
+          reject(error);
+          showGraphQLErrorToast(error);
+        });
+    });
+  };
+  
+  const [createJobPriceCalculationDetail] = useMutation(CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION);
+
+  
   const handleCreateJobCcEmail = (jobCcEmail: any) => {
     return new Promise((resolve, reject) => {
       createJobCcEmail({ variables: jobCcEmail })
@@ -728,79 +761,8 @@ function JobEdit() {
     handleCreateJob();
   };
 
-  const logAllFormElements = () => {
-    if (!validateAddresses()) return;
-
-    const today = new Date().toISOString(); // Gets current date and time in ISO format
-
-    const jobDestination1 =
-      jobDestinations.length > 0
-        ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
-        : null;
-
-    const payload = {
-      freight_type: refinedData.freight_type,
-      transport_type: job.transport_type,
-      state: refinedData.state,
-      state_code: refinedData.state_code,
-      job_pickup_address: {
-        state: pickUpDestination?.address_state,
-        suburb: pickUpDestination?.address_city,
-        postcode: pickUpDestination?.address_postal_code,
-        address: pickUpDestination?.address,
-      },
-      job_destination_address:
-        jobDestinations.length > 0
-          ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
-          : {},
-      pickup_time: {
-        ready_by: readyAt,
-      },
-      delivery_time: {
-        drop_by: dropAt,
-      },
-      surcharges: {
-        hand_unload: job.is_hand_unloading || false,
-        dangerous_goods: job.is_dangerous_goods || false,
-        time_slot: job.timeslot || null,
-        tail_lift: job.is_tailgate_required || null,
-        stackable: false, // If applicable, update this
-      },
-      job_items: jobItems.map((item) => ({
-        id: item.id,
-        name: item.name || "",
-        notes: item.notes || "",
-        quantity: item.quantity,
-        volume: item.volume,
-        weight: item.weight,
-        dimension_height: item.dimension_height,
-        dimension_width: item.dimension_width,
-        dimension_depth: item.dimension_depth,
-        job_destination: jobDestination1 || null,
-        item_type: {
-          id: item.item_type?.id || "",
-          name: item.item_type?.name || "",
-        },
-        created_at: refinedData.created_at || today,
-        // updated_at: item.updated_at || today,
-      })),
-    };
-
-    console.log(payload);
-  };
-
   const sendFreightData = async () => {
-    const apiUrl =process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL
+    const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
 
@@ -865,7 +827,7 @@ function JobEdit() {
           name: item.item_type?.name || "",
         },
         created_at: refinedData.created_at || today,
-        // updated_at: item.updated_at || today,
+        updated_at: refinedData.updated_at || today,
       })),
     };
 
@@ -873,13 +835,13 @@ function JobEdit() {
 
     try {
       const response = await axios.post(apiUrl, payload, {
-        headers: { "Content-Type": "applic  ation/json" },
+        headers: { "Content-Type": "application/json" },
       });
 
       console.log("Response Data:", response.data);
-
+      setQuoteCalculationRes(response?.data);
     } catch (error) {
-      // console.error("Error:", error.response?.data || error.message);
+      console.error("Error:", error);
     }
   };
 
@@ -1608,12 +1570,16 @@ function JobEdit() {
                         </GridItem>
 
                         <GridItem>
-                          <Flex
+                        {(job.job_category_id === 1 || job.job_category_id === 2) &&
+  (job.transport_location === "VIC" || job.transport_location === "QLD") &&
+  quoteCalculationRes && (
+                              <Flex
                             height="100%"
                             justifyContent="flex-start"
                             pt={7}
                             direction="column"
                           >
+
                             <Button
                               bg="#3b82f6" /* Match the blue color */
                               color="white"
@@ -1631,80 +1597,47 @@ function JobEdit() {
                               fontSize="sm"
                               onClick={() => {
                                 // logAllFormElements();
-                                sendFreightData()
-                                // Handle button click response here
-                                // For demonstration, setting a mock response
-                                // setJob({
-                                //   ...job,
-                                //   buttonResponse: {
-                                //     state: "Victoria",
-                                //     state_code: "VIC",
-                                //     job_pickup_address: {
-                                //       state: "Victoria",
-                                //       suburb: "Melbourne Airport",
-                                //       postcode: "3045",
-                                //       address:
-                                //         "door 21/47 Watson Drive, Melbourne Airport Victoria 3045, Australia",
-                                //     },
-                                //     job_destination_address: {
-                                //       state: "Victoria",
-                                //       suburb: "Tullamarine",
-                                //       postcode: "3043",
-                                //       address:
-                                //         "130 Melrose Drive, Tullamarine Victoria 3043, Australia",
-                                //     },
-                                //     cbm_auto: 0.200000000000000011102230246251565404236316680908203125,
-                                //     total_weight: 268,
-                                //     freight: 9.8499999999999996447286321199499070644378662109375,
-                                //     fuel: 1.479999999999999982236431605997495353221893310546875,
-                                //     hand_unload: 20,
-                                //     dangerous_goods: 30,
-                                //     stackable: 0,
-                                //     total: 61.32000000000000028421709430404007434844970703125,
-                                //   },
-                                // });
+                                sendFreightData();                               
                               }}
                             >
                               Get A Quote
                             </Button>
-                            {job.buttonResponse && (
+                          
+                            {quoteCalculationRes && (
                               <Box mt={4}>
                                 <Stack spacing={3}>
-                                  {/* <Text fontSize="sm" fontWeight="500">State: {job.buttonResponse.state}</Text>
-              <Text fontSize="sm" fontWeight="500">State Code: {job.buttonResponse.state_code}</Text>
-              <Text fontSize="sm" fontWeight="500">Job Pickup Address: {job.buttonResponse.job_pickup_address.address}</Text>
-              <Text fontSize="sm" fontWeight="500">Job Destination Address: {job.buttonResponse.job_destination_address.address}</Text> */}
-                                  <Text fontSize="sm" fontWeight="500">
-                                    CBM Auto: {job.buttonResponse.cbm_auto}
+                                   <Text fontSize="sm" fontWeight="500">
+                                    CBM Auto: {quoteCalculationRes.cbm_auto}
                                   </Text>
                                   <Text fontSize="sm" fontWeight="500">
                                     Total Weight:{" "}
-                                    {job.buttonResponse.total_weight}
+                                    {quoteCalculationRes.total_weight}
                                   </Text>
                                   <Text fontSize="sm" fontWeight="500">
-                                    Freight: {job.buttonResponse.freight}
+                                    Freight: {quoteCalculationRes.freight}
                                   </Text>
                                   <Text fontSize="sm" fontWeight="500">
-                                    Fuel: {job.buttonResponse.fuel}
+                                    Fuel: {quoteCalculationRes.fuel}
                                   </Text>
                                   <Text fontSize="sm" fontWeight="500">
                                     Hand Unload:{" "}
-                                    {job.buttonResponse.hand_unload}
+                                    {quoteCalculationRes.hand_unload}
                                   </Text>
                                   <Text fontSize="sm" fontWeight="500">
                                     Dangerous Goods:{" "}
-                                    {job.buttonResponse.dangerous_goods}
+                                    {quoteCalculationRes.dangerous_goods}
                                   </Text>
                                   <Text fontSize="sm" fontWeight="500">
-                                    Stackable: {job.buttonResponse.stackable}
+                                    Stackable: {quoteCalculationRes.stackable}
                                   </Text>
                                   <Text fontSize="sm" fontWeight="500">
-                                    Total: {job.buttonResponse.total}
+                                    Total: {quoteCalculationRes.total}
                                   </Text>
                                 </Stack>
                               </Box>
                             )}
                           </Flex>
+                          )}
                         </GridItem>
                       </SimpleGrid>
                     </Flex>
