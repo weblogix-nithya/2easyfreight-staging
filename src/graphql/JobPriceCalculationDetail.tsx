@@ -3,8 +3,8 @@ import { gql } from "@apollo/client";
 // JobPriceCalculationDetail Queries and Mutations
 
 export const GET_JOB_PRICE_CALCULATION_DETAIL_QUERY = gql`
-  query JobPriceCalculationDetail($id: ID!) {
-    jobPriceCalculationDetail(id: $id) {
+  query JobPriceCalculationDetail($job_id: ID!) {
+    jobPriceCalculationDetail(job_id: $job_id) {
       id
       job_id
       customer_id

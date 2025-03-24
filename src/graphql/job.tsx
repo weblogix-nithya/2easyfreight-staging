@@ -235,6 +235,8 @@ export const GET_JOB_QUERY = gql`
         name
       }
       admin_notes
+      transport_location
+      transport_type
       # delivery_notes
       pick_up_notes
       base_notes

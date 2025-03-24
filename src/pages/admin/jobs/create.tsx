@@ -14,14 +14,12 @@ import {
   SimpleGrid,
   Stack,
   Text,
-  useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import { t } from "@chakra-ui/styled-system/dist/types/utils";
+// import { t } from "@chakra-ui/styled-system/dist/types/utils";
 import { faTrashCan } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
-import { Select } from "chakra-react-select";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
 import FileInput from "components/fileInput/FileInput";
@@ -47,7 +45,11 @@ import {
   defaultJobDestination,
 } from "graphql/jobDestination";
 import { CREATE_JOB_ITEM_MUTATION, defaultJobItem } from "graphql/jobItem";
-import { CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION, CreateJobPriceCalculationDetailInput, defaultJobPriceCalculationDetail } from "graphql/JobPriceCalculationDetail";
+import {
+  CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
+  CreateJobPriceCalculationDetailInput,
+  defaultJobPriceCalculationDetail,
+} from "graphql/JobPriceCalculationDetail";
 import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
 import { ADD_MEDIA_MUTATION } from "graphql/media";
 import {
@@ -87,9 +89,10 @@ function JobEdit() {
     ...defaultJobDestination,
     ...{ id: 1, address_line_1: "" },
   });
-  const [refinedData, setRefinedData] = useState(defaultJobQuoteData);
-  const [quoteCalculationRes, setQuoteCalculationRes] =
-    useState(defaultJobPriceCalculationDetail);
+  const [refinedData, setRefinedData] = useState({...defaultJobQuoteData, freight_type:''});
+  const [quoteCalculationRes, setQuoteCalculationRes] = useState(
+    defaultJobPriceCalculationDetail,
+  );
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -256,8 +259,8 @@ function JobEdit() {
         ...job,
         id: undefined,
         job_status_id: 1,
-        transport_type: "",
-        transport_location: "",
+        transport_type: job.transport_type,
+        transport_location: job.transport_location,
         media: undefined,
       },
     },
@@ -294,7 +297,7 @@ function JobEdit() {
       // save job price calculation detail
       await handleCreateJobPriceCalculationDetail({
         job_id: Number(data.createJob.id),
-        customer_id: quoteCalculationRes.customer_id,
+        customer_id: Number(job.customer_id),
         cbm_auto: Number(quoteCalculationRes.cbm_auto), // Ensure type casting
         total_weight: Number(quoteCalculationRes.total_weight),
         freight: Number(quoteCalculationRes.freight),
@@ -304,7 +307,7 @@ function JobEdit() {
         stackable: Number(quoteCalculationRes.stackable),
         total: Number(quoteCalculationRes.total),
       });
-      
+      console.log("Job cre", job.customer_id);
       // save job destinations
       const resultPickup = await handleCreateJobDestination({
         input: {
@@ -333,11 +336,11 @@ function JobEdit() {
         // handle success case for this media object
       }
 
-      await handleSendConsignmentDocket({
-        variables: {
-          id: parseInt(data.createJob.id),
-        },
-      });
+      // await handleSendConsignmentDocket({
+      //   variables: {
+      //     id: parseInt(data.createJob.id),
+      //   },
+      // });
 
       toast({
         title: "Job created",
@@ -366,7 +369,7 @@ function JobEdit() {
         reader.readAsArrayBuffer(media.file);
       });
 
-      router.push(`/admin/jobs/${data.createJob.id}/#invoice`);
+      router.push(`/admin/jobs/${data.createJob.id}`);
       setIsSaving(false);
     },
     onError: (error) => {
@@ -405,7 +408,9 @@ function JobEdit() {
 
   const [createJobItem] = useMutation(CREATE_JOB_ITEM_MUTATION);
 
-  const handleCreateJobPriceCalculationDetail = (jobPriceDetail: CreateJobPriceCalculationDetailInput) => {
+  const handleCreateJobPriceCalculationDetail = (
+    jobPriceDetail: CreateJobPriceCalculationDetailInput,
+  ) => {
     return new Promise((resolve, reject) => {
       createJobPriceCalculationDetail({ variables: { input: jobPriceDetail } })
         .then(({ data }) => {
@@ -417,10 +422,11 @@ function JobEdit() {
         });
     });
   };
-  
-  const [createJobPriceCalculationDetail] = useMutation(CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION);
 
-  
+  const [createJobPriceCalculationDetail] = useMutation(
+    CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
+  );
+
   const handleCreateJobCcEmail = (jobCcEmail: any) => {
     return new Promise((resolve, reject) => {
       createJobCcEmail({ variables: jobCcEmail })
@@ -1570,74 +1576,76 @@ function JobEdit() {
                         </GridItem>
 
                         <GridItem>
-                        {(job.job_category_id === 1 || job.job_category_id === 2) &&
-  (job.transport_location === "VIC" || job.transport_location === "QLD") &&
-  quoteCalculationRes && (
+                          {(job.job_category_id === 1 ||
+                            job.job_category_id === 2) &&
+                            (job.transport_location === "VIC" ||
+                              job.transport_location === "QLD") &&
+                            quoteCalculationRes && (
                               <Flex
-                            height="100%"
-                            justifyContent="flex-start"
-                            pt={7}
-                            direction="column"
-                          >
+                                height="100%"
+                                justifyContent="flex-start"
+                                pt={7}
+                                flexDirection="column"
+                              >
+                                <Button
+                                  bg="#3b82f6" /* Match the blue color */
+                                  color="white"
+                                  _hover={{
+                                    bg: "#2563eb", // Slightly darker blue for hover
+                                  }}
+                                  _active={{
+                                    bg: "#2563eb", // Active state
+                                    transform: "scale(0.95)", // Slightly shrink button when activated
+                                  }}
+                                  borderRadius="8px" /* Rounded corners */
+                                  px={6}
+                                  py={3}
+                                  fontWeight="500"
+                                  fontSize="sm"
+                                  onClick={() => {
+                                    // logAllFormElements();
+                                    sendFreightData();
+                                  }}
+                                >
+                                  Get A Quote
+                                </Button>
 
-                            <Button
-                              bg="#3b82f6" /* Match the blue color */
-                              color="white"
-                              _hover={{
-                                bg: "#2563eb", // Slightly darker blue for hover
-                              }}
-                              _active={{
-                                bg: "#2563eb", // Active state
-                                transform: "scale(0.95)", // Slightly shrink button when activated
-                              }}
-                              borderRadius="8px" /* Rounded corners */
-                              px={6}
-                              py={3}
-                              fontWeight="500"
-                              fontSize="sm"
-                              onClick={() => {
-                                // logAllFormElements();
-                                sendFreightData();                               
-                              }}
-                            >
-                              Get A Quote
-                            </Button>
-                          
-                            {quoteCalculationRes && (
-                              <Box mt={4}>
-                                <Stack spacing={3}>
-                                   <Text fontSize="sm" fontWeight="500">
-                                    CBM Auto: {quoteCalculationRes.cbm_auto}
-                                  </Text>
-                                  <Text fontSize="sm" fontWeight="500">
-                                    Total Weight:{" "}
-                                    {quoteCalculationRes.total_weight}
-                                  </Text>
-                                  <Text fontSize="sm" fontWeight="500">
-                                    Freight: {quoteCalculationRes.freight}
-                                  </Text>
-                                  <Text fontSize="sm" fontWeight="500">
-                                    Fuel: {quoteCalculationRes.fuel}
-                                  </Text>
-                                  <Text fontSize="sm" fontWeight="500">
-                                    Hand Unload:{" "}
-                                    {quoteCalculationRes.hand_unload}
-                                  </Text>
-                                  <Text fontSize="sm" fontWeight="500">
-                                    Dangerous Goods:{" "}
-                                    {quoteCalculationRes.dangerous_goods}
-                                  </Text>
-                                  <Text fontSize="sm" fontWeight="500">
-                                    Stackable: {quoteCalculationRes.stackable}
-                                  </Text>
-                                  <Text fontSize="sm" fontWeight="500">
-                                    Total: {quoteCalculationRes.total}
-                                  </Text>
-                                </Stack>
-                              </Box>
+                                {quoteCalculationRes && (
+                                  <Box mt={4}>
+                                    <Stack spacing={3}>
+                                      <Text fontSize="sm" fontWeight="500">
+                                        CBM Auto: {quoteCalculationRes.cbm_auto}
+                                      </Text>
+                                      <Text fontSize="sm" fontWeight="500">
+                                        Total Weight:{" "}
+                                        {quoteCalculationRes.total_weight}
+                                      </Text>
+                                      <Text fontSize="sm" fontWeight="500">
+                                        Freight: {quoteCalculationRes.freight}
+                                      </Text>
+                                      <Text fontSize="sm" fontWeight="500">
+                                        Fuel: {quoteCalculationRes.fuel}
+                                      </Text>
+                                      <Text fontSize="sm" fontWeight="500">
+                                        Hand Unload:{" "}
+                                        {quoteCalculationRes.hand_unload}
+                                      </Text>
+                                      <Text fontSize="sm" fontWeight="500">
+                                        Dangerous Goods:{" "}
+                                        {quoteCalculationRes.dangerous_goods}
+                                      </Text>
+                                      <Text fontSize="sm" fontWeight="500">
+                                        Stackable:{" "}
+                                        {quoteCalculationRes.stackable}
+                                      </Text>
+                                      <Text fontSize="sm" fontWeight="500">
+                                        Total: {quoteCalculationRes.total}
+                                      </Text>
+                                    </Stack>
+                                  </Box>
+                                )}
+                              </Flex>
                             )}
-                          </Flex>
-                          )}
                         </GridItem>
                       </SimpleGrid>
                     </Flex>
