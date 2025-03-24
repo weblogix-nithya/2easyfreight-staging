@@ -28,7 +28,7 @@ export default function Project(props: {
   const bg = useColorModeValue("white", "navy.700");
   return (
     <Card bg={bg} {...rest} p="14px">
-      <Flex align="center" direction={{ base: "column", md: "row" }}>
+      <Flex align="center" flexDirection={{ base: "column", md: "row" }}>
         <Image
           h="80px"
           w="80px"
