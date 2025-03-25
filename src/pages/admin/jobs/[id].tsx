@@ -68,8 +68,12 @@ import {
   UPDATE_JOB_ITEM_MUTATION,
 } from "graphql/jobItem";
 import {
+  CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
+  CreateJobPriceCalculationDetailInput,
   defaultJobPriceCalculationDetail,
   GET_JOB_PRICE_CALCULATION_DETAIL_QUERY,
+  UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
+  // UpdateJobPriceCalculationDetailInput,
 } from "graphql/JobPriceCalculationDetail";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
 import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
@@ -105,6 +109,10 @@ function JobEdit() {
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
+  const [changedFields, setChangedFields] =
+    useState<typeof defaultJob>(defaultJob);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
   const { id } = router.query;
@@ -267,7 +275,7 @@ function JobEdit() {
       if (data?.job == null) {
         router.push("/admin/jobs");
       }
-    
+
       if (!updatingMedia) {
         setJob({
           ...job,
@@ -279,6 +287,7 @@ function JobEdit() {
         const selectedCategoryName = jobCategories.find(
           (job_category) => job_category.value == data?.job.job_category_id,
         )?.label;
+        // console.log("sn", selectedCategoryName);
         const selectedLocation = locationOptions.find(
           (location) => location.value == data.job.transport_location,
         );
@@ -288,6 +297,7 @@ function JobEdit() {
           state_code: data.job.transport_location,
           state: selectedLocation?.label || null,
         });
+        // console.log("refine", refinedData);
         getCustomersByCompanyId({
           query: "",
           page: 1,
@@ -296,7 +306,7 @@ function JobEdit() {
           orderByOrder: "ASC",
           company_id: data.job.company_id,
         });
-    
+
         setJobDateAt(
           data.job.ready_at ? formatDate(data.job.ready_at) : jobDateAt,
         );
@@ -315,16 +325,16 @@ function JobEdit() {
         );
         // jobDestinations without is_pickup
         let _jobDestinations = data.job.job_destinations || [];
-    
+
         setOriginalJobDestinations(_jobDestinations);
         setJobDestinations(_jobDestinations);
-    
+
         setPickUpDestination(
           data.job.pick_up_destination
             ? data.job.pick_up_destination
             : { ...defaultJobDestination, id: 0, is_new: true },
         );
-    
+
         setOriginalJobItems([]);
         setOriginalJobItems(data.job.job_items);
         setJobItems([]);
@@ -342,7 +352,7 @@ function JobEdit() {
         setUpdatingMedia(false);
       }
     },
-    
+
     // onCompleted: (data) => {
     //   if (data?.job == null) {
     //     router.push("/admin/jobs");
@@ -395,7 +405,7 @@ function JobEdit() {
     //     );
     //     // jobDestinations without is_pickup
     //     let _jobDestinations = data.job.job_destinations || []
-        
+
     //     setOriginalJobDestinations(_jobDestinations);
     //     setJobDestinations(_jobDestinations);
 
@@ -423,8 +433,8 @@ function JobEdit() {
     //   }
     // },
     onError(error) {
-      console.log("onError");
-      console.log(error);
+      // console.log("onError");
+      // console.log(error);
     },
   });
 
@@ -448,7 +458,7 @@ function JobEdit() {
 
       setRefinedData({
         ...refinedData,
-        freight_type: selectedCategoryName || null,
+        freight_type: selectedCategoryName,
         state_code: jobData.job.transport_location,
         state: selectedLocation?.label || null,
       });
@@ -472,28 +482,49 @@ function JobEdit() {
   const [handleUpdateJob, {}] = useMutation(UPDATE_JOB_MUTATION, {
     variables: {
       input: {
-        ...job,
-        job_destinations: undefined,
-        job_items: undefined,
-        media: undefined,
-        chats: undefined,
-        customer_invoice: undefined,
-        pick_up_destination: undefined,
-        total_volume: undefined,
-        driver: undefined,
-        job_status: undefined,
-        job_category: undefined,
-        job_type: undefined,
-        customer: undefined,
-        company: undefined,
-        total_weight: undefined,
-        total_quantity: undefined,
-        invoice_url: undefined,
-        pod_url: undefined,
-        job_cc_emails: undefined,
-        quote: undefined,
-        created_at: undefined,
+        id: job.id,
+        name: job.name,
+        reference_no: job.reference_no,
+        booked_by: job.booked_by,
+        notes: job.notes,
+        job_category_id: job.job_category_id,
+        job_status_id: job.job_status_id,
+        job_type_id: job.job_type_id,
+        decline_reason_id: job.decline_reason_id,
+        driver_id: job.driver_id,
+        region_id: job.region_id,
+        customer_id: job.customer_id,
+        company_id: job.company_id,
+        start_at: job.start_at,
+        ready_at: job.ready_at,
+        drop_at: job.drop_at,
+        completed_at: job.completed_at,
+        pick_up_lng: job.pick_up_lng,
+        pick_up_lat: job.pick_up_lat,
+        pick_up_address: job.pick_up_address,
+        pick_up_state: job.pick_up_state,
+        pick_up_notes: job.pick_up_notes,
+        pick_up_name: job.pick_up_name,
+        pick_up_report: job.pick_up_report,
+        delivery_name: job.delivery_name,
+        delivery_report: job.delivery_report,
+        customer_notes: job.customer_notes,
+        base_notes: job.base_notes,
+        admin_notes: job.admin_notes,
+        decline_notes: job.decline_notes,
+        minutes_waited: job.minutes_waited,
+        is_inbound_connect: job.is_inbound_connect,
+        is_hand_unloading: job.is_hand_unloading,
+        is_dangerous_goods: job.is_dangerous_goods,
+        is_tailgate_required: job.is_tailgate_required,
+        timeslot: job.timeslot,
+        last_free_at: job.last_free_at,
+        // sort_id: job.sort_id,
+        quoted_price: job.quoted_price,
+        transport_type: job.transport_type,
+        transport_location: job.transport_location,
       },
+      // // console.log("job", job)
     },
     onCompleted: async (data) => {
       //update job items
@@ -738,7 +769,9 @@ function JobEdit() {
       skip: !job.id || !Boolean(job.id), // To ensure no falsy value interferes
       onCompleted: (data) => {
         // Process the data as needed
-        
+        // console.log(data, "d");
+        setIsUpdateMode(true); // Data exists, so it's an update
+        setPricecalculationid(data.jobPriceCalculationDetail.id);
         setRefinedData({
           ...data.jobPriceCalculationDetail,
           cbm_auto: data.jobPriceCalculationDetail?.cbm_auto,
@@ -763,15 +796,17 @@ function JobEdit() {
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail.stackable,
         });
-        setButtonText("View Quote");
+        setButtonText("Quote");
 
-        console.log(data.jobPriceCalculationDetail, "imp");
+        // console.log(data.jobPriceCalculationDetail, "imp");
       },
       onError: (error) => {
         // Handle the error and set data to empty
         console.error("Error fetching job price calculation detail:", error);
         setRefinedData(defaultJobQuoteData);
         setQuoteCalculationRes(defaultJobPriceCalculationDetail);
+        setIsUpdateMode(false); // No data found, so we need to create a new entry
+
         setButtonText("Get A Quote");
       },
     },
@@ -893,7 +928,7 @@ function JobEdit() {
         drop_at: formatDateTimeToDB(jobDateAt, dropAt),
       });
     } catch (e) {
-      //console.log(e);
+      //// console.log(e);
     }
   };
   const addToJobDestinations = () => {
@@ -920,7 +955,7 @@ function JobEdit() {
   //handleDeleteJobItem
   const [handleDeleteJobItem, {}] = useMutation(DELETE_JOB_ITEM_MUTATION, {
     onCompleted: (data) => {
-      console.log("Job Item Deleted", data);
+      // console.log("Job Item Deleted", data);
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
@@ -931,7 +966,7 @@ function JobEdit() {
     DELETE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
-        console.log("Job destination Deleted", data);
+        // console.log("Job destination Deleted", data);
       },
       onError: (error) => {
         showGraphQLErrorToast(error);
@@ -969,7 +1004,7 @@ function JobEdit() {
   //handleUpdateJobItems
   const [handleUpdateJobItem, {}] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
     onCompleted: (data) => {
-      console.log("Job item updated");
+      // console.log("Job item updated");
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
@@ -980,7 +1015,7 @@ function JobEdit() {
     UPDATE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
-        console.log("Job destination updated");
+        // console.log("Job destination updated");
       },
       onError: (error) => {
         showGraphQLErrorToast(error);
@@ -1226,102 +1261,103 @@ function JobEdit() {
     }
   };
 
-const validateAddresses = () => {
-  if (!pickUpDestination?.address) {
-    toast({
-      title: "Pickup address is required.",
-      description: "Please enter the address in the correct format.",
-      status: "warning",
-      duration: 3000,
-      isClosable: true,
+  const handleCreateJobPriceCalculationDetail = (
+    jobPriceDetail: CreateJobPriceCalculationDetailInput,
+  ) => {
+    return new Promise((resolve, reject) => {
+      createJobPriceCalculationDetail({ variables: { input: jobPriceDetail } })
+        .then(({ data }) => {
+          resolve(data);
+        })
+        .catch((error) => {
+          reject(error);
+          showGraphQLErrorToast(error);
+        });
     });
-    return false;
-  }
+  };
 
-  if (jobDestinations.some((destination) => !destination.address)) {
-    toast({
-      title: "Delivery address is required.",
-      description: "Please ensure all delivery addresses are properly entered.",
-      status: "warning",
-      duration: 3000,
-      isClosable: true,
+  const [createJobPriceCalculationDetail] = useMutation(
+    CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
+  );
+
+  const handleUpdateJobPriceCalculationDetail = (quoteCalculationRes: any) => {
+    return new Promise((resolve, reject) => {
+      updateJobPriceCalculationDetail({
+        variables: {
+          job_id: Number(job.id),
+          input: {
+            // job_id: Number(updatedData.job_id),
+            customer_id: Number(job.customer_id),
+            cbm_auto: Number(quoteCalculationRes.cbm_auto), // Ensure type casting
+            total_weight: Number(quoteCalculationRes.total_weight),
+            freight: Number(quoteCalculationRes.freight),
+            fuel: Number(quoteCalculationRes.fuel),
+            hand_unload: Number(quoteCalculationRes.hand_unload),
+            dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
+            stackable: Number(quoteCalculationRes.stackable),
+            total: Number(quoteCalculationRes.total),
+          },
+        },
+      })
+        .then(({ data }) => {
+          resolve(data);
+        })
+        .catch((error) => {
+          // reject(error);
+          // showGraphQLErrorToast(error);
+        });
     });
-    return false;
-  }
+  };
 
-  if (!refinedData.freight_type) {
-    console.error("Freight Type is not set.");
-    toast({
-      title: "Freight Type is required.",
-      description: "Please ensure the freight type is properly set.",
-      status: "warning",
-      duration: 3000,
-      isClosable: true,
-    });
-  }
+  const [updateJobPriceCalculationDetail] = useMutation(
+    UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
+  );
 
-  if (!job.transport_type) {
-    console.error("Transport Type is not set.");
-    toast({
-      title: "Transport Type is required.",
-      description: "Please ensure the transport type is properly set.",
-      status: "warning",
-      duration: 3000,
-      isClosable: true,
-    });
-  }
+  const validateAddresses = () => {
+    if (!pickUpDestination?.address) {
+      toast({
+        title: "Pickup address is required.",
+        description: "Please enter the address in the correct format.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
 
-  if (!job.transport_location) {
-    console.error("Transport Location is not set.");
-    toast({
-      title: "Transport Location is required.",
-      description: "Please ensure the transport location is properly set.",
-      status: "warning",
-      duration: 3000,
-      isClosable: true,
-    });
-  }
+    if (jobDestinations.some((destination) => !destination.address)) {
+      toast({
+        title: "Delivery address is required.",
+        description:
+          "Please ensure all delivery addresses are properly entered.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
 
-  if (
-    !refinedData.freight_type ||
-    !job.transport_type ||
-    !job.transport_location
-  ) {
-    return false;
-  }
+    if (!job.transport_type || !job.transport_location) {
+      toast({
+        title: "Transport type or transport location is missing.",
+        description:
+          "Please ensure the Transport type or transport location is properly set.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+    return true;
+  };
 
-  return true;
-};
+  const sendFreightData = async (string: string) => {
+    const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
+    // console.log(string, "st");
+    if (!validateAddresses()) return;
 
-const sendFreightData = async () => {
-  const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
+    const today = new Date().toISOString(); // Get current date and time in ISO format
 
-  if (!validateAddresses()) return;
-
-  const today = new Date().toISOString(); // Get current date and time in ISO format
-
-  const jobDestination1 =
-    jobDestinations.length > 0
-      ? {
-          state: jobDestinations[0]?.address_state,
-          suburb: jobDestinations[0]?.address_city,
-          postcode: jobDestinations[0]?.address_postal_code,
-          address: jobDestinations[0]?.address,
-        }
-      : null;
-
-  const payload = {
-    freight_type: refinedData.freight_type,
-    transport_type: job.transport_type,
-    state: refinedData.state || job.transport_location,
-    state_code: refinedData.state_code,
-    job_pickup_address: {
-      state: pickUpDestination?.address_state,
-      suburb: pickUpDestination?.address_city,
-      postcode: pickUpDestination?.address_postal_code,
-      address: pickUpDestination?.address,
-    },
-    job_destination_address:
+    const jobDestination1 =
       jobDestinations.length > 0
         ? {
             state: jobDestinations[0]?.address_state,
@@ -1329,79 +1365,180 @@ const sendFreightData = async () => {
             postcode: jobDestinations[0]?.address_postal_code,
             address: jobDestinations[0]?.address,
           }
-        : {},
-    pickup_time: {
-      ready_by: readyAt,
-    },
-    delivery_time: {
-      drop_by: dropAt,
-    },
-    surcharges: {
-      hand_unload: job.is_hand_unloading || false,
-      dangerous_goods: job.is_dangerous_goods || false,
-      time_slot: job.timeslot || null,
-      tail_lift: job.is_tailgate_required || null,
-      stackable: false, // If applicable, update this
-    },
-    job_items: jobItems.map((item) => ({
-      id: item.id,
-      name: item.name || "",
-      notes: item.notes || "",
-      quantity: item.quantity,
-      volume: item.volume,
-      weight: item.weight,
-      dimension_height: item.dimension_height,
-      dimension_width: item.dimension_width,
-      dimension_depth: item.dimension_depth,
-      job_destination: jobDestination1 || null,
-      item_type: {
-        id: item.item_type?.id || "",
-        name: item.item_type?.name || "",
+        : null;
+
+    const selectedCategoryName = jobCategories.find(
+      (job_category) => job_category.value == job?.job_category_id,
+    )?.label;
+    const selectedstate = locationOptions.find(
+      (item) => item.value == job.transport_location,
+    )?.label;
+
+    const payload = {
+      customer_id: Number(job.customer_id),
+      freight_type: refinedData.freight_type || selectedCategoryName,
+      transport_type: job.transport_type,
+      state: refinedData.state || selectedstate,
+      state_code: refinedData.state_code || job.transport_location,
+      job_pickup_address: {
+        state: pickUpDestination?.address_state,
+        suburb: pickUpDestination?.address_city,
+        postcode: pickUpDestination?.address_postal_code,
+        address: pickUpDestination?.address,
       },
-      created_at: refinedData.created_at || today,
-      updated_at: refinedData.updated_at || today,
-    })),
+      job_destination_address:
+        jobDestinations.length > 0
+          ? {
+              state: jobDestinations[0]?.address_state,
+              suburb: jobDestinations[0]?.address_city,
+              postcode: jobDestinations[0]?.address_postal_code,
+              address: jobDestinations[0]?.address,
+            }
+          : {},
+      pickup_time: {
+        ready_by: readyAt,
+      },
+      delivery_time: {
+        drop_by: dropAt,
+      },
+      surcharges: {
+        hand_unload: job.is_hand_unloading || false,
+        dangerous_goods: job.is_dangerous_goods || false,
+        time_slot: job.timeslot || null,
+        tail_lift: job.is_tailgate_required || null,
+        stackable: false, // If applicable, update this
+      },
+      job_items: jobItems.map((item) => ({
+        id: item.id,
+        name: item.name || "",
+        notes: item.notes || "",
+        quantity: item.quantity,
+        volume: item.volume,
+        weight: item.weight,
+        dimension_height: item.dimension_height,
+        dimension_width: item.dimension_width,
+        dimension_depth: item.dimension_depth,
+        job_destination: jobDestination1 || null,
+        item_type: {
+          id: item.item_type?.id || "",
+          name: item.item_type?.name || "",
+        },
+        created_at: refinedData.created_at || today,
+        updated_at: refinedData.updated_at || today,
+      })),
+    };
+
+    // console.log(payload);
+
+    try {
+      const response = await axios.post(apiUrl, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // console.log("Response Data:", response.data);
+      setQuoteCalculationRes(response?.data);
+      toast({ title: "Quote Calculation Success", status: "success" });
+
+      if (isUpdateMode) {
+        await handleUpdateJobPriceCalculationDetail(quoteCalculationRes)
+          .then((data) => {
+            // console.log("Updated successfully:", data);
+            toast({
+              title: "Quote price updated",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+          })
+          .catch((error) => {
+            console.error("Error updating job price:", error);
+          });
+      } else {
+        await handleCreateJobPriceCalculationDetail({
+          job_id: Number(job.id),
+          customer_id: Number(job.customer_id),
+          cbm_auto: Number(quoteCalculationRes.cbm_auto), // Ensure type casting
+          total_weight: Number(quoteCalculationRes.total_weight),
+          freight: Number(quoteCalculationRes.freight),
+          fuel: Number(quoteCalculationRes.fuel),
+          hand_unload: Number(quoteCalculationRes.hand_unload),
+          dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
+          stackable: Number(quoteCalculationRes.stackable),
+          total: Number(quoteCalculationRes.total),
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
-  console.log(payload);
+  const handleSaveJobPriceCalculation = () => {
+    if (isUpdateMode) {
+      // console.log("update");
+      const hasChanged =
+        prevJobState.freight_type !== refinedData.freight_type ||
+        prevJobState.transport_type !== job.transport_type ||
+        prevJobState.transport_location !== job.transport_location ||
+        prevJobState.job_items.some(
+          (item, index) =>
+            item.id !== jobItems[index].id ||
+            item.name !== jobItems[index].name ||
+            item.notes !== jobItems[index].notes ||
+            item.quantity !== jobItems[index].quantity ||
+            item.volume !== jobItems[index].volume ||
+            item.weight !== jobItems[index].weight ||
+            item.dimension_height !== jobItems[index].dimension_height ||
+            item.dimension_width !== jobItems[index].dimension_width ||
+            item.dimension_depth !== jobItems[index].dimension_depth,
+        );
 
-  try {
-    const response = await axios.post(apiUrl, payload, {
-      headers: { "Content-Type": "application/json" },
-    });
+      if (hasChanged) {
+        setButtonText("Get A Quote");
+        sendFreightData("update");
+      } else {
+        // setIsSaving(true);
+        // handleUpdateJob();
+        toast({
+          title: "No changes detected",
+          description: "No changes detected, no need to update.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else {
+      // console.log("add");
+      setButtonText("Get A Quote");
+      sendFreightData("new");
+    }
 
-    console.log("Response Data:", response.data);
-    setQuoteCalculationRes(response?.data);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-};
+    const hasChanged =
+      prevJobState.freight_type !== refinedData.freight_type ||
+      prevJobState.transport_type !== job.transport_type ||
+      prevJobState.transport_location !== job.transport_location ||
+      prevJobState.job_items.some(
+        (item, index) =>
+          item.id !== jobItems[index].id ||
+          item.name !== jobItems[index].name ||
+          item.notes !== jobItems[index].notes ||
+          item.quantity !== jobItems[index].quantity ||
+          item.volume !== jobItems[index].volume ||
+          item.weight !== jobItems[index].weight ||
+          item.dimension_height !== jobItems[index].dimension_height ||
+          item.dimension_width !== jobItems[index].dimension_width ||
+          item.dimension_depth !== jobItems[index].dimension_depth,
+      );
 
-const handleButtonClicked = () => {
-  const hasChanged = 
-    prevJobState.freight_type !== refinedData.freight_type ||
-    prevJobState.transport_type !== job.transport_type ||
-    prevJobState.transport_location !== job.transport_location ||
-    prevJobState.job_items.some((item, index) => 
-      item.id !== jobItems[index].id ||
-      item.name !== jobItems[index].name ||
-      item.notes !== jobItems[index].notes ||
-      item.quantity !== jobItems[index].quantity ||
-      item.volume !== jobItems[index].volume ||
-      item.weight !== jobItems[index].weight ||
-      item.dimension_height !== jobItems[index].dimension_height ||
-      item.dimension_width !== jobItems[index].dimension_width ||
-      item.dimension_depth !== jobItems[index].dimension_depth
-    );
-
-  if (hasChanged) {
-    setButtonText("Get A Quote ");
-    sendFreightData();
-  } else {
-    setIsSaving(true);
-    handleUpdateJob();
-  }
-};
+    if (hasChanged) {
+      setButtonText("Get A Quote");
+      sendFreightData("update");
+    } else {
+      setIsSaving(true);
+      sendFreightData("new");
+      setButtonText("Get A Quote");
+      // handleUpdateJob();
+    }
+  };
 
   return (
     <AdminLayout>
@@ -2417,7 +2554,7 @@ const handleButtonClicked = () => {
                                         fontWeight="500"
                                         fontSize="sm"
                                         onClick={() => {
-                                          handleButtonClicked();
+                                          handleSaveJobPriceCalculation();
                                         }}
                                       >
                                         {buttonText}

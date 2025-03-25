@@ -485,9 +485,48 @@ export const UPDATE_JOB_MUTATION = gql`
     updateJob(input: $input) {
       id
       name
+      reference_no
+      booked_by
+      notes
+      job_category_id
+      job_status_id
+      job_type_id
+      decline_reason_id
+      driver_id
+      region_id
+      customer_id
+      company_id
+      start_at
+      ready_at
+      drop_at
+      completed_at
+      pick_up_lng
+      pick_up_lat
+      pick_up_address
+      pick_up_state
+      pick_up_notes
+      pick_up_name
+      pick_up_report
+      delivery_name
+      delivery_report
+      customer_notes
+      base_notes
+      admin_notes
+      decline_notes
+      minutes_waited
+      is_inbound_connect
+      is_hand_unloading
+      is_dangerous_goods
+      is_tailgate_required
+      timeslot
+      last_free_at
+      quoted_price
+      transport_type
+      transport_location
     }
   }
 `;
+
 
 export const BULK_UPDATE_JOB_MUTATION = gql`
   mutation bulkUpdateJob($input: [UpdateJobInput]!) {

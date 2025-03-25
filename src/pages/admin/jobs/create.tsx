@@ -89,7 +89,10 @@ function JobEdit() {
     ...defaultJobDestination,
     ...{ id: 1, address_line_1: "" },
   });
-  const [refinedData, setRefinedData] = useState({...defaultJobQuoteData, freight_type:''});
+  const [refinedData, setRefinedData] = useState({
+    ...defaultJobQuoteData,
+    freight_type: "",
+  });
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
@@ -1587,29 +1590,30 @@ function JobEdit() {
                                 pt={7}
                                 flexDirection="column"
                               >
-                                <Button
-                                  bg="#3b82f6" /* Match the blue color */
-                                  color="white"
-                                  _hover={{
-                                    bg: "#2563eb", // Slightly darker blue for hover
-                                  }}
-                                  _active={{
-                                    bg: "#2563eb", // Active state
-                                    transform: "scale(0.95)", // Slightly shrink button when activated
-                                  }}
-                                  borderRadius="8px" /* Rounded corners */
-                                  px={6}
-                                  py={3}
-                                  fontWeight="500"
-                                  fontSize="sm"
-                                  onClick={() => {
-                                    // logAllFormElements();
-                                    sendFreightData();
-                                  }}
-                                >
-                                  Get A Quote
-                                </Button>
-
+                                <Flex>
+                                  <Button
+                                    bg="#3b82f6" /* Match the blue color */
+                                    color="white"
+                                    _hover={{
+                                      bg: "#2563eb", // Slightly darker blue for hover
+                                    }}
+                                    _active={{
+                                      bg: "#2563eb", // Active state
+                                      transform: "scale(0.95)", // Slightly shrink button when activated
+                                    }}
+                                    borderRadius="8px" /* Rounded corners */
+                                    px={6}
+                                    py={3}
+                                    fontWeight="500"
+                                    fontSize="sm"
+                                    onClick={() => {
+                                      // logAllFormElements();
+                                      sendFreightData();
+                                    }}
+                                  >
+                                    Get A Quote
+                                  </Button>
+                                </Flex>
                                 {quoteCalculationRes && (
                                   <Box mt={4}>
                                     <Stack spacing={3}>
