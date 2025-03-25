@@ -79,8 +79,11 @@ export const CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
 `;
 
 export const UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
-  mutation UpdateJobPriceCalculationDetail($id: ID!, $input: UpdateJobPriceCalculationDetailInput!) {
-    updateJobPriceCalculationDetail(id: $id, input: $input) {
+  mutation updateJobPriceCalculationDetailByJobId(
+    $job_id: ID!,
+    $input: UpdateJobPriceCalculationDetailInput!
+  ) {
+    updateJobPriceCalculationDetailByJobId(job_id: $job_id, input: $input) {
       id
       job_id
       customer_id
@@ -95,6 +98,7 @@ export const UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
     }
   }
 `;
+
 
 export const DELETE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
   mutation DeleteJobPriceCalculationDetail($id: ID!) {
