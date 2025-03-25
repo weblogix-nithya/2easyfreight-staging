@@ -34,6 +34,7 @@
     "@wojtekmaj/react-daterange-picker": "^5.0.1",
     "apexcharts": "^4.4.0",
     "apollo-upload-client": "^17.0.0",
+    "axios": "^1.8.4",
     "chakra-react-select": "^4.4.3",
     "framer-motion": "^6.5.1",
     "graphql": "^16.6.0",

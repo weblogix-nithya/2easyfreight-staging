@@ -25,6 +25,7 @@ import {
 } from "@chakra-ui/react";
 import { faTrashCan } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
@@ -43,7 +44,7 @@ import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_DRIVERS_QUERY } from "graphql/driver";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
-import {
+import defaultJobQuoteData, {
   defaultJob,
   DELETE_JOB_MUTATION,
   GET_JOB_QUERY,
@@ -66,6 +67,10 @@ import {
   DELETE_JOB_ITEM_MUTATION,
   UPDATE_JOB_ITEM_MUTATION,
 } from "graphql/jobItem";
+import {
+  defaultJobPriceCalculationDetail,
+  GET_JOB_PRICE_CALCULATION_DETAIL_QUERY,
+} from "graphql/JobPriceCalculationDetail";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
 import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
 import { DELETE_MEDIA_MUTATION } from "graphql/media";
@@ -96,6 +101,11 @@ function JobEdit() {
   const textColor = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = useState(defaultJob);
+  const [refinedData, setRefinedData] = useState(defaultJobQuoteData);
+  const [quoteCalculationRes, setQuoteCalculationRes] = useState(
+    defaultJobPriceCalculationDetail,
+  );
+  const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
   const { id } = router.query;
   const [isSaving, setIsSaving] = useState(false);
@@ -136,6 +146,16 @@ function JobEdit() {
   const [isSameDayJob, setIsSameDayJob] = useState(false);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
+  const [locationOptions, setLocationOptions] = useState([
+    { value: "VIC", label: "Victoria" },
+    { value: "QLD", label: "Queensland" },
+  ]);
+  const [prevJobState, setPrevJobState] = useState({
+    freight_type: refinedData.freight_type,
+    transport_type: job.transport_type,
+    transport_location: job.transport_location,
+    job_items: jobItems, // Add job_items to the state
+  });
 
   const tabs = [
     {
@@ -236,7 +256,7 @@ function JobEdit() {
 
   const {
     loading: jobLoading,
-    data: jobData,
+    data: jobData, // Renamed 'data' to 'jobData'
     refetch: getJob,
   } = useQuery(GET_JOB_QUERY, {
     variables: {
@@ -247,9 +267,27 @@ function JobEdit() {
       if (data?.job == null) {
         router.push("/admin/jobs");
       }
-
+    
       if (!updatingMedia) {
-        setJob({ ...job, ...data?.job, media: data?.job.media });
+        setJob({
+          ...job,
+          ...data?.job,
+          media: data?.job.media,
+          job_category_id: data?.job.job_category_id,
+          transport_location: data?.job.transport_location,
+        });
+        const selectedCategoryName = jobCategories.find(
+          (job_category) => job_category.value == data?.job.job_category_id,
+        )?.label;
+        const selectedLocation = locationOptions.find(
+          (location) => location.value == data.job.transport_location,
+        );
+        setRefinedData({
+          ...refinedData,
+          freight_type: selectedCategoryName || null,
+          state_code: data.job.transport_location,
+          state: selectedLocation?.label || null,
+        });
         getCustomersByCompanyId({
           query: "",
           page: 1,
@@ -258,7 +296,7 @@ function JobEdit() {
           orderByOrder: "ASC",
           company_id: data.job.company_id,
         });
-
+    
         setJobDateAt(
           data.job.ready_at ? formatDate(data.job.ready_at) : jobDateAt,
         );
@@ -276,19 +314,17 @@ function JobEdit() {
             ).toDateString(),
         );
         // jobDestinations without is_pickup
-        let _jobDestinations = data.job.job_destinations.filter(
-          (destination: any) => !destination.is_pickup,
-        );
-        setOriginalJobDestinations([]);
+        let _jobDestinations = data.job.job_destinations || [];
+    
         setOriginalJobDestinations(_jobDestinations);
-
-        setJobDestinations([]);
+        setJobDestinations(_jobDestinations);
+    
         setPickUpDestination(
           data.job.pick_up_destination
             ? data.job.pick_up_destination
             : { ...defaultJobDestination, id: 0, is_new: true },
         );
-        setJobDestinations(_jobDestinations);
+    
         setOriginalJobItems([]);
         setOriginalJobItems(data.job.job_items);
         setJobItems([]);
@@ -306,13 +342,119 @@ function JobEdit() {
         setUpdatingMedia(false);
       }
     },
+    
+    // onCompleted: (data) => {
+    //   if (data?.job == null) {
+    //     router.push("/admin/jobs");
+    //   }
+
+    //   if (!updatingMedia) {
+    //     setJob({
+    //       ...job,
+    //       ...data?.job,
+    //       media: data?.job.media,
+    //       job_category_id: data?.job.job_category_id,
+    //       transport_location: data?.job.transport_location,
+    //     });
+    //     const selectedCategoryName = jobCategories.find(
+    //       (job_category) => job_category.value == data?.job.job_category_id,
+    //     )?.label;
+    //     const selectedLocation = locationOptions.find(
+    //       (location) => location.value == jobData.job.transport_location,
+    //     );
+    //     setRefinedData({
+    //       ...refinedData,
+    //       freight_type: selectedCategoryName || null,
+    //       state_code: data?.job.transport_location,
+    //       state: selectedLocation?.label || null,
+    //     });
+    //     getCustomersByCompanyId({
+    //       query: "",
+    //       page: 1,
+    //       first: 100,
+    //       orderByColumn: "id",
+    //       orderByOrder: "ASC",
+    //       company_id: data.job.company_id,
+    //     });
+
+    //     setJobDateAt(
+    //       data.job.ready_at ? formatDate(data.job.ready_at) : jobDateAt,
+    //     );
+    //     setReadyAt(
+    //       data.job.ready_at ? formatTimeUTCtoInput(data.job.ready_at) : readyAt,
+    //     );
+    //     setDropAt(
+    //       data.job.drop_at ? formatTimeUTCtoInput(data.job.drop_at) : dropAt,
+    //     );
+    //     setIsSameDayJob(today === formatDate(data.job.ready_at));
+    //     setIsTomorrowJob(
+    //       new Date(formatDate(data.job.ready_at)).toDateString() ===
+    //         new Date(
+    //           new Date(today).setDate(new Date(today).getDate() + 1),
+    //         ).toDateString(),
+    //     );
+    //     // jobDestinations without is_pickup
+    //     let _jobDestinations = data.job.job_destinations || []
+        
+    //     setOriginalJobDestinations(_jobDestinations);
+    //     setJobDestinations(_jobDestinations);
+
+    //     setPickUpDestination(
+    //       data.job.pick_up_destination
+    //         ? data.job.pick_up_destination
+    //         : { ...defaultJobDestination, id: 0, is_new: true },
+    //     );
+    //     setJobDestinations(_jobDestinations);
+    //     setOriginalJobItems([]);
+    //     setOriginalJobItems(data.job.job_items);
+    //     setJobItems([]);
+    //     setJobItems(data.job.job_items);
+    //     setJobCcEmails([]);
+    //     setJobCcEmails(data.job.job_cc_emails);
+    //     setJobCcEmailTags(
+    //       data.job.job_cc_emails.map(
+    //         (job_cc_email: { id: number; email: string }) => job_cc_email.email,
+    //       ),
+    //     );
+    //   } else {
+    //     setJob({ ...job, media: data?.job.media });
+    //     setJobCcEmails(data.job.job_cc_emails);
+    //     setUpdatingMedia(false);
+    //   }
+    // },
     onError(error) {
       console.log("onError");
       console.log(error);
     },
   });
 
-  // method to format savedAddresses to be used in the select
+  useEffect(() => {
+    if (jobData?.job) {
+      // Use 'jobData' instead of 'data'
+      setJob({
+        ...job,
+        job_category_id: jobData.job.job_category_id,
+        transport_location: jobData.job.transport_location,
+      });
+
+      // Find the selected category name based on job_category_id
+      const selectedCategoryName = jobCategories.find(
+        (job_category) => job_category.value === jobData.job.job_category_id,
+      )?.label;
+
+      const selectedLocation = locationOptions.find(
+        (location) => location.value === jobData.job.transport_location,
+      );
+
+      setRefinedData({
+        ...refinedData,
+        freight_type: selectedCategoryName || null,
+        state_code: jobData.job.transport_location,
+        state: selectedLocation?.label || null,
+      });
+    }
+  }, [jobData, jobCategories]); // Use 'jobData' instead of 'data'
+
   const formatToSelect = (
     _entityArray: any[],
     valueKeyName: string,
@@ -585,6 +727,55 @@ function JobEdit() {
       });
     },
   });
+  // Use the useQuery hook to fetch the data
+  const { loading, error, data } = useQuery(
+    GET_JOB_PRICE_CALCULATION_DETAIL_QUERY,
+    {
+      variables: {
+        job_id: job.id,
+      },
+      // skip: !job.id,
+      skip: !job.id || !Boolean(job.id), // To ensure no falsy value interferes
+      onCompleted: (data) => {
+        // Process the data as needed
+        
+        setRefinedData({
+          ...data.jobPriceCalculationDetail,
+          cbm_auto: data.jobPriceCalculationDetail?.cbm_auto,
+          customer_id: data.jobPriceCalculationDetail?.customer_id,
+          dangerous_goods: data.jobPriceCalculationDetail?.dangerous_goods,
+          freight: data.jobPriceCalculationDetail?.freight,
+          fuel: data.jobPriceCalculationDetail?.fuel,
+          hand_unload: data.jobPriceCalculationDetail?.hand_unload,
+          stackable: data.jobPriceCalculationDetail?.stackable,
+          total_price: data.jobPriceCalculationDetail?.total_price,
+          total_weight: data.jobPriceCalculationDetail?.total_weight,
+        });
+        setQuoteCalculationRes({
+          ...data.jobPriceCalculationDetail,
+          total_price: data.jobPriceCalculationDetail?.total_price,
+          total_weight: data.jobPriceCalculationDetail?.total_weight,
+          cbm_auto: data.jobPriceCalculationDetail?.cbm_auto,
+          customer_id: data.jobPriceCalculationDetail?.customer_id,
+          dangerous_goods: data.jobPriceCalculationDetail?.dangerous_goods,
+          freight: data.jobPriceCalculationDetail?.freight,
+          fuel: data.jobPriceCalculationDetail?.fuel,
+          hand_unload: data.jobPriceCalculationDetail?.hand_unload,
+          stackable: data.jobPriceCalculationDetail.stackable,
+        });
+        setButtonText("View Quote");
+
+        console.log(data.jobPriceCalculationDetail, "imp");
+      },
+      onError: (error) => {
+        // Handle the error and set data to empty
+        console.error("Error fetching job price calculation detail:", error);
+        setRefinedData(defaultJobQuoteData);
+        setQuoteCalculationRes(defaultJobPriceCalculationDetail);
+        setButtonText("Get A Quote");
+      },
+    },
+  );
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: {
       query: "",
@@ -675,14 +866,22 @@ function JobEdit() {
     }
     _jobItems[index] = value;
     setJobItems(_jobItems);
+    setPrevJobState((prevState) => ({
+      ...prevState,
+      job_items: _jobItems,
+    }));
   };
   const addToJobItems = () => {
-    let nextId = jobItems[jobItems.length - 1].id + 1;
+    let nextId = 1; // Default to 1 if jobItems is empty
+    if (jobItems.length > 0) {
+      nextId = jobItems[jobItems.length - 1].id + 1;
+    }
     setJobItems((jobItems) => [
       ...jobItems,
       { ...defaultJobItem, ...{ id: nextId, is_new: true } },
     ]);
   };
+
   useEffect(() => {
     dateChanged();
   }, [jobDateAt, readyAt, dropAt]);
@@ -1027,6 +1226,183 @@ function JobEdit() {
     }
   };
 
+const validateAddresses = () => {
+  if (!pickUpDestination?.address) {
+    toast({
+      title: "Pickup address is required.",
+      description: "Please enter the address in the correct format.",
+      status: "warning",
+      duration: 3000,
+      isClosable: true,
+    });
+    return false;
+  }
+
+  if (jobDestinations.some((destination) => !destination.address)) {
+    toast({
+      title: "Delivery address is required.",
+      description: "Please ensure all delivery addresses are properly entered.",
+      status: "warning",
+      duration: 3000,
+      isClosable: true,
+    });
+    return false;
+  }
+
+  if (!refinedData.freight_type) {
+    console.error("Freight Type is not set.");
+    toast({
+      title: "Freight Type is required.",
+      description: "Please ensure the freight type is properly set.",
+      status: "warning",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+
+  if (!job.transport_type) {
+    console.error("Transport Type is not set.");
+    toast({
+      title: "Transport Type is required.",
+      description: "Please ensure the transport type is properly set.",
+      status: "warning",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+
+  if (!job.transport_location) {
+    console.error("Transport Location is not set.");
+    toast({
+      title: "Transport Location is required.",
+      description: "Please ensure the transport location is properly set.",
+      status: "warning",
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+
+  if (
+    !refinedData.freight_type ||
+    !job.transport_type ||
+    !job.transport_location
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
+const sendFreightData = async () => {
+  const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
+
+  if (!validateAddresses()) return;
+
+  const today = new Date().toISOString(); // Get current date and time in ISO format
+
+  const jobDestination1 =
+    jobDestinations.length > 0
+      ? {
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
+      : null;
+
+  const payload = {
+    freight_type: refinedData.freight_type,
+    transport_type: job.transport_type,
+    state: refinedData.state || job.transport_location,
+    state_code: refinedData.state_code,
+    job_pickup_address: {
+      state: pickUpDestination?.address_state,
+      suburb: pickUpDestination?.address_city,
+      postcode: pickUpDestination?.address_postal_code,
+      address: pickUpDestination?.address,
+    },
+    job_destination_address:
+      jobDestinations.length > 0
+        ? {
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
+        : {},
+    pickup_time: {
+      ready_by: readyAt,
+    },
+    delivery_time: {
+      drop_by: dropAt,
+    },
+    surcharges: {
+      hand_unload: job.is_hand_unloading || false,
+      dangerous_goods: job.is_dangerous_goods || false,
+      time_slot: job.timeslot || null,
+      tail_lift: job.is_tailgate_required || null,
+      stackable: false, // If applicable, update this
+    },
+    job_items: jobItems.map((item) => ({
+      id: item.id,
+      name: item.name || "",
+      notes: item.notes || "",
+      quantity: item.quantity,
+      volume: item.volume,
+      weight: item.weight,
+      dimension_height: item.dimension_height,
+      dimension_width: item.dimension_width,
+      dimension_depth: item.dimension_depth,
+      job_destination: jobDestination1 || null,
+      item_type: {
+        id: item.item_type?.id || "",
+        name: item.item_type?.name || "",
+      },
+      created_at: refinedData.created_at || today,
+      updated_at: refinedData.updated_at || today,
+    })),
+  };
+
+  console.log(payload);
+
+  try {
+    const response = await axios.post(apiUrl, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    console.log("Response Data:", response.data);
+    setQuoteCalculationRes(response?.data);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+
+const handleButtonClicked = () => {
+  const hasChanged = 
+    prevJobState.freight_type !== refinedData.freight_type ||
+    prevJobState.transport_type !== job.transport_type ||
+    prevJobState.transport_location !== job.transport_location ||
+    prevJobState.job_items.some((item, index) => 
+      item.id !== jobItems[index].id ||
+      item.name !== jobItems[index].name ||
+      item.notes !== jobItems[index].notes ||
+      item.quantity !== jobItems[index].quantity ||
+      item.volume !== jobItems[index].volume ||
+      item.weight !== jobItems[index].weight ||
+      item.dimension_height !== jobItems[index].dimension_height ||
+      item.dimension_width !== jobItems[index].dimension_width ||
+      item.dimension_depth !== jobItems[index].dimension_depth
+    );
+
+  if (hasChanged) {
+    setButtonText("Get A Quote ");
+    sendFreightData();
+  } else {
+    setIsSaving(true);
+    handleUpdateJob();
+  }
+};
+
   return (
     <AdminLayout>
       <Box
@@ -1137,9 +1513,17 @@ function JobEdit() {
                           placeholder=""
                           onChange={(e) => {
                             const selectedCategory = e.value;
+                            const selectedCategoryName = jobCategories.find(
+                              (job_category) =>
+                                job_category.value === selectedCategory,
+                            )?.label;
                             setJob({
                               ...job,
                               job_category_id: selectedCategory || null,
+                            });
+                            setRefinedData({
+                              ...refinedData,
+                              freight_type: selectedCategoryName || null,
                             });
                           }}
                         />
@@ -1786,6 +2170,56 @@ function JobEdit() {
                               })
                             }
                           />
+                          <CustomInputField
+                            key="transport_typeKey"
+                            isSelect={true}
+                            optionsArray={[
+                              { value: "import", label: "Import" },
+                              { value: "export", label: "Export" },
+                            ]}
+                            label="Transport Type"
+                            name="transport_type"
+                            value={[
+                              { value: "import", label: "Import" },
+                              { value: "export", label: "Export" },
+                            ].find((_e) => _e.value == job.transport_type)}
+                            placeholder=""
+                            onChange={(e) => {
+                              setJob({ ...job, transport_type: e.value });
+                              setRefinedData({
+                                ...refinedData,
+                                transport_type: e.value,
+                              });
+                            }}
+                          />
+
+                          {/* Location Select */}
+                          <CustomInputField
+                            key="locationKey"
+                            isSelect={true}
+                            optionsArray={locationOptions} // Use the saved optionsArray
+                            label="Location"
+                            name="transport_location"
+                            value={locationOptions.find(
+                              (_e) => _e.value == job.transport_location,
+                            )} // Initialize with the correct value
+                            placeholder=""
+                            onChange={(e) => {
+                              const newState = {
+                                ...refinedData,
+                                state_code: e.value,
+                                state: e.label,
+                              };
+                              setRefinedData(newState);
+                              setJob({ ...job, transport_location: e.value });
+                            }}
+                          />
+                          <Text fontSize="sm" color={textColorSecodary} mt={3}>
+                            <strong>Hint: </strong>To get a quote, the location
+                            must be <strong>Victoria or Queensland</strong>, and
+                            the job category should be{" "}
+                            <strong>Air Freight or LCL</strong>.
+                          </Text>
                         </Box>
                       ) : (
                         <Flex alignItems="center" mb={"16px"}>
@@ -1805,150 +2239,235 @@ function JobEdit() {
                         </Flex>
                       )}
                       <Box mb="16px">
-                        <Flex alignItems="center" width="100%" pt={7}>
-                          <SimpleGrid columns={{ sm: 1 }} width="100%">
-                            <GridItem>
-                              <FormLabel
-                                display="flex"
-                                mb="0"
-                                fontSize="sm"
-                                fontWeight="500"
-                                _hover={{ cursor: "pointer" }}
-                              >
-                                Does this job require a timeslot booking through
-                                Inbound Connect?
-                              </FormLabel>
-                            </GridItem>
-                            <GridItem>
-                              <RadioGroup
-                                isDisabled={!isAdmin}
-                                value={job.is_inbound_connect ? "1" : "0"}
-                                onChange={(e) => {
-                                  setJob({
-                                    ...job,
-                                    is_inbound_connect:
-                                      e === "1" ? true : false,
-                                  });
-                                }}
-                              >
-                                <Stack direction="row" pt={3}>
-                                  <Radio value="0">No</Radio>
-                                  <Radio value="1" pl={6}>
-                                    Yes
-                                  </Radio>
-                                </Stack>
-                              </RadioGroup>
-                            </GridItem>
-                          </SimpleGrid>
-                        </Flex>
+                        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                          <Box>
+                            <Flex alignItems="center" width="100%" pt={7}>
+                              <SimpleGrid columns={{ sm: 1 }} width="100%">
+                                <GridItem>
+                                  <FormLabel
+                                    display="flex"
+                                    mb="0"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    _hover={{ cursor: "pointer" }}
+                                  >
+                                    Does this job require a timeslot booking
+                                    through Inbound Connect?
+                                  </FormLabel>
+                                </GridItem>
+                                <GridItem>
+                                  <RadioGroup
+                                    isDisabled={!isAdmin}
+                                    value={job.is_inbound_connect ? "1" : "0"}
+                                    onChange={(e) => {
+                                      setJob({
+                                        ...job,
+                                        is_inbound_connect:
+                                          e === "1" ? true : false,
+                                      });
+                                    }}
+                                  >
+                                    <Stack direction="row" pt={3}>
+                                      <Radio value="0">No</Radio>
+                                      <Radio value="1" pl={6}>
+                                        Yes
+                                      </Radio>
+                                    </Stack>
+                                  </RadioGroup>
+                                </GridItem>
+                              </SimpleGrid>
+                            </Flex>
 
-                        <Flex alignItems="center" width="100%" pt={7}>
-                          <SimpleGrid columns={{ sm: 1 }} width="100%">
-                            <GridItem>
-                              <FormLabel
-                                display="flex"
-                                mb="0"
-                                fontSize="sm"
-                                fontWeight="500"
-                                _hover={{ cursor: "pointer" }}
-                              >
-                                Does this job require hand unloading?
-                              </FormLabel>
-                            </GridItem>
+                            <Flex alignItems="center" width="100%" pt={7}>
+                              <SimpleGrid columns={{ sm: 1 }} width="100%">
+                                <GridItem>
+                                  <FormLabel
+                                    display="flex"
+                                    mb="0"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    _hover={{ cursor: "pointer" }}
+                                  >
+                                    Does this job require hand unloading?
+                                  </FormLabel>
+                                </GridItem>
+                                <GridItem>
+                                  <RadioGroup
+                                    isDisabled={!isAdmin}
+                                    value={job.is_hand_unloading ? "1" : "0"}
+                                    onChange={(e) => {
+                                      setJob({
+                                        ...job,
+                                        is_hand_unloading:
+                                          e === "1" ? true : false,
+                                      });
+                                    }}
+                                  >
+                                    <Stack direction="row" pt={3}>
+                                      <Radio value="0">No</Radio>
+                                      <Radio value="1" pl={6}>
+                                        Yes
+                                      </Radio>
+                                    </Stack>
+                                  </RadioGroup>
+                                </GridItem>
+                              </SimpleGrid>
+                            </Flex>
 
-                            <GridItem>
-                              <RadioGroup
-                                isDisabled={!isAdmin}
-                                value={job.is_hand_unloading ? "1" : "0"}
-                                onChange={(e) => {
-                                  setJob({
-                                    ...job,
-                                    is_hand_unloading: e === "1" ? true : false,
-                                  });
-                                }}
-                              >
-                                <Stack direction="row" pt={3}>
-                                  <Radio value="0">No</Radio>
-                                  <Radio value="1" pl={6}>
-                                    Yes
-                                  </Radio>
-                                </Stack>
-                              </RadioGroup>
-                            </GridItem>
-                          </SimpleGrid>
-                        </Flex>
+                            <Flex alignItems="center" width="100%" pt={7}>
+                              <SimpleGrid columns={{ sm: 1 }} width="100%">
+                                <GridItem>
+                                  <FormLabel
+                                    display="flex"
+                                    mb="0"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    _hover={{ cursor: "pointer" }}
+                                  >
+                                    Are there dangerous goods being transported?
+                                  </FormLabel>
+                                </GridItem>
+                                <GridItem>
+                                  <RadioGroup
+                                    isDisabled={!isAdmin}
+                                    value={job.is_dangerous_goods ? "1" : "0"}
+                                    onChange={(e) => {
+                                      setJob({
+                                        ...job,
+                                        is_dangerous_goods:
+                                          e === "1" ? true : false,
+                                      });
+                                    }}
+                                  >
+                                    <Stack direction="row" pt={3}>
+                                      <Radio value="0">No</Radio>
+                                      <Radio value="1" pl={6}>
+                                        Yes
+                                      </Radio>
+                                    </Stack>
+                                  </RadioGroup>
+                                </GridItem>
+                              </SimpleGrid>
+                            </Flex>
 
-                        <Flex alignItems="center" width="100%" pt={7}>
-                          <SimpleGrid columns={{ sm: 1 }} width="100%">
+                            <Flex alignItems="center" width="100%" pt={7}>
+                              <SimpleGrid columns={{ sm: 1 }} width="100%">
+                                <GridItem>
+                                  <FormLabel
+                                    display="flex"
+                                    mb="0"
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    _hover={{ cursor: "pointer" }}
+                                  >
+                                    Is a Tail Lift vehicle required?
+                                  </FormLabel>
+                                </GridItem>
+                                <GridItem>
+                                  <RadioGroup
+                                    isDisabled={!isAdmin}
+                                    value={job.is_tailgate_required ? "1" : "0"}
+                                    onChange={(e) => {
+                                      setJob({
+                                        ...job,
+                                        is_tailgate_required:
+                                          e === "1" ? true : false,
+                                      });
+                                    }}
+                                  >
+                                    <Stack direction="row" pt={3}>
+                                      <Radio value="0">No</Radio>
+                                      <Radio value="1" pl={6}>
+                                        Yes
+                                      </Radio>
+                                    </Stack>
+                                  </RadioGroup>
+                                </GridItem>
+                              </SimpleGrid>
+                            </Flex>
+                          </Box>
+                          <Box>
+                            {/* Right side content goes here */}
                             <GridItem>
-                              <FormLabel
-                                display="flex"
-                                mb="0"
-                                fontSize="sm"
-                                fontWeight="500"
-                                _hover={{ cursor: "pointer" }}
-                              >
-                                Are there dangerous goods being transported?
-                              </FormLabel>
-                            </GridItem>
-                            <GridItem>
-                              <RadioGroup
-                                isDisabled={!isAdmin}
-                                value={job.is_dangerous_goods ? "1" : "0"}
-                                onChange={(e) => {
-                                  setJob({
-                                    ...job,
-                                    is_dangerous_goods:
-                                      e === "1" ? true : false,
-                                  });
-                                }}
-                              >
-                                <Stack direction="row" pt={3}>
-                                  <Radio value="0">No</Radio>
-                                  <Radio value="1" pl={6}>
-                                    Yes
-                                  </Radio>
-                                </Stack>
-                              </RadioGroup>
-                            </GridItem>
-                          </SimpleGrid>
-                        </Flex>
-                        <Flex alignItems="center" width="100%" pt={7}>
-                          <SimpleGrid columns={{ sm: 1 }} width="100%">
-                            <GridItem>
-                              <FormLabel
-                                display="flex"
-                                mb="0"
-                                fontSize="sm"
-                                fontWeight="500"
-                                _hover={{ cursor: "pointer" }}
-                              >
-                                Is a Tail Lift vehicle required?
-                              </FormLabel>
-                            </GridItem>
+                              {(job.job_category_id == 1 ||
+                                job.job_category_id == 2) &&
+                                (job.transport_location === "VIC" ||
+                                  job.transport_location === "QLD") && (
+                                  <Flex
+                                    height="100%"
+                                    justifyContent="flex-start"
+                                    pt={7}
+                                    flexDirection="column"
+                                  >
+                                    {/* First Row: Button */}
+                                    <Flex>
+                                      <Button
+                                        bg="#3b82f6" /* Match the blue color */
+                                        color="white"
+                                        _hover={{
+                                          bg: "#2563eb", // Slightly darker blue for hover
+                                        }}
+                                        _active={{
+                                          bg: "#2563eb", // Active state
+                                          transform: "scale(0.95)", // Slightly shrink button when activated
+                                        }}
+                                        borderRadius="8px" /* Rounded corners */
+                                        px={6}
+                                        py={3}
+                                        fontWeight="500"
+                                        fontSize="sm"
+                                        onClick={() => {
+                                          handleButtonClicked();
+                                        }}
+                                      >
+                                        {buttonText}
+                                      </Button>
+                                    </Flex>
 
-                            <GridItem>
-                              <RadioGroup
-                                isDisabled={!isAdmin}
-                                value={job.is_tailgate_required ? "1" : "0"}
-                                onChange={(e) => {
-                                  setJob({
-                                    ...job,
-                                    is_tailgate_required:
-                                      e === "1" ? true : false,
-                                  });
-                                }}
-                              >
-                                <Stack direction="row" pt={3}>
-                                  <Radio value="0">No</Radio>
-                                  <Radio value="1" pl={6}>
-                                    Yes
-                                  </Radio>
-                                </Stack>
-                              </RadioGroup>
+                                    {/* Second Row: Other Elements */}
+                                    {quoteCalculationRes && (
+                                      <Box mt={4}>
+                                        <Stack spacing={3}>
+                                          <Text fontSize="sm" fontWeight="500">
+                                            CBM Auto:{" "}
+                                            {quoteCalculationRes.cbm_auto}
+                                          </Text>
+                                          <Text fontSize="sm" fontWeight="500">
+                                            Total Weight:{" "}
+                                            {quoteCalculationRes.total_weight}
+                                          </Text>
+                                          <Text fontSize="sm" fontWeight="500">
+                                            Freight:{" "}
+                                            {quoteCalculationRes.freight}
+                                          </Text>
+                                          <Text fontSize="sm" fontWeight="500">
+                                            Fuel: {quoteCalculationRes.fuel}
+                                          </Text>
+                                          <Text fontSize="sm" fontWeight="500">
+                                            Hand Unload:{" "}
+                                            {quoteCalculationRes.hand_unload}
+                                          </Text>
+                                          <Text fontSize="sm" fontWeight="500">
+                                            Dangerous Goods:{" "}
+                                            {
+                                              quoteCalculationRes.dangerous_goods
+                                            }
+                                          </Text>
+                                          <Text fontSize="sm" fontWeight="500">
+                                            Stackable:{" "}
+                                            {quoteCalculationRes.stackable}
+                                          </Text>
+                                          <Text fontSize="sm" fontWeight="500">
+                                            Total: {quoteCalculationRes.total}
+                                          </Text>
+                                        </Stack>
+                                      </Box>
+                                    )}
+                                  </Flex>
+                                )}
                             </GridItem>
-                          </SimpleGrid>
-                        </Flex>
+                          </Box>
+                        </SimpleGrid>
                       </Box>
                     </Box>
                     {isAdmin && (
