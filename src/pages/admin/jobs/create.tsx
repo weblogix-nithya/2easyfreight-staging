@@ -81,7 +81,7 @@ function JobEdit() {
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
-  console.log(job, "job");
+  // console.log(job, "job");
   const [customerSelected, setCustomerSelected] = useState(defaultCustomer);
   const [jobDestinations, setJobDestinations] = useState([
     { ...defaultJobDestination, ...{ id: 2, address_line_1: "" } },
@@ -109,7 +109,7 @@ function JobEdit() {
   // Temporary saved addresses
   const [isSaving, setIsSaving] = useState(false);
   const [jobItems, setJobItems] = useState([defaultJobItem]);
-  console.log(jobItems, "jobitem");
+  // console.log(jobItems, "jobitem");
   const [savedAddressesSelect, setSavedAddressesSelect] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [jobTypeOptions, setJobTypeOptions] = useState([]);
@@ -319,7 +319,7 @@ function JobEdit() {
         stackable: Number(quoteCalculationRes.stackable),
         total: Number(quoteCalculationRes.total),
       });
-      console.log("Job cre", job.customer_id);
+      // console.log("Job cre", job.customer_id);
       // save job destinations
       const resultPickup = await handleCreateJobDestination({
         input: {
@@ -399,7 +399,7 @@ function JobEdit() {
         duration: 3000,
         isClosable: true,
       });*/
-      console.log("Media created");
+      // console.log("Media created");
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
@@ -935,7 +935,7 @@ useEffect(() => {
                         ...refinedData,
                         freight_type: selectedCategoryName || null,
                       });
-                      console.log(refinedData, "n");
+                      // console.log(refinedData, "n");
                     }}
                   />
                   {!isCompany && (
@@ -1143,10 +1143,27 @@ useEffect(() => {
                     )}
                     placeholder="Select type"
                     onChange={(e) => {
+                      // setJob({
+                      //   ...job,
+                      //   job_type_id: e.value || null,
+                      // });
+                      const selectedCategory = e.value;
+                      const selectedCategoryName = filteredJobTypeOptions.find(
+                        (job_category) =>
+                          job_category.value === selectedCategory,
+                      )?.label;
+                  
                       setJob({
                         ...job,
-                        job_type_id: e.value || null,
+                        job_type_id: selectedCategory || null,
                       });
+                  
+                      setRefinedData({
+                        ...refinedData,
+                        service_choice: selectedCategoryName || null,
+                      });
+                      console.log(refinedData, "n");
+                      console.log(job,'job')
                     }}
                   />
 
