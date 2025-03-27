@@ -81,6 +81,7 @@ function JobEdit() {
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
+  console.log(job, "job");
   const [customerSelected, setCustomerSelected] = useState(defaultCustomer);
   const [jobDestinations, setJobDestinations] = useState([
     { ...defaultJobDestination, ...{ id: 2, address_line_1: "" } },
@@ -91,17 +92,20 @@ function JobEdit() {
   });
   const [refinedData, setRefinedData] = useState({
     ...defaultJobQuoteData,
-    freight_type: "",
+    freight_type: "LCL",
   });
+  console.log(refinedData, "refined to wp");
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isQuotePrice, setIsQuotePrice] = useState(false);
 
   // Temporary saved addresses
   const [isSaving, setIsSaving] = useState(false);
   const [jobItems, setJobItems] = useState([defaultJobItem]);
+  console.log(jobItems, "jobitem");
   const [savedAddressesSelect, setSavedAddressesSelect] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [jobTypeOptions, setJobTypeOptions] = useState([]);
@@ -849,6 +853,7 @@ function JobEdit() {
 
       console.log("Response Data:", response.data);
       setQuoteCalculationRes(response?.data);
+      setIsQuotePrice(true);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -1173,6 +1178,64 @@ function JobEdit() {
                           })
                         }
                       />
+                      {/* Transport Type Select */}
+                      <CustomInputField
+                        key="transport_typeKey"
+                        isSelect={true}
+                        optionsArray={[
+                          { value: "import", label: "Import" },
+                          { value: "export", label: "Export" },
+                        ]}
+                        label="Transport Type"
+                        name="transport_type"
+                        value={[
+                          { value: "import", label: "Import" },
+                          { value: "export", label: "Export" },
+                        ].find((_e) => _e.value === job.transport_type)}
+                        placeholder=""
+                        onChange={(e) => {
+                          setJob({ ...job, transport_type: e.value });
+                          setRefinedData({
+                            ...refinedData,
+                            transport_type: e.value,
+                          });
+                        }}
+                      />
+
+                      {/* Location Select */}
+                      <CustomInputField
+                        key="locationKey"
+                        isSelect={true}
+                        optionsArray={[
+                          { value: "VIC", label: "Victoria" },
+                          { value: "QLD", label: "Queensland" },
+                        ]}
+                        label="Location"
+                        name="transport_location"
+                        value={[
+                          { value: "VIC", label: "Victoria" },
+                          { value: "QLD", label: "Queensland" },
+                        ].find((_e) => _e.value === job.transport_location)}
+                        placeholder=""
+                        onChange={(e) => {
+                          const newState = {
+                            ...refinedData,
+                            state_code: e.value,
+                            state: e.label,
+                          };
+                          setJob({ ...job, transport_location: e.value });
+                          setRefinedData(newState);
+                        }}
+                      />
+                      <Text
+                        style={{
+                          color: "red",
+                          paddingLeft: "11.4rem",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Note: For LCL and Airfreight Only
+                      </Text>
                     </>
                   )}
                 </Box>
@@ -1314,6 +1377,56 @@ function JobEdit() {
                     }}
                     onValueChanged={handleJobItemChanged}
                   />
+                  <Box
+                    mt={4}
+                    p={3}
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="md"
+                    backgroundColor="gray.50"
+                  >
+                    {/* CBM Auto */}
+                    <Flex justify="flex-end" align="center" mb={2}>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="500"
+                        color="gray.700"
+                        pl={4}
+                      >
+                        CBM Auto&nbsp;:&nbsp;
+                      </Text>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="600"
+                        color="blue.600"
+                        textAlign="right"
+                        pr={4}
+                      >
+                        {quoteCalculationRes.cbm_auto}
+                      </Text>
+                    </Flex>
+
+                    {/* Total Weight */}
+                    <Flex justify="flex-end" align="center">
+                      <Text
+                        fontSize="sm"
+                        fontWeight="500"
+                        color="gray.700"
+                        pl={4}
+                      >
+                        Total Weight&nbsp;:&nbsp;
+                      </Text>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="600"
+                        color="blue.600"
+                        textAlign="right"
+                        pr={4}
+                      >
+                        {quoteCalculationRes.total_weight}
+                      </Text>
+                    </Flex>
+                  </Box>
                 </Box>
 
                 <Divider className="my-12" />
@@ -1385,55 +1498,6 @@ function JobEdit() {
                       />
                     )}
                   </Box>
-                  {/* Transport Type Select */}
-                  <CustomInputField
-                    key="transport_typeKey"
-                    isSelect={true}
-                    optionsArray={[
-                      { value: "import", label: "Import" },
-                      { value: "export", label: "Export" },
-                    ]}
-                    label="Transport Type"
-                    name="transport_type"
-                    value={[
-                      { value: "import", label: "Import" },
-                      { value: "export", label: "Export" },
-                    ].find((_e) => _e.value === job.transport_type)}
-                    placeholder=""
-                    onChange={(e) => {
-                      setJob({ ...job, transport_type: e.value });
-                      setRefinedData({
-                        ...refinedData,
-                        transport_type: e.value,
-                      });
-                    }}
-                  />
-
-                  {/* Location Select */}
-                  <CustomInputField
-                    key="locationKey"
-                    isSelect={true}
-                    optionsArray={[
-                      { value: "VIC", label: "Victoria" },
-                      { value: "QLD", label: "Queensland" },
-                    ]}
-                    label="Location"
-                    name="transport_location"
-                    value={[
-                      { value: "VIC", label: "Victoria" },
-                      { value: "QLD", label: "Queensland" },
-                    ].find((_e) => _e.value === job.transport_location)}
-                    placeholder=""
-                    onChange={(e) => {
-                      const newState = {
-                        ...refinedData,
-                        state_code: e.value,
-                        state: e.label,
-                      };
-                      setJob({ ...job, transport_location: e.value });
-                      setRefinedData(newState);
-                    }}
-                  />
 
                   <Box mb="16px">
                     <Flex alignItems="center" width="100%" pt={7}>
@@ -1578,19 +1642,23 @@ function JobEdit() {
                           </Flex>
                         </GridItem>
 
-                        <GridItem>
-                          {(job.job_category_id === 1 ||
-                            job.job_category_id === 2) &&
+                        <GridItem
+                          pr={4} // Add desired right padding here
+                        >
+                          {(job.job_category_id == 1 ||
+                            job.job_category_id == 2) &&
                             (job.transport_location === "VIC" ||
                               job.transport_location === "QLD") &&
                             quoteCalculationRes && (
                               <Flex
                                 height="100%"
-                                justifyContent="flex-start"
+                                justifyContent="center"
                                 pt={7}
                                 flexDirection="column"
                               >
-                                <Flex>
+                                <Flex justify="center">
+                                  {" "}
+                                  {/* Center the button */}
                                   <Button
                                     bg="#3b82f6" /* Match the blue color */
                                     color="white"
@@ -1617,34 +1685,137 @@ function JobEdit() {
                                 {quoteCalculationRes && (
                                   <Box mt={4}>
                                     <Stack spacing={3}>
-                                      <Text fontSize="sm" fontWeight="500">
-                                        CBM Auto: {quoteCalculationRes.cbm_auto}
-                                      </Text>
-                                      <Text fontSize="sm" fontWeight="500">
-                                        Total Weight:{" "}
-                                        {quoteCalculationRes.total_weight}
-                                      </Text>
-                                      <Text fontSize="sm" fontWeight="500">
-                                        Freight: {quoteCalculationRes.freight}
-                                      </Text>
-                                      <Text fontSize="sm" fontWeight="500">
-                                        Fuel: {quoteCalculationRes.fuel}
-                                      </Text>
-                                      <Text fontSize="sm" fontWeight="500">
-                                        Hand Unload:{" "}
-                                        {quoteCalculationRes.hand_unload}
-                                      </Text>
-                                      <Text fontSize="sm" fontWeight="500">
-                                        Dangerous Goods:{" "}
-                                        {quoteCalculationRes.dangerous_goods}
-                                      </Text>
-                                      <Text fontSize="sm" fontWeight="500">
-                                        Stackable:{" "}
-                                        {quoteCalculationRes.stackable}
-                                      </Text>
-                                      <Text fontSize="sm" fontWeight="500">
-                                        Total: {quoteCalculationRes.total}
-                                      </Text>
+                                      {/* Freight */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Freight:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.freight}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Fuel */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Fuel:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.fuel}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Hand Unload */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Hand Unload:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.hand_unload}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Dangerous Goods */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Dangerous Goods:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.dangerous_goods}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Stackable */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Stackable:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.stackable}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Total */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Total:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.total}
+                                        </Text>
+                                      </Flex>
                                     </Stack>
                                   </Box>
                                 )}
@@ -1678,6 +1849,21 @@ function JobEdit() {
                   >
                     Create Job
                   </Button>
+                  {/* <Button
+                    variant="primary"
+                    onClick={handleJobCreation}
+                    isDisabled={
+                      (job.job_category_id === 1 ||
+                        job.job_category_id === 2) &&
+                      (job.transport_location === "VIC" ||
+                        job.transport_location === "QLD") &&
+                      !isQuotePrice // Disable the button if setIsQuotePrice (isQuotePrice) is false
+                        ? true
+                        : isSaving // Otherwise, consider the existing `isSaving` condition
+                    }
+                  >
+                    Create Job
+                  </Button> */}
                 </Flex>
               </FormControl>
             </Grid>
