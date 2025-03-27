@@ -705,21 +705,6 @@ export const defaultJob: Job = {
   // job_price_quote: []
 };
 
-type JobPriceCalculationDetail = {
-  id: string;
-  job_id: string;
-  customer_id: number;
-  cbm_auto: number;
-  total_weight: number;
-  freight: number;
-  fuel: number;
-  hand_unload: number;
-  dangerous_goods: number;
-  stackable: number;
-  total: number;
-};
-
-
 export type JobAddress = {
   state: string;
   suburb: string;
@@ -766,6 +751,7 @@ export type JobItem = {
 export type JobQuoteData = {
   freight_type: string;
   transport_type: any;
+  service_choice: string;
   state: string;
   state_code: string;
   stackable: boolean;
@@ -782,6 +768,7 @@ export type JobQuoteData = {
 const defaultJobQuoteData: JobQuoteData = {
   freight_type: "",
   transport_type: "",
+  service_choice:'',
   state: "",
   state_code: "",
   created_at: "",
