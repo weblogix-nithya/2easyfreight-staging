@@ -41,6 +41,8 @@ import {
   UPDATE_INVOICE_LINE_ITEM_MUTATION,
 } from "graphql/invoiceLineItem";
 import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
+import { defaultJob, GET_JOB_QUERY } from "graphql/job";
+import { defaultJobDestination } from "graphql/jobDestination";
 import { formatCurrency, formatFloat } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
@@ -62,6 +64,11 @@ function InvoiceEdit() {
     isHandleUpdateInvoiceLineItemsLoading,
     setIsHandleUpdateInvoiceLineItemsLoading,
   ] = useState(false);
+    const [job, setJob] = useState(defaultJob);
+    const [jobDestinations, setJobDestinations] = useState([]);
+    const [pickUpDestination, setPickUpDestination] = useState(
+      defaultJobDestination,
+    );
   const [isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
@@ -77,7 +84,6 @@ function InvoiceEdit() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [paymentTerm, setPaymentTerm] = useState(null);
-
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -102,6 +108,36 @@ function InvoiceEdit() {
     },
     onCompleted: (data) => {
       setInvoiceLineItems(data.invoiceLineItems.data);
+    },
+  });
+
+  const {
+    loading: jobLoading,
+    data: jobData, // Renamed 'data' to 'jobData'
+    refetch: getJob,
+  } = useQuery(GET_JOB_QUERY, {
+    variables: {
+      id: invoice.job_id,
+    },
+    skip: !id,
+    onCompleted: (data) => {
+      console.log(data,'d')
+           // jobDestinations without is_pickup
+      let _jobDestinations = data.job.job_destinations;
+
+      setJobDestinations(_jobDestinations);
+      console.log(jobDestinations,'jd')
+
+      setPickUpDestination(
+        data.job.pick_up_destination
+          ? data.job.pick_up_destination
+          : { ...defaultJobDestination},
+      );
+      console.log(pickUpDestination, 'pjd')
+    },
+    onError(error) {
+      // console.log("onError");
+      // console.log(error);
     },
   });
 
@@ -185,7 +221,7 @@ function InvoiceEdit() {
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, { }] = useMutation(
+  const [handleUpdateApproveInvoice, {}] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
@@ -283,7 +319,7 @@ function InvoiceEdit() {
       },
     });
 
-  const [handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -301,7 +337,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -318,7 +354,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleGenerateInvoicePdf, { }] = useMutation(
+  const [handleGenerateInvoicePdf, {}] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -352,7 +388,7 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleDeleteInvoiceLineItem, { }] = useMutation(
+  const [handleDeleteInvoiceLineItem, {}] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -578,6 +614,8 @@ function InvoiceEdit() {
                     {invoice.invoice_status?.name}
                   </Skeleton>
                 )}
+                {/* <Box>collection: {invoice?.job?.job_destinations[0].address_city}</Box> */}
+                <Box pl={6}>collection: {pickUpDestination.address_city}</Box>
               </Flex>
 
               {invoice.is_rcti && (
@@ -617,6 +655,7 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
+                    <Box pl={6}>delivery : {jobDestinations.map(destination => destination.address_city).join(", ")}</Box>
                   </Flex>
                   <Flex alignItems="center" mb="16px">
                     <FormLabel
