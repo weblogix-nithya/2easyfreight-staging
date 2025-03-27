@@ -100,6 +100,10 @@ function JobEdit() {
   );
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [tempcalculation, setTempcalculation] = useState({
+    cbm_auto: 0,
+    total_weight: 0,
+  });
   const [isQuotePrice, setIsQuotePrice] = useState(false);
 
   // Temporary saved addresses
@@ -216,6 +220,7 @@ function JobEdit() {
     },
   });
 
+  
   useQuery(GET_JOB_TYPES_QUERY, {
     variables: defaultVariables,
     onCompleted: (data) => {
@@ -235,7 +240,7 @@ function JobEdit() {
     variables: {
       query: debouncedSearch,
       page: 1,
-      first: 100,
+      first: 10000,
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
@@ -578,7 +583,27 @@ function JobEdit() {
     }
     _jobItems[index] = value;
     setJobItems(_jobItems);
+      // recalculateTempCalculations(_jobItems);
+
   };
+  
+useEffect(() => {
+  // Recalculate cbm_auto and total_weight whenever jobItems change
+  const calculateTotals = () => {
+    const cbmAuto = jobItems.reduce((total, item) => total + item.volume || 0, 0);
+    const totalWeight = jobItems.reduce(
+      (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+      0
+    );
+    setTempcalculation({
+      cbm_auto: parseFloat(cbmAuto.toFixed(2)), // Rounded to 2 decimal points
+      total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
+    });
+  };
+
+  calculateTotals();
+}, [jobItems]);
+
   const addToJobItems = () => {
     let nextId = jobItems[jobItems.length - 1].id + 1;
     setJobItems((jobItems) => [
@@ -1402,7 +1427,9 @@ function JobEdit() {
                         textAlign="right"
                         pr={4}
                       >
-                        {quoteCalculationRes.cbm_auto}
+                        {isQuotePrice
+                          ? quoteCalculationRes.cbm_auto
+                          : tempcalculation?.cbm_auto || 0}
                       </Text>
                     </Flex>
 
@@ -1423,7 +1450,9 @@ function JobEdit() {
                         textAlign="right"
                         pr={4}
                       >
-                        {quoteCalculationRes.total_weight}
+                        {isQuotePrice
+                          ? quoteCalculationRes.total_weight
+                          : tempcalculation?.total_weight || 0}
                       </Text>
                     </Flex>
                   </Box>
