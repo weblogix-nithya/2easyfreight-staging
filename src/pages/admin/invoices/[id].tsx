@@ -119,7 +119,7 @@ function InvoiceEdit() {
     variables: {
       id: invoice.job_id,
     },
-    skip: !id,
+    skip: !invoice?.job_id, 
     onCompleted: (data) => {
       console.log(data,'d')
            // jobDestinations without is_pickup
@@ -615,7 +615,7 @@ function InvoiceEdit() {
                   </Skeleton>
                 )}
                 {/* <Box>collection: {invoice?.job?.job_destinations[0].address_city}</Box> */}
-                <Box pl={6}>collection: {pickUpDestination.address_city}</Box>
+                <Box pl={6}>Collection : {pickUpDestination.address_city}</Box>
               </Flex>
 
               {invoice.is_rcti && (
@@ -655,7 +655,7 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
-                    <Box pl={6}>delivery : {jobDestinations.map(destination => destination.address_city).join(", ")}</Box>
+                    <Box pl={6}>Delivery : {jobDestinations.map(destination => destination.address_city).join(", ")}</Box>
                   </Flex>
                   <Flex alignItems="center" mb="16px">
                     <FormLabel
