@@ -32,6 +32,9 @@ export const GET_CUSTOMERS_QUERY = gql`
         is_pod_sendable
         is_invoice_sendable
         rate_card_url
+        adjust_sign
+        adjust_type
+        min_rate
       }
       paginatorInfo {
         count
@@ -64,6 +67,9 @@ export const GET_CUSTOMER_QUERY = gql`
       is_company_admin
       is_pod_sendable
       is_invoice_sendable
+      adjust_sign
+      adjust_type
+      min_rate
     }
   }
 `;
@@ -194,4 +200,7 @@ export const defaultCustomer: Customer = {
   is_company_admin: false,
   is_pod_sendable: false,
   is_invoice_sendable: false,
+  adjust_type: "",
+  adjust_sign: "",
+  min_rate: ""
 };

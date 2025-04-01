@@ -11,6 +11,7 @@ import {
   GridItem,
   Radio,
   RadioGroup,
+  SelectField,
   SimpleGrid,
   Stack,
   Text,
@@ -22,6 +23,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
+import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import JobInputTable from "components/jobs/JobInputTable";
@@ -60,6 +62,7 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
+import { min } from "moment";
 import { useRouter } from "next/router";
 import {
   SyntheticEvent,
@@ -220,7 +223,6 @@ function JobEdit() {
     },
   });
 
-  
   useQuery(GET_JOB_TYPES_QUERY, {
     variables: defaultVariables,
     onCompleted: (data) => {
@@ -583,26 +585,28 @@ function JobEdit() {
     }
     _jobItems[index] = value;
     setJobItems(_jobItems);
-      // recalculateTempCalculations(_jobItems);
-
-  };
-  
-useEffect(() => {
-  // Recalculate cbm_auto and total_weight whenever jobItems change
-  const calculateTotals = () => {
-    const cbmAuto = jobItems.reduce((total, item) => total + item.volume || 0, 0);
-    const totalWeight = jobItems.reduce(
-      (total, item) => total + (item.quantity || 0) * (item.weight || 0),
-      0
-    );
-    setTempcalculation({
-      cbm_auto: parseFloat(cbmAuto.toFixed(2)), // Rounded to 2 decimal points
-      total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
-    });
+    // recalculateTempCalculations(_jobItems);
   };
 
-  calculateTotals();
-}, [jobItems]);
+  useEffect(() => {
+    // Recalculate cbm_auto and total_weight whenever jobItems change
+    const calculateTotals = () => {
+      const cbmAuto = jobItems.reduce(
+        (total, item) => total + item.volume || 0,
+        0,
+      );
+      const totalWeight = jobItems.reduce(
+        (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+        0,
+      );
+      setTempcalculation({
+        cbm_auto: parseFloat(cbmAuto.toFixed(2)), // Rounded to 2 decimal points
+        total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
+      });
+    };
+
+    calculateTotals();
+  }, [jobItems]);
 
   const addToJobItems = () => {
     let nextId = jobItems[jobItems.length - 1].id + 1;
@@ -652,10 +656,22 @@ useEffect(() => {
       );
       setCustomerOptions(_customerOptions);
       if (isCustomer) {
+        console.log(customerSelected, "customerSelected");
+
         setJob({ ...job, ...{ customer_id: customerId } });
-        setCustomerSelected({
-          ..._customerOptions.find((_e) => _e.value === customerId).entity,
-        });
+        const selectedCustomer = _customerOptions.find(
+          (_e) => _e.value === customerId,
+        )?.entity;
+        if (selectedCustomer) {
+          setCustomerSelected(selectedCustomer);
+          // Update refinedData with the new properties
+          setRefinedData({
+            ...refinedData,
+            min_rate: selectedCustomer.min_rate,
+            adjust_type: selectedCustomer.adjust_type,
+            adjust_sign: selectedCustomer.adjust_sign,
+          });
+        }
         getCustomerAddresses();
       }
     },
@@ -803,6 +819,17 @@ useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
+    if ((job.job_type_id = null)) {
+      toast({
+        title: "Job Type Required",
+        description:
+          "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
     const today = new Date().toISOString(); // Gets current date and time in ISO format
 
@@ -821,6 +848,10 @@ useEffect(() => {
       transport_type: job.transport_type,
       state: refinedData.state,
       state_code: refinedData.state_code,
+      service_choice: refinedData.service_choice,
+      min_rate: refinedData.min_rate,
+      adjust_type: refinedData.adjust_type,
+      adjust_sign: refinedData.adjust_sign,
       job_pickup_address: {
         state: pickUpDestination?.address_state,
         suburb: pickUpDestination?.address_city,
@@ -980,11 +1011,44 @@ useEffect(() => {
                         ...job,
                         customer_id: e.value || null,
                       });
-                      setCustomerSelected({
-                        ...customerOptions.find((_e) => _e.value === e.value)
-                          .entity,
-                      });
+                      const selectedCustomer = customerOptions.find(
+                        (_e) => _e.value === e.value,
+                      )?.entity;
+                      if (selectedCustomer) {
+                        setCustomerSelected(selectedCustomer);
+                        setRefinedData({
+                          ...refinedData,
+                          min_rate: selectedCustomer.min_rate,
+                          adjust_type: selectedCustomer.adjust_type,
+                          adjust_sign: selectedCustomer.adjust_sign,
+                        });
+                      }
                     }}
+                  />
+
+                  <CustomInputFieldAdornment
+                    label="Customer Rate"
+                    placeholder=""
+                    isDisabled={true}
+                    name="min_rate"
+                    value={customerSelected.min_rate}
+                    addonsStart={
+                      <Text ml="2" fontSize="sm">
+                        {customerSelected.adjust_sign}-
+                      </Text>
+                    }
+                    addonsEnd={
+                      <Text mr="2" fontSize="sm">
+                        {customerSelected.adjust_type}%
+                      </Text>
+                    }
+                    onChange={
+                      (e) => {}
+                      //setJob({
+                      //  ...job,
+                      //  [e.target.name]: e.target.value,
+                      //})
+                    }
                   />
                   <CustomInputField
                     label="Operator phone:"
@@ -1152,18 +1216,18 @@ useEffect(() => {
                         (job_category) =>
                           job_category.value === selectedCategory,
                       )?.label;
-                  
+
                       setJob({
                         ...job,
                         job_type_id: selectedCategory || null,
                       });
-                  
+
                       setRefinedData({
                         ...refinedData,
                         service_choice: selectedCategoryName || null,
                       });
                       console.log(refinedData, "n");
-                      console.log(job,'job')
+                      console.log(job, "job");
                     }}
                   />
 

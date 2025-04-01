@@ -763,6 +763,9 @@ export type JobQuoteData = {
   delivery_time: DeliveryTime;
   surcharges: Surcharges;
   job_items: JobItem[];
+  min_rate:string,
+  adjust_type:string,
+  adjust_sign:string,
 };
 
 const defaultJobQuoteData: JobQuoteData = {
@@ -774,6 +777,9 @@ const defaultJobQuoteData: JobQuoteData = {
   created_at: "",
   updated_at: "",
   stackable: false,
+  min_rate:"",
+  adjust_type:"",
+  adjust_sign:"",
   job_pickup_address: {
     state: "",
     suburb: "",
