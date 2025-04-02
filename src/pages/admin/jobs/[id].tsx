@@ -1664,22 +1664,32 @@ function JobEdit() {
                           name="min_rate"
                           value={customerSelected.min_rate}
                           addonsStart={
-                            <Text ml="2" fontSize="sm">
-                              {customerSelected.adjust_sign}-
-                            </Text>
+                            customerSelected.adjust_sign ? (
+                              <Text ml="2" fontSize="sm">
+                                {customerSelected.adjust_sign}
+                              </Text>
+                            ) : (
+                              <Text ml="2" fontSize="sm">
+                                + / -
+                              </Text>
+                            )
                           }
                           addonsEnd={
-                            <Text mr="2" fontSize="sm">
-                              {customerSelected.adjust_type}%
-                            </Text>
+                            customerSelected.adjust_type ? (
+                              <Text mr="2" fontSize="sm">
+                                {customerSelected.adjust_type}
+                              </Text>
+                            ) : (
+                              <Text mr="2" fontSize="sm">
+                                $ / %
+                              </Text>
+                            )
                           }
-                          onChange={
-                            (e) => {}
-                            //setJob({
-                            //  ...job,
-                            //  [e.target.name]: e.target.value,
-                            //})
-                          }
+                          onChange={(e) => {}}
+                          //setJob({
+                          //  ...job,
+                          //  [e.target.name]: e.target.value,
+                          //})
                         />
 
                         <Flex alignItems="center" mb="16px">

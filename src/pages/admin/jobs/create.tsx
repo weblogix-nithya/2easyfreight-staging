@@ -11,7 +11,7 @@ import {
   GridItem,
   Radio,
   RadioGroup,
-  SelectField,
+  // SelectField,
   SimpleGrid,
   Stack,
   Text,
@@ -62,7 +62,7 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
-import { min } from "moment";
+// import { min } from "moment";
 import { useRouter } from "next/router";
 import {
   SyntheticEvent,
@@ -1026,30 +1026,41 @@ function JobEdit() {
                     }}
                   />
 
-                  <CustomInputFieldAdornment
-                    label="Customer Rate"
-                    placeholder=""
-                    isDisabled={true}
-                    name="min_rate"
-                    value={customerSelected.min_rate}
-                    addonsStart={
-                      <Text ml="2" fontSize="sm">
-                        {customerSelected.adjust_sign}-
-                      </Text>
-                    }
-                    addonsEnd={
-                      <Text mr="2" fontSize="sm">
-                        {customerSelected.adjust_type}%
-                      </Text>
-                    }
-                    onChange={
-                      (e) => {}
-                      //setJob({
-                      //  ...job,
-                      //  [e.target.name]: e.target.value,
-                      //})
-                    }
-                  />
+<CustomInputFieldAdornment
+  label="Customer Rate"
+  placeholder=""
+  isDisabled={true}
+  name="min_rate"
+  value={customerSelected.min_rate}
+  addonsStart={
+    customerSelected.adjust_sign ? (
+      <Text ml="2" fontSize="sm">
+        {customerSelected.adjust_sign}
+      </Text>
+    ) : (
+      <Text ml="2" fontSize="sm">
+        +/-
+      </Text>
+    )
+  }
+  addonsEnd={
+    customerSelected.adjust_type ? (
+      <Text mr="2" fontSize="sm">
+        {customerSelected.adjust_type}
+      </Text>
+    ) : (
+      <Text mr="2" fontSize="sm">
+        $/%
+      </Text>
+    )
+  }
+  onChange={(e) => {}}
+  //setJob({
+  //  ...job,
+  //  [e.target.name]: e.target.value,
+  //})
+/>
+
                   <CustomInputField
                     label="Operator phone:"
                     placeholder=""

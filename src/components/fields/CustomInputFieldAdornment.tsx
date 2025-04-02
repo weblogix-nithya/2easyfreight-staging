@@ -1,4 +1,3 @@
-// Chakra imports
 import {
   Box,
   Flex,
@@ -78,7 +77,7 @@ export default function Default(props: {
   const textColorPrimary = useColorModeValue("navy.700", "white");
   const textColorSecondary = useColorModeValue("#888888", "#888888");
   // RandomId
-  const [randomIdSection, setRandomIdSection] = useState(
+  const [_randomIdSection, _setRandomIdSection] = useState(
     (id ? id : name) + Math.random().toString(36).substring(7)
   );
 
@@ -92,7 +91,7 @@ export default function Default(props: {
           width="200px"
           fontSize="sm"
           fontWeight="500"
-          htmlFor={(id ? id : name) + randomIdSection}
+          htmlFor={(id ? id : name) + _randomIdSection}
           color={textColorPrimary}
           _hover={{ cursor: "pointer" }}
         >
@@ -132,13 +131,13 @@ export default function Default(props: {
             minWidth={minWidth}
             style={inputStyles}
           >
-            <InputLeftAddon children={addonsStart} />
+            <InputLeftAddon>{addonsStart}</InputLeftAddon>
             <Input
               ref={inputRef}
               {...rest}
               isDisabled={isDisabled}
               type={type ? type : "text"}
-              id={(id ? id : name) + randomIdSection}
+              id={(id ? id : name) + _randomIdSection}
               variant="main"
               placeholder={placeholder}
               _placeholder={{ fontWeight: "400", color: "secondaryGray.600" }}
@@ -153,14 +152,14 @@ export default function Default(props: {
               fontSize="sm"
               fontWeight="500"
             />
-            <InputRightAddon children={addonsEnd} />
+            <InputRightAddon>{addonsEnd}</InputRightAddon>
           </InputGroup>
         )}
         {isTextArea && (
           <Textarea
             {...rest}
             isDisabled={isDisabled}
-            id={(id ? id : name) + randomIdSection}
+            id={(id ? id : name) + _randomIdSection}
             placeholder={placeholder}
             _placeholder={{ fontWeight: "400", color: "secondaryGray.600" }}
             isRequired={true}
@@ -177,4 +176,3 @@ export default function Default(props: {
     </Flex>
   );
 }
-  
