@@ -217,8 +217,5 @@ export const defaultCustomer: Customer = {
   is_invoice_sendable: false,
   adjust_sign: '+',
   adjust_type: '$',
-  min_rate: '0',
-  adjust_type: "",
-  adjust_sign: "",
-  min_rate: ""
+  min_rate: '0'
 };

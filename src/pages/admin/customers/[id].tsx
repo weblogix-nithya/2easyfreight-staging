@@ -131,7 +131,7 @@ function CustomerEdit() {
       }
     }, [existingRate]);
   
-    const handleChange = (e) => {
+    const handleChange = (e: { target: { name: any; value: any; }; }) => {
       setUpdatedRate({
         ...updatedRate,
         [e.target.name]: e.target.value,
