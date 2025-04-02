@@ -32,6 +32,9 @@ export const GET_CUSTOMERS_QUERY = gql`
         is_pod_sendable
         is_invoice_sendable
         rate_card_url
+        adjust_sign
+        adjust_type
+        min_rate
       }
       paginatorInfo {
         count
@@ -64,6 +67,12 @@ export const GET_CUSTOMER_QUERY = gql`
       is_company_admin
       is_pod_sendable
       is_invoice_sendable
+      adjust_sign
+      adjust_type
+      min_rate
+      adjust_sign
+      adjust_type
+      min_rate
     }
   }
 `;
@@ -85,6 +94,9 @@ export const CREATE_CUSTOMER_MUTATION = gql`
       is_company_admin
       is_pod_sendable
       is_invoice_sendable
+      adjust_sign
+      adjust_type
+      min_rate
     }
   }
 `;
@@ -114,6 +126,9 @@ export const UPDATE_CUSTOMER_MUTATION = gql`
       is_company_admin
       is_pod_sendable
       is_invoice_sendable
+      adjust_sign
+      adjust_type
+      min_rate
     }
   }
 `;
@@ -149,6 +164,9 @@ export interface UpdateCustomerInput {
   is_company_admin: Boolean;
   is_pod_sendable: Boolean;
   is_invoice_sendable: Boolean;
+  adjust_sign: String;
+  adjust_type: String;
+  min_rate: String;
 }
 
 export interface CreateCustomerInput {
@@ -165,6 +183,9 @@ export interface CreateCustomerInput {
   is_company_admin: Boolean;
   is_pod_sendable: Boolean;
   is_invoice_sendable: Boolean;
+  adjust_sign: String;
+  adjust_type: String;
+  min_rate: String;
 }
 
 type Customer = {
@@ -194,4 +215,7 @@ export const defaultCustomer: Customer = {
   is_company_admin: false,
   is_pod_sendable: false,
   is_invoice_sendable: false,
+  adjust_sign: '+',
+  adjust_type: '$',
+  min_rate: '0'
 };
