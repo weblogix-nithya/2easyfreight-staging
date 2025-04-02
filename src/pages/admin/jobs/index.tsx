@@ -333,7 +333,7 @@ export default function JobIndex() {
         column,
         order,
         table_name,
-        scope,
+        // scope,
       },
     ];
   }, [sorting]);
@@ -491,34 +491,38 @@ export default function JobIndex() {
                 background={menuBg}
                 me="10px"
               />
-              <Button
-                variant="no-effects"
-                onClick={onOpenFilter}
-                className="text-[var(--chakra-colors-primary-400)]"
-              >
-                Filters
-                <FullChevronDown className="ml-2" />
-              </Button>
-              <Checkbox
-                onChange={(e) => {
-                  if (!e.target.checked) {
-                    destroyCookie(null, "jobMainFilters", { path: "*" });
-                    destroyCookie(null, "displayName", { path: "*" });
-                    handleResetAll();
-                  }
-                  setCookie(
-                    null,
-                    "is_filter_ticked",
-                    e.target.checked ? "1" : "0",
-                    {
-                      maxAge: 30 * 24 * 60 * 60,
-                      path: "*",
-                    },
-                  );
-                  dispatch(setIsFilterTicked(e.target.checked ? "1" : "0"));
-                }}
-                isChecked={is_filter_ticked == "1" ? true : false}
-              ></Checkbox>
+              {isAdmin && (
+                <>
+                  <Button
+                    variant="no-effects"
+                    onClick={onOpenFilter}
+                    className="text-[var(--chakra-colors-primary-400)]"
+                  >
+                    Filters
+                    <FullChevronDown className="ml-2" />
+                  </Button>
+                  <Checkbox
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        destroyCookie(null, "jobMainFilters", { path: "*" });
+                        destroyCookie(null, "displayName", { path: "*" });
+                        handleResetAll();
+                      }
+                      setCookie(
+                        null,
+                        "is_filter_ticked",
+                        e.target.checked ? "1" : "0",
+                        {
+                          maxAge: 30 * 24 * 60 * 60,
+                          path: "*",
+                        },
+                      );
+                      dispatch(setIsFilterTicked(e.target.checked ? "1" : "0"));
+                    }}
+                    isChecked={is_filter_ticked == "1" ? true : false}
+                  ></Checkbox>
+                </>
+              )}
             </Flex>
 
             <Flex>

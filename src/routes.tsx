@@ -42,8 +42,8 @@ const routes: IRoute[] = [
     isPrivate: false,
   },
   {
-    name: "Job Allocations",
-    title: "Delivery Allocation",
+    name: "Tracking",
+    title: "Tracking",
     layout: "/admin",
     path: "/job-allocations",
     icon: <FontAwesomeIcon icon={faTruckRampBox} className="mr-1" />,
