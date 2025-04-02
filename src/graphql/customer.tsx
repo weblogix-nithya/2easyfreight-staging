@@ -32,6 +32,9 @@ export const GET_CUSTOMERS_QUERY = gql`
         is_pod_sendable
         is_invoice_sendable
         rate_card_url
+        adjust_sign
+        adjust_type
+        min_rate
       }
       paginatorInfo {
         count
@@ -64,6 +67,9 @@ export const GET_CUSTOMER_QUERY = gql`
       is_company_admin
       is_pod_sendable
       is_invoice_sendable
+      adjust_sign
+      adjust_type
+      min_rate
       adjust_sign
       adjust_type
       min_rate
@@ -211,5 +217,5 @@ export const defaultCustomer: Customer = {
   is_invoice_sendable: false,
   adjust_sign: '+',
   adjust_type: '$',
-  min_rate: '0',
+  min_rate: '0'
 };

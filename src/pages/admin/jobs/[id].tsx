@@ -29,6 +29,7 @@ import axios from "axios";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
+import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
 import FileInput from "components/fileInput/FileInput";
 import InvoiceTab from "components/jobs/InvoiceTab";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
@@ -1625,11 +1626,70 @@ function JobEdit() {
                           }
                           placeholder=""
                           onChange={(e) => {
+                            // Update job with the selected customer ID
                             setJob({
                               ...job,
                               customer_id: e.value || null,
                             });
+
+                            // Fetch the selected customer details
+                            const selectedCustomer = customerOptions.find(
+                              (option) => option.value === e.value,
+                            )?.entity;
+
+                            if (selectedCustomer) {
+                              // Update refinedData with customer-specific properties
+                              setRefinedData({
+                                ...refinedData,
+                                min_rate: selectedCustomer.min_rate,
+                                adjust_type: selectedCustomer.adjust_type,
+                                adjust_sign: selectedCustomer.adjust_sign,
+                              });
+                              getCustomerAddresses(); // Re-fetch customer addresses
+                            } else {
+                              // Reset refinedData if no customer is selected
+                              setRefinedData({
+                                ...refinedData,
+                                min_rate: null,
+                                adjust_type: null,
+                                adjust_sign: null,
+                              });
+                            }
                           }}
+                        />
+                        <CustomInputFieldAdornment
+                          label="Customer Rate"
+                          placeholder=""
+                          isDisabled={true}
+                          name="min_rate"
+                          value={customerSelected.min_rate}
+                          addonsStart={
+                            customerSelected.adjust_sign ? (
+                              <Text ml="2" fontSize="sm">
+                                {customerSelected.adjust_sign}
+                              </Text>
+                            ) : (
+                              <Text ml="2" fontSize="sm">
+                                + / -
+                              </Text>
+                            )
+                          }
+                          addonsEnd={
+                            customerSelected.adjust_type ? (
+                              <Text mr="2" fontSize="sm">
+                                {customerSelected.adjust_type}
+                              </Text>
+                            ) : (
+                              <Text mr="2" fontSize="sm">
+                                $ / %
+                              </Text>
+                            )
+                          }
+                          onChange={(e) => {}}
+                          //setJob({
+                          //  ...job,
+                          //  [e.target.name]: e.target.value,
+                          //})
                         />
 
                         <Flex alignItems="center" mb="16px">
