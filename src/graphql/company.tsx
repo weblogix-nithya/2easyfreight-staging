@@ -17,6 +17,9 @@ export const GET_COMPANYS_QUERY = gql`
       data {
         id
         name
+        adjust_sign
+        adjust_type
+        min_rate
       }
       paginatorInfo {
         count
@@ -58,6 +61,9 @@ export const GET_COMPANY_QUERY = gql`
       rate_card_url
       logo_url
       payment_term
+      adjust_sign
+      adjust_type
+      min_rate
     }
   }
 `;
@@ -75,6 +81,9 @@ export const CREATE_COMPANY_MUTATION = gql`
       admin_notes
       base_notes
       payment_term
+      adjust_sign
+      adjust_type
+      min_rate
     }
   }
 `;
@@ -94,6 +103,9 @@ export const UPDATE_COMPANY_MUTATION = gql`
       is_pod_sendable
       is_invoice_sendable
       payment_term
+      adjust_sign
+      adjust_type
+      min_rate
     }
   }
 `;
@@ -129,6 +141,9 @@ export interface UpdateCompanyInput {
   lng: Number;
   lat: Number;
   payment_term: String;
+  adjust_sign: String;
+  adjust_type: String;
+  min_rate: String;
 }
 
 export interface CreateCompanyInput {
@@ -154,6 +169,9 @@ export interface CreateCompanyInput {
   lng: Number;
   lat: Number;
   payment_term: String;
+  adjust_sign: String;
+  adjust_type: String;
+  min_rate: String;
 }
 
 type Company = {
@@ -181,7 +199,10 @@ type Company = {
   lat: number | null;
   rate_card_url: string | null;
   logo_url: string | null;
-  payment_term: String | null;
+  payment_term: string | null;
+  adjust_sign: string | null;
+  adjust_type: string | null;
+  min_rate: string | null;
 };
 
 export const defaultCompany: Company = {
@@ -209,7 +230,10 @@ export const defaultCompany: Company = {
   lat: null,
   rate_card_url: null,
   logo_url: null,
-  payment_term: '7_days',
+  payment_term: "7_days",
+  adjust_sign: "+",
+  adjust_type: "%",
+  min_rate: "0",
 };
 
 export const paymentTerms = [
