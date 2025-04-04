@@ -196,10 +196,10 @@ type Company = {
   lat: number | null;
   rate_card_url: string | null;
   logo_url: string | null;
-  payment_term: String | null;
-  adjust_sign: String | null;
-  adjust_type: String | null;
-  min_rate: String | null;
+  payment_term: string | null;
+  adjust_sign: string | null;
+  adjust_type: string | null;
+  min_rate: string | null;
 };
 
 export const defaultCompany: Company = {
