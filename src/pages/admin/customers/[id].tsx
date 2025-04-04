@@ -12,7 +12,7 @@ import {
   Input,
   Radio,
   RadioGroup,
-  Select,
+  // Select,
   Stack,
   Textarea,
   useColorModeValue,
@@ -38,13 +38,13 @@ import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect,useMemo, useState} from "react";
+import { useMemo, useState} from "react";
 
 function CustomerEdit() {
   const toast = useToast();
-  let menuBg = useColorModeValue("white", "navy.800");
+  // let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // const textColorSecondary = "gray.400";
   const [customer, setCustomer] = useState(defaultCustomer);
   const [tabId, setTabId] = useState(0);
   const router = useRouter();
@@ -117,12 +117,7 @@ function CustomerEdit() {
   }, []);
 
 
-    const handleChange = (e: { target: { name: any; value: any; }; }) => {
-      setUpdatedRate({
-        ...updatedRate,
-        [e.target.name]: e.target.value,
-      });
-    };
+
 
   return (
     <AdminLayout>

@@ -1051,7 +1051,7 @@ function CompanyEdit() {
                               name="adjust_sign"
                               options={adjustSignOptions}
                               variant="main"
-                              fontSize="sm"
+                              // fontSize="sm"
                               value={adjustSignOptions.find(opt => opt.value === company.adjust_sign)}
                               onChange={(selectedOption) =>
                                 setCompany({ ...company, adjust_sign: selectedOption?.value })
@@ -1067,7 +1067,7 @@ function CompanyEdit() {
                             name="adjust_type"
                             options={adjustTypeOptions}
                             variant="main"
-                            fontSize="sm"
+                            // fontSize="sm"
                             value={adjustTypeOptions.find(opt => opt.value === company.adjust_type)}
                             onChange={(selectedOption) => {
                               const newType = selectedOption?.value;
