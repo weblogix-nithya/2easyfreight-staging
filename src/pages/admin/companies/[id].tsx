@@ -70,6 +70,15 @@ function CompanyEdit() {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [rateCardUrl, setRateCardUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const adjustSignOptions = [
+    { label: "+", value: "+" },
+    { label: "-", value: "-" }
+  ];
+  const adjustTypeOptions = [
+    { label: "%", value: "%" },
+    { label: "$", value: "$" }
+  ];
+
   const {
     loading: companyLoading,
     data: companyData,
@@ -221,7 +230,7 @@ function CompanyEdit() {
       data.customers.data.map((customer: any) => {
         setAvailableCustomersOptions((availableCustomersOptions) => [
           ...availableCustomersOptions,
-          { value: parseInt(customer.id), label: customer.email },
+          { value: parseInt(company.id), label: company.email },
         ]);
       });
     },
@@ -1030,6 +1039,74 @@ function CompanyEdit() {
                       </Flex>
                       <Divider />
 
+                        <h3 className="mt-6 mb-4">Custom rate</h3>
+
+                        <Flex alignItems="center" mb="30px" gap="16px">
+                          {/* Adjustment Sign */}
+                          <Flex flex="1" flexDirection="column">
+                            <FormLabel mb="4px" fontSize="sm" fontWeight="500" color={textColor}>
+                              Adjustment Sign
+                            </FormLabel>
+                            <Select
+                              name="adjust_sign"
+                              options={adjustSignOptions}
+                              variant="main"
+                              fontSize="sm"
+                              value={adjustSignOptions.find(opt => opt.value === company.adjust_sign)}
+                              onChange={(selectedOption) =>
+                                setCompany({ ...company, adjust_sign: selectedOption?.value })
+                              }
+                            />
+                          </Flex>
+
+                          <Flex flex="1" flexDirection="column">
+                          <FormLabel mb="4px" fontSize="sm" fontWeight="500" color={textColor}>
+                            Adjustment Type
+                          </FormLabel>
+                          <Select
+                            name="adjust_type"
+                            options={adjustTypeOptions}
+                            variant="main"
+                            fontSize="sm"
+                            value={adjustTypeOptions.find(opt => opt.value === company.adjust_type)}
+                            onChange={(selectedOption) => {
+                              const newType = selectedOption?.value;
+                              setCompany((prev) => ({
+                                ...prev,
+                                adjust_type: newType,
+                                min_rate: newType === "%" ? "0" : "0.00",
+                              }));
+                            }}
+                          />
+                        </Flex>
+
+                          {/* Min Rate */}
+                          <Flex flex="1" flexDirection="column">
+                            <FormLabel mb="4px" fontSize="sm" fontWeight="500" color={textColor}>
+                              Min Rate
+                            </FormLabel>
+                            <Input
+                              type="number"
+                              name="min_rate"
+                              variant="main"
+                              fontSize="sm"
+                              value={company.min_rate === "0" ? "" : company.min_rate}
+                              step={company.adjust_type === "%" ? "1" : "0.01"}
+                              min="0"
+                            
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setCompany({
+                                  ...company,
+                                  min_rate: value === "" ? "" : String(parseFloat(value)),
+                                });
+                              }}
+                              placeholder={company.adjust_type === "%" ? "10" : "10.00"}
+                            />
+                          </Flex>
+                        </Flex>
+                      <Divider />
+
                       <h3 className="mt-6 mb-4">Notifications</h3>
                       <Flex className="w-full" alignItems="center">
                         <FormLabel
@@ -1089,6 +1166,7 @@ function CompanyEdit() {
                           </Stack>
                         </RadioGroup>
                       </Flex>
+
                     </FormControl>
                   )}
 

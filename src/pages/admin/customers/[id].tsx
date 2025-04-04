@@ -117,20 +117,6 @@ function CustomerEdit() {
   }, []);
 
 
-    const existingRate = "";
-    const [updatedRate, setUpdatedRate] = useState({
-      base_rate: "",
-      adjustment_type: "fixed",
-      adjustment_value: "",
-      min_rate: "",
-    });
-  
-    useEffect(() => {
-      if (existingRate) {
-        setUpdatedRate(existingRate);
-      }
-    }, [existingRate]);
-  
     const handleChange = (e: { target: { name: any; value: any; }; }) => {
       setUpdatedRate({
         ...updatedRate,
@@ -704,79 +690,7 @@ function CustomerEdit() {
                       </Flex>
                     </Flex>
 
-                    <Divider />
-
-                    <h3 className="mt-6 mb-4">Custom rate</h3>
                    
-                    <Flex alignItems="center" mb="30px" gap="16px">
-                      {/* Adjustment Sign */}
-                      <Flex flex="1" flexDirection="column">
-                        <FormLabel mb="4px" fontSize="sm" fontWeight="500" color={textColor}>
-                          Adjustment Sign
-                        </FormLabel>
-                        <Select
-                          name="adjust_sign"
-                          variant="main"
-                          fontSize="sm"
-                          value={customer.adjust_sign}
-                          onChange={(e) =>
-                            setCustomer({ ...customer, adjust_sign: e.target.value })
-                          }
-                        >
-                          <option value="+">+</option>
-                          <option value="-">-</option>
-                        </Select>
-                      </Flex>
-
-                      {/* Adjustment Type */}
-                      <Flex flex="1" flexDirection="column">
-                        <FormLabel mb="4px" fontSize="sm" fontWeight="500" color={textColor}>
-                          Adjustment Type
-                        </FormLabel>
-                        <Select
-                          name="adjust_type"
-                          variant="main"
-                          fontSize="sm"
-                          value={customer.adjust_type}
-                          onChange={(e) => {
-                            const newType = e.target.value;
-                            setCustomer((prev) => ({
-                              ...prev,
-                              adjust_type: newType,
-                              min_rate: newType === "$" ? "0.00" : "0", // Ensure correct format on type change
-                            }));
-                          }}
-                        >
-                          <option value="%">%</option>
-                          <option value="$">$</option>
-                        </Select>
-                      </Flex>
-
-                      {/* Min Rate */}
-                      <Flex flex="1" flexDirection="column">
-                        <FormLabel mb="4px" fontSize="sm" fontWeight="500" color={textColor}>
-                          Min Rate
-                        </FormLabel>
-                        <Input
-                          type="number"
-                          name="min_rate"
-                          variant="main"
-                          fontSize="sm"
-                          value={customer.min_rate === 0 ? "" : customer.min_rate}
-                          step={customer.adjust_type === "$" ? "0.01" : "1"}
-                          min="0"
-                        
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setCustomer({
-                              ...customer,
-                              min_rate: value === "" ? "" : String(parseFloat(value)),
-                            });
-                          }}
-                          placeholder={customer.adjust_type === "$" ? "10.00" : "10"}
-                        />
-                      </Flex>
-                    </Flex>
                 </FormControl>
 
                 )}
