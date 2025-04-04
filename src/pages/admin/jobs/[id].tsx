@@ -40,7 +40,7 @@ import PaginationTable from "components/table/PaginationTable";
 import { TabsComponent } from "components/tabs/TabsComponet";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { GET_COMPANYS_QUERY } from "graphql/company";
+import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_DRIVERS_QUERY } from "graphql/driver";
@@ -281,6 +281,7 @@ function JobEdit() {
         setJob({
           ...job,
           ...data?.job,
+          company_id: data?.job.company_id,
           media: data?.job.media,
           job_category_id: data?.job.job_category_id,
           transport_location: data?.job.transport_location,
@@ -302,7 +303,7 @@ function JobEdit() {
         getCustomersByCompanyId({
           query: "",
           page: 1,
-          first: 100,
+          first: 1000,
           orderByColumn: "id",
           orderByOrder: "ASC",
           company_id: data.job.company_id,
@@ -358,6 +359,31 @@ function JobEdit() {
       // console.log(error);
     },
   });
+
+  const { loading: companyLoading, data: companyData } = useQuery(
+    GET_COMPANY_QUERY,
+    {
+      variables: {
+        id: job?.company_id,
+      },
+      skip: !job?.company_id,
+      onCompleted: (data) => {
+        if (data?.company == null) {
+          // router.push("/admin/companies");
+        }
+        setRefinedData({
+          ...refinedData,
+          min_rate: data?.company?.min_rate,
+          adjust_type: data?.company?.adjust_type,
+          adjust_sign: data?.company?.adjust_sign,
+        });
+      },
+      onError(error) {
+        console.log("onError");
+        console.log(error);
+      },
+    },
+  );
 
   useEffect(() => {
     if (jobData?.job) {
@@ -773,16 +799,29 @@ function JobEdit() {
       orderByOrder: "ASC",
     },
     onCompleted: (data) => {
-      setCompaniesOptions([]);
-      data.companys.data.map((_entity: any) => {
-        setCompaniesOptions((companys) => [
-          ...companys,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
-      });
+      const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
+        value: parseInt(_entity.id),
+        label: _entity.name,
+        min_rate: _entity.min_rate, // Add these properties to the options
+        adjust_type: _entity.adjust_type,
+        adjust_sign: _entity.adjust_sign,
+      }));
+
+      setCompaniesOptions(newCompaniesOptions);
+
+      // If a company is already selected, update refinedData with its properties
+      const selectedCompany = newCompaniesOptions.find(
+        (entity: { value: number }) => entity.value === job.company_id,
+      );
+
+      if (selectedCompany) {
+        setRefinedData({
+          ...refinedData,
+          min_rate: selectedCompany?.min_rate,
+          adjust_type: selectedCompany?.adjust_type,
+          adjust_sign: selectedCompany?.adjust_sign,
+        });
+      }
     },
   });
 
@@ -1585,6 +1624,40 @@ function JobEdit() {
                             });
                           }}
                         />
+                        <CustomInputFieldAdornment
+                          label="Custom Rate"
+                          placeholder=""
+                          isDisabled={true}
+                          name="min_rate"
+                          value={refinedData?.min_rate}
+                          addonsStart={
+                            refinedData.adjust_sign ? (
+                              <Text ml="2" fontSize="sm">
+                                {refinedData.adjust_sign}
+                              </Text>
+                            ) : (
+                              <Text ml="2" fontSize="sm">
+                                + / -
+                              </Text>
+                            )
+                          }
+                          addonsEnd={
+                            refinedData.adjust_type ? (
+                              <Text mr="2" fontSize="sm">
+                                {refinedData.adjust_type}
+                              </Text>
+                            ) : (
+                              <Text mr="2" fontSize="sm">
+                                $ / %
+                              </Text>
+                            )
+                          }
+                          onChange={(e) => {}}
+                          //setJob({
+                          //  ...job,
+                          //  [e.target.name]: e.target.value,
+                          //})
+                        />
                         {!isCompany && (
                           <CustomInputField
                             isSelect={true}
@@ -1603,10 +1676,22 @@ function JobEdit() {
                                 company_id: e.value || null,
                                 customer_id: null,
                               });
+                              const selectedCompany = companiesOptions.find(
+                                (entity) => entity.value === e.value,
+                              );
+
+                              if (selectedCompany) {
+                                setRefinedData({
+                                  ...refinedData,
+                                  min_rate: selectedCompany.min_rate,
+                                  adjust_type: selectedCompany.adjust_type,
+                                  adjust_sign: selectedCompany.adjust_sign,
+                                });
+                              }
                               getCustomersByCompanyId({
                                 query: "",
                                 page: 1,
-                                first: 100,
+                                first: 1000,
                                 orderByColumn: "id",
                                 orderByOrder: "ASC",
                                 company_id: e.value,
@@ -1638,58 +1723,9 @@ function JobEdit() {
                             )?.entity;
 
                             if (selectedCustomer) {
-                              // Update refinedData with customer-specific properties
-                              setRefinedData({
-                                ...refinedData,
-                                min_rate: selectedCustomer.min_rate,
-                                adjust_type: selectedCustomer.adjust_type,
-                                adjust_sign: selectedCustomer.adjust_sign,
-                              });
                               getCustomerAddresses(); // Re-fetch customer addresses
-                            } else {
-                              // Reset refinedData if no customer is selected
-                              setRefinedData({
-                                ...refinedData,
-                                min_rate: null,
-                                adjust_type: null,
-                                adjust_sign: null,
-                              });
                             }
                           }}
-                        />
-                        <CustomInputFieldAdornment
-                          label="Customer Rate"
-                          placeholder=""
-                          isDisabled={true}
-                          name="min_rate"
-                          value={customerSelected.min_rate}
-                          addonsStart={
-                            customerSelected.adjust_sign ? (
-                              <Text ml="2" fontSize="sm">
-                                {customerSelected.adjust_sign}
-                              </Text>
-                            ) : (
-                              <Text ml="2" fontSize="sm">
-                                + / -
-                              </Text>
-                            )
-                          }
-                          addonsEnd={
-                            customerSelected.adjust_type ? (
-                              <Text mr="2" fontSize="sm">
-                                {customerSelected.adjust_type}
-                              </Text>
-                            ) : (
-                              <Text mr="2" fontSize="sm">
-                                $ / %
-                              </Text>
-                            )
-                          }
-                          onChange={(e) => {}}
-                          //setJob({
-                          //  ...job,
-                          //  [e.target.name]: e.target.value,
-                          //})
                         />
 
                         <Flex alignItems="center" mb="16px">

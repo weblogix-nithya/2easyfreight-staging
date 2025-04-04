@@ -247,16 +247,29 @@ function JobEdit() {
       orderByOrder: "ASC",
     },
     onCompleted: (data) => {
-      setCompaniesOptions([]);
-      data.companys.data.map((_entity: any) => {
-        setCompaniesOptions((companys) => [
-          ...companys,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
-      });
+      const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
+        value: parseInt(_entity.id),
+        label: _entity.name,
+        min_rate: _entity.min_rate, // Add these properties to the options
+        adjust_type: _entity.adjust_type,
+        adjust_sign: _entity.adjust_sign,
+      }));
+
+      setCompaniesOptions(newCompaniesOptions);
+
+      // If a company is already selected, update refinedData with its properties
+      const selectedCompany = newCompaniesOptions.find(
+        (entity: { value: number }) => entity.value === job.company_id,
+      );
+
+      if (selectedCompany) {
+        setRefinedData({
+          ...refinedData,
+          min_rate: selectedCompany.min_rate,
+          adjust_type: selectedCompany.adjust_type,
+          adjust_sign: selectedCompany.adjust_sign,
+        });
+      }
     },
   });
 
@@ -665,12 +678,6 @@ function JobEdit() {
         if (selectedCustomer) {
           setCustomerSelected(selectedCustomer);
           // Update refinedData with the new properties
-          setRefinedData({
-            ...refinedData,
-            min_rate: selectedCustomer.min_rate,
-            adjust_type: selectedCustomer.adjust_type,
-            adjust_sign: selectedCustomer.adjust_sign,
-          });
         }
         getCustomerAddresses();
       }
@@ -992,9 +999,56 @@ function JobEdit() {
                           company_id: e.value || null,
                           customer_id: null,
                         });
+                        const selectedCompany = companiesOptions.find(
+                          (entity) => entity.value === e.value,
+                        );
+
+                        if (selectedCompany) {
+                          setRefinedData({
+                            ...refinedData,
+                            min_rate: selectedCompany.min_rate,
+                            adjust_type: selectedCompany.adjust_type,
+                            adjust_sign: selectedCompany.adjust_sign,
+                          });
+                        }
                       }}
                     />
                   )}
+
+                  <CustomInputFieldAdornment
+                    label="Custom Rate"
+                    placeholder=""
+                    isDisabled={true}
+                    name="min_rate"
+                    value={refinedData?.min_rate}
+                    addonsStart={
+                      refinedData?.adjust_sign ? (
+                        <Text ml="2" fontSize="sm">
+                          {refinedData?.adjust_sign}
+                        </Text>
+                      ) : (
+                        <Text ml="2" fontSize="sm">
+                          +/-
+                        </Text>
+                      )
+                    }
+                    addonsEnd={
+                      refinedData?.adjust_type ? (
+                        <Text mr="2" fontSize="sm">
+                          {refinedData?.adjust_type}
+                        </Text>
+                      ) : (
+                        <Text mr="2" fontSize="sm">
+                          $/%
+                        </Text>
+                      )
+                    }
+                    onChange={(e) => {}}
+                    //setJob({
+                    //  ...job,
+                    //  [e.target.name]: e.target.value,
+                    //})
+                  />
 
                   <CustomInputField
                     isSelect={true}
@@ -1016,50 +1070,9 @@ function JobEdit() {
                       )?.entity;
                       if (selectedCustomer) {
                         setCustomerSelected(selectedCustomer);
-                        setRefinedData({
-                          ...refinedData,
-                          min_rate: selectedCustomer.min_rate,
-                          adjust_type: selectedCustomer.adjust_type,
-                          adjust_sign: selectedCustomer.adjust_sign,
-                        });
                       }
                     }}
                   />
-
-<CustomInputFieldAdornment
-  label="Customer Rate"
-  placeholder=""
-  isDisabled={true}
-  name="min_rate"
-  value={customerSelected.min_rate}
-  addonsStart={
-    customerSelected.adjust_sign ? (
-      <Text ml="2" fontSize="sm">
-        {customerSelected.adjust_sign}
-      </Text>
-    ) : (
-      <Text ml="2" fontSize="sm">
-        +/-
-      </Text>
-    )
-  }
-  addonsEnd={
-    customerSelected.adjust_type ? (
-      <Text mr="2" fontSize="sm">
-        {customerSelected.adjust_type}
-      </Text>
-    ) : (
-      <Text mr="2" fontSize="sm">
-        $/%
-      </Text>
-    )
-  }
-  onChange={(e) => {}}
-  //setJob({
-  //  ...job,
-  //  [e.target.name]: e.target.value,
-  //})
-/>
 
                   <CustomInputField
                     label="Operator phone:"
