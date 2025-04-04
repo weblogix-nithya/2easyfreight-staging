@@ -230,7 +230,7 @@ function CompanyEdit() {
       data.customers.data.map((customer: any) => {
         setAvailableCustomersOptions((availableCustomersOptions) => [
           ...availableCustomersOptions,
-          { value: parseInt(company.id), label: company.email },
+          { value: parseInt(customer.id), label: customer.email },
         ]);
       });
     },
