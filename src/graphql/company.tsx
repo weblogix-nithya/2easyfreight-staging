@@ -17,6 +17,9 @@ export const GET_COMPANYS_QUERY = gql`
       data {
         id
         name
+        adjust_sign
+        adjust_type
+        min_rate
       }
       paginatorInfo {
         count
@@ -229,8 +232,8 @@ export const defaultCompany: Company = {
   logo_url: null,
   payment_term: "7_days",
   adjust_sign: "+",
-  adjust_type: '%',
-  min_rate: '0',
+  adjust_type: "%",
+  min_rate: "0",
 };
 
 export const paymentTerms = [

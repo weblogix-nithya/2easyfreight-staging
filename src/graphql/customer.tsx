@@ -32,9 +32,6 @@ export const GET_CUSTOMERS_QUERY = gql`
         is_pod_sendable
         is_invoice_sendable
         rate_card_url
-        adjust_sign
-        adjust_type
-        min_rate
       }
       paginatorInfo {
         count
