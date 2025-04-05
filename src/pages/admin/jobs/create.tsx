@@ -79,7 +79,7 @@ function JobEdit() {
   const { isAdmin, customerId, companyId, isCompany, isCustomer } = useSelector(
     (state: RootState) => state.user,
   );
-console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
+// console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
@@ -96,7 +96,7 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
     ...defaultJobQuoteData,
     freight_type: "LCL",
   });
-  console.log(refinedData, "refined to wp");
+  // console.log(refinedData, "refined to wp");
   const [tempRate,setTempRate]=useState({
     min_rate:0,
     adjust_type:"",
@@ -273,7 +273,7 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
           adjust_type: selectedCompany.adjust_type,
           adjust_sign: selectedCompany.adjust_sign,
         });
-        console.log(selectedCompany.min_rate, "selected company min rate")
+        // console.log(selectedCompany.min_rate, "selected company min rate")
       }
 
       if (!isAdmin) {
@@ -287,7 +287,7 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
             adjust_type: companyWithId.adjust_type,
             adjust_sign: companyWithId.adjust_sign,
           });
-          console.log(companyWithId,'companywithid min rate')
+          // console.log(companyWithId,'companywithid min rate')
         }
       }
     },
@@ -689,7 +689,7 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
       );
       setCustomerOptions(_customerOptions);
       if (isCustomer) {
-        console.log(customerSelected, "customerSelected");
+        // console.log(customerSelected, "customerSelected");
 
         setJob({ ...job, ...{ customer_id: customerId } });
         const selectedCustomer = _customerOptions.find(
@@ -843,7 +843,7 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
   };
 
   const sendFreightData = async () => {
-    console.log(' quotedata',refinedData.adjust_sign,refinedData.min_rate,refinedData.adjust_type)
+    // console.log(' quotedata',refinedData.adjust_sign,refinedData.min_rate,refinedData.adjust_type)
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
@@ -928,14 +928,14 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
       })),
     };
 
-    console.log(payload,'quote payload');
+    // console.log(payload,'quote payload');
 
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("Response Data:", response.data);
+      // console.log("Response Data:", response.data);
       setQuoteCalculationRes(response?.data);
       setIsQuotePrice(true);
     } catch (error) {
@@ -1272,8 +1272,8 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
                         ...refinedData,
                         service_choice: selectedCategoryName || null,
                       });
-                      console.log(refinedData, "n");
-                      console.log(job, "job");
+                      // console.log(refinedData, "n");
+                      // console.log(job, "job");
                     }}
                   />
 
@@ -1330,6 +1330,8 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
                           })
                         }
                       />
+                      </>
+                    )}
                       {/* Transport Type Select */}
                       <CustomInputField
                         key="transport_typeKey"
@@ -1388,8 +1390,6 @@ console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, cus
                       >
                         Note: For LCL and Airfreight Only
                       </Text>
-                    </>
-                  )}
                 </Box>
 
                 <Divider className="my-12" />
