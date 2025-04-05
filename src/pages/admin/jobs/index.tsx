@@ -444,7 +444,7 @@ export default function JobIndex() {
     });
   };
   const handleSortingChange = (sortBy: string | any[]) => {
-    console.log("handleSorting", sortBy);
+    // console.log("handleSorting", sortBy);
     if (sortBy.length === 0) {
       setSorting({
         id: "id",
