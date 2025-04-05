@@ -62,7 +62,6 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
-// import { min } from "moment";
 import { useRouter } from "next/router";
 import {
   SyntheticEvent,
@@ -80,7 +79,7 @@ function JobEdit() {
   const { isAdmin, customerId, companyId, isCompany, isCustomer } = useSelector(
     (state: RootState) => state.user,
   );
-
+console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
@@ -98,6 +97,11 @@ function JobEdit() {
     freight_type: "LCL",
   });
   console.log(refinedData, "refined to wp");
+  const [tempRate,setTempRate]=useState({
+    min_rate:0,
+    adjust_type:"",
+    adjust_sign:""
+  })
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
@@ -259,7 +263,7 @@ function JobEdit() {
 
       // If a company is already selected, update refinedData with its properties
       const selectedCompany = newCompaniesOptions.find(
-        (entity: { value: number }) => entity.value === job.company_id,
+        (entity: { value: number }) => entity.value == job.company_id,
       );
 
       if (selectedCompany) {
@@ -269,6 +273,22 @@ function JobEdit() {
           adjust_type: selectedCompany.adjust_type,
           adjust_sign: selectedCompany.adjust_sign,
         });
+        console.log(selectedCompany.min_rate, "selected company min rate")
+      }
+
+      if (!isAdmin) {
+        const companyWithId = newCompaniesOptions.find(
+          (entity: { value: number }) => entity.value == companyId,
+        );
+        if (companyWithId) {
+          setRefinedData({
+            ...refinedData,
+            min_rate: companyWithId.min_rate,
+            adjust_type: companyWithId.adjust_type,
+            adjust_sign: companyWithId.adjust_sign,
+          });
+          console.log(companyWithId,'companywithid min rate')
+        }
       }
     },
   });
@@ -823,6 +843,7 @@ function JobEdit() {
   };
 
   const sendFreightData = async () => {
+    console.log(' quotedata',refinedData.adjust_sign,refinedData.min_rate,refinedData.adjust_type)
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
@@ -907,7 +928,7 @@ function JobEdit() {
       })),
     };
 
-    console.log(payload);
+    console.log(payload,'quote payload');
 
     try {
       const response = await axios.post(apiUrl, payload, {
@@ -1014,7 +1035,7 @@ function JobEdit() {
                       }}
                     />
                   )}
-
+                  {!isCompany && (
                   <CustomInputFieldAdornment
                     label="Custom Rate"
                     placeholder=""
@@ -1049,6 +1070,7 @@ function JobEdit() {
                     //  [e.target.name]: e.target.value,
                     //})
                   />
+                  )}
 
                   <CustomInputField
                     isSelect={true}
