@@ -1037,7 +1037,6 @@ function JobEdit() {
                     />
                   )}
                   {!isCompany && (
-                  {!isCompany && (
                   <CustomInputFieldAdornment
                     label="Custom Rate"
                     placeholder=""
@@ -1072,9 +1071,7 @@ function JobEdit() {
                     //  [e.target.name]: e.target.value,
                     //})
                   />
-                  )}
-                  )}
-
+                  )}                
                   <CustomInputField
                     isSelect={true}
                     optionsArray={customerOptions}
