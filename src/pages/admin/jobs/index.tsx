@@ -34,7 +34,7 @@ import {
 import JobTableSettingsModal from "components/jobs/JobTableSettingsModal";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
-import { TabsComponent } from "components/tabs/TabsComponet";
+// import { TabsComponent } from "components/tabs/TabsComponet";
 import { GET_AVAILABLE_DRIVERS_QUERY } from "graphql/driver";
 import {
   DynamicTableUser,
