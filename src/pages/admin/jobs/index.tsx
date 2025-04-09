@@ -7,12 +7,15 @@ import {
   Flex,
   Link,
   SimpleGrid,
+  Spinner,
   Tag,
   TagCloseButton,
   TagLabel,
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react";
+import DateRangePicker from "@wojtekmaj/react-daterange-picker";
+import { Select } from "chakra-react-select";
 import { FullChevronDown } from "components/icons/Icons";
 import ActionBar from "components/jobs/ActionBar";
 import FilterJobsModal from "components/jobs/FilterJobsModal";
@@ -67,7 +70,16 @@ export default function JobIndex() {
   const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
-
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [rangeDate, setRangeDate] = useState([null, null]);
+  
+  const [isTableLoading, setIsTableLoading] = useState(false);
+  const statusOptions = [
+    { value: "all", label: "Show All", statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { value: "current", label: "Current (Unassigned/Scheduled/En Route)", statusIds: [1, 2, 4] },
+    { value: "in_transit", label: "In Transit (Assigned/In Transit)", statusIds: [3, 5] },
+    { value: "completed", label: "Completed (Completed/Delivered)", statusIds: [6, 7] }
+  ];
   const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
     (state: RootState) => state.user,
   );
@@ -78,8 +90,8 @@ export default function JobIndex() {
 
   const [jobStatuses, setJobStatuses] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
-  const [isCompleted, setIsCompleted] = useState(false); // 1 = pending, 2 = active, 4 = inactive
-  const [isPending, setIsPending] = useState(true); // First access is Pending
+  // const [isCompleted, setIsCompleted] = useState(false); // 1 = pending, 2 = active, 4 = inactive
+  // const [isPending, setIsPending] = useState(true); // First access is Pending
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState(null);
@@ -103,11 +115,12 @@ export default function JobIndex() {
         isAdmin,
         isCustomer,
         dynamicTableUsers,
-        isPending,
-        isCompleted,
+        // isPending,
+        // isCompleted,
       ),
-    [isCustomer, isAdmin, dynamicTableUsers, isPending, isCompleted],
+    [isCustomer, isAdmin, dynamicTableUsers],
   );
+
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
     isCustomer,
@@ -239,13 +252,13 @@ export default function JobIndex() {
     },
   ];
 
-  const changeTab = useMemo(() => {
-    return debounce((tab) => {
-      setIsPending(tab == 1);
-      setIsCompleted(tab == 2 ? true : false);
-      setQueryPageIndex(0);
-    }, 300);
-  }, []);
+  // const changeTab = useMemo(() => {
+  //   return debounce((tab) => {
+  //     // setIsPending(tab == 1);
+  //     // setIsCompleted(tab == 2 ? true : false);
+  //     setQueryPageIndex(0);
+  //   }, 300);
+  // }, []);
 
   useEffect(() => {
     if (isAdmin) getJobs();
@@ -254,9 +267,10 @@ export default function JobIndex() {
     queryPageIndex,
     queryPageSize,
     searchQuery,
-    isCompleted,
+    // isCompleted,
     mainFilters,
-    isPending,
+    rangeDate,
+    // isPending,
   ]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -349,7 +363,11 @@ export default function JobIndex() {
       page: queryPageIndex + 1,
       first: 100,
       orderByRelationship: orderByRelationship,
-      job_status_ids: isCompleted ? [6, 7] : [1, 2, 3, 4, 5, 8, 9],
+      between_at: rangeDate && rangeDate[0] ? {
+        from_at: rangeDate[0],
+        to_at: rangeDate[1]
+      } : undefined,
+      job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
       ...mainJobFilter,
     },
     skip: !isAdmin,
@@ -367,7 +385,11 @@ export default function JobIndex() {
       first: queryPageSize,
       orderByRelationship: orderByRelationship,
       company_id: parseInt(companyId),
-      job_status_ids: isCompleted ? [6, 7] : isPending ? [1] : [2, 3, 4, 5],
+      between_at: rangeDate && rangeDate[0] ? {
+        from_at: rangeDate[0],
+        to_at: rangeDate[1]
+      } : undefined,
+      job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
       ...mainJobFilter,
     },
     skip: !isCompany,
@@ -460,6 +482,29 @@ export default function JobIndex() {
       setSorting(newSorting);
     }
   };
+
+const handleStatusChange = (selectedOption: any) => {
+  setStatusFilter(selectedOption.value);
+  setQueryPageIndex(0);
+    
+  // Update job status IDs filter based on selection
+  let statusIds: number[] = [];
+  if (selectedOption.value !== "all") {
+    const option = statusOptions.find(opt => opt.value === selectedOption.value);
+    statusIds = option?.statusIds || [];
+  }
+  
+  // Store the status IDs in state or update the existing filter
+  const updatedJobFilter = {
+    ...mainJobFilter,
+    job_status_ids: statusIds.length > 0 ? statusIds : [1, 2, 3, 4, 5, 6, 7]
+  };
+  setMainJobFilter(updatedJobFilter);
+};
+
+useEffect(() => {
+  setIsTableLoading(loading || companyJobsLoading);
+}, [companyJobsLoading, loading]);
 
   return (
     <AdminLayout>
@@ -584,10 +629,49 @@ export default function JobIndex() {
               Clear all
             </Button>
           </Flex>
-          <TabsComponent
+          <Flex>
+            <Box width="300px">
+              <Select
+                options={statusOptions}
+                defaultValue={statusOptions[0]}
+                onChange={handleStatusChange}
+                placeholder="Select Status"
+                className="basic-single"
+                classNamePrefix="select"
+              />
+            </Box>
+            <Box
+              alignItems="center"
+              flexDirection="column"
+              w="30%"
+              maxW="max-content"
+              p="10px 10px"
+              h="max-content"
+              ml="4"
+              sx={{
+                '.react-daterange-picker__wrapper': {
+                  border: '1px solid',
+                  borderColor: '#e3e3e3',
+                  padding: '6px',
+                  borderRadius: '0.375rem',
+                  marginTop: '-15px'
+                }
+              }}
+            >
+              {/* @ts-ignore */}
+              <DateRangePicker value={rangeDate} onChange={setRangeDate} />
+            </Box>
+          </Flex>
+          {/* <TabsComponent
             tabs={isAdmin ? adminTabs : customerTabs}
             onChange={(tabId) => changeTab(tabId)}
-          />
+          /> */}
+             {isTableLoading ? (
+            <Box textAlign="center" py={4} px={10}>
+              Loading  <Spinner size="sm" ml={2} />
+            </Box>
+          ) : (
+          <>
           {isAdmin && !loading && jobs?.jobs.data.length >= 0 && (
             <PaginationTable
               columns={columns}
@@ -643,6 +727,8 @@ export default function JobIndex() {
                 showManualPages
                 onSortingChange={handleSortingChange}
               />
+            )}
+            </>
             )}
         </SimpleGrid>
 
