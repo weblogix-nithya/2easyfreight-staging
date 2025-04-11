@@ -32,6 +32,8 @@ export const GET_JOBS_QUERY = gql`
     $weight_to: Int
     $volume_from: Int
     $volume_to: Int
+    $company_area: String
+
   ) {
     jobs(
       query: $query
@@ -64,6 +66,7 @@ export const GET_JOBS_QUERY = gql`
       weight_to: $weight_to
       volume_from: $volume_from
       volume_to: $volume_to
+      
     ) {
       data {
         id
@@ -209,6 +212,7 @@ export const GET_JOB_QUERY = gql`
       id
       name
       driver_id
+      company_area
       driver {
         full_name
         no_max_capacity
@@ -461,7 +465,6 @@ export const CREATE_JOB_MUTATION = gql`
     createJob(input: $input) {
       id
       name
-      
     }
   }
 `;
@@ -476,6 +479,7 @@ export const UPDATE_JOB_RIGHT_MUTATION = gql`
       job_category_id
       start_at
       admin_notes
+      company_area
     }
   }
 `;
@@ -523,6 +527,7 @@ export const UPDATE_JOB_MUTATION = gql`
       quoted_price
       transport_type
       transport_location
+      company_area
     }
   }
 `;
@@ -556,7 +561,7 @@ export const SEND_CONSIGNMENT_DOCKET = gql`
 `;
 
 export interface UpdateJobInput {
-  id: number; // Keeping ID required for updates
+  id: number; 
   name?: string;
   driver_id?: number;
   job_type_id?: number;
@@ -565,6 +570,7 @@ export interface UpdateJobInput {
   start_at?: Date;
   admin_notes?: string;
   booked_by?: string;
+  company_area:string;
   reference_no?: string;
   customer_id?: string;
   company_id?: number;
@@ -594,6 +600,7 @@ export interface CreateJobInput {
   job_type_id?: number;
   customer_id?: string;
   company_id?: number;
+  company_area:string;
   transport_type?: string; // Fixed from transportType
   transport_location?: string;
   ready_at?: string;
@@ -609,7 +616,7 @@ export interface CreateJobInput {
   admin_notes?: string;
   customer_notes?: string;
   base_notes?: string;
-  // job_price_quote?: JobPriceCalculationDetail[]; // Correct type
+  // job_price_quote?: JobPriceCalculationDetail[]; 
 }
 
 type Job = {
@@ -622,6 +629,7 @@ type Job = {
   // job_category_name?: string;
   job_status_id: number;
   job_type_id: number;
+  company_area:string;
   //decline_reason_id: number;
   //driver_id: number;
   //region_id: number;
@@ -671,6 +679,7 @@ export const defaultJob: Job = {
   booked_by: "",
   //notes: "",
   job_category_id: 1,
+  company_area:"",
   // job_category_name: undefined,
   job_status_id: null,
   job_type_id: 1,
@@ -809,4 +818,3 @@ const defaultJobQuoteData: JobQuoteData = {
 };
 
 export default defaultJobQuoteData;
-

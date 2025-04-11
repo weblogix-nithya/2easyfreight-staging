@@ -294,7 +294,20 @@ function JobEdit() {
           media: data?.job.media,
           job_category_id: data?.job.job_category_id,
           transport_location: data?.job.transport_location,
+          company_area: data?.job.company_area,
         });
+        if (data?.job.company_area && companyRates.length > 0) {
+          const matchingRate = companyRates.find(rate => rate.area === data.job.company_area);
+          if (matchingRate) {
+            setSelectedRegion({
+              area: matchingRate.area,
+              cbm_rate: matchingRate.cbm_rate,
+              minimum_charge: matchingRate.minimum_charge
+            });
+          }
+        }
+        getCompanyRates({ variables: { company_id: data.job.company_id } });  // Fetch company rates here
+
         const selectedCategoryName = jobCategories.find(
           (job_category) => job_category.value == data?.job.job_category_id,
         )?.label;
@@ -369,6 +382,19 @@ function JobEdit() {
     },
   });
 
+  useEffect(() => {
+    if (job.company_area && companyRates.length > 0) {
+      const matchingRate = companyRates.find(rate => rate.area === job.company_area);
+      if (matchingRate) {
+        setSelectedRegion({
+          area: matchingRate.area,
+          cbm_rate: matchingRate.cbm_rate,
+          minimum_charge: matchingRate.minimum_charge
+        });
+      }
+    }
+  }, [companyRates, job.company_area]);
+  
   const { loading: companyLoading, data: companyData } = useQuery(
     GET_COMPANY_QUERY,
     {
@@ -442,6 +468,7 @@ function JobEdit() {
         name: job.name,
         reference_no: job.reference_no,
         booked_by: job.booked_by,
+        company_area: job.company_area,
         notes: job.notes,
         job_category_id: job.job_category_id,
         job_status_id: job.job_status_id,
@@ -1715,6 +1742,10 @@ function JobEdit() {
                                     const selectedRate = companyRates.find(
                                       (rate) => rate.area === e.value,
                                     );
+                                    setJob({
+                                      ...job,
+                                      company_area: e.value || null,
+                                    })
                                     if (selectedRate) {
                                       setSelectedRegion({
                                         area: selectedRate.area,
@@ -1740,6 +1771,23 @@ function JobEdit() {
                                   isDisabled={true}
                                   name="minimum_charge"
                                   value={selectedRegion?.minimum_charge || ""}
+                                  addonsEnd={
+                                    <Text mr="2" fontSize="sm">
+                                      $
+                                    </Text>
+                                  }
+                                  onChange={(e) => {}}
+                                  //setJob({
+                                  //  ...job,
+                                  //  [e.target.name]: e.target.value,
+                                  //})
+                                />
+                                <CustomInputFieldAdornment
+                                  label="CBM Rate"
+                                  placeholder=""
+                                  isDisabled={true}
+                                  name="cbm_rate"
+                                  value={selectedRegion?.cbm_rate || ""}
                                   addonsEnd={
                                     <Text mr="2" fontSize="sm">
                                       $
