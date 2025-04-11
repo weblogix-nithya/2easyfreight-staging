@@ -5,7 +5,7 @@ import {
   GridItem,
   Input,
   InputGroup,
-  InputLeftAddon,
+  // InputLeftAddon,
   InputRightAddon,
   SimpleGrid,
   SpaceProps,
@@ -23,7 +23,7 @@ export default function Default(props: {
   label?: string;
   extra?: string;
   placeholder?: string;
-  addonsStart?: React.ReactNode;
+  // addonsStart?: React.ReactNode;
   addonsEnd?: React.ReactNode;
   type?: string;
   name?: string;
@@ -49,7 +49,7 @@ export default function Default(props: {
     label = "",
     extra,
     placeholder = "",
-    addonsStart,
+    // addonsStart,
     addonsEnd,
     value,
     defaultValue,
@@ -131,7 +131,7 @@ export default function Default(props: {
             minWidth={minWidth}
             style={inputStyles}
           >
-            <InputLeftAddon>{addonsStart}</InputLeftAddon>
+           {/* <InputLeftAddon>{addonsStart}</InputLeftAddon> */}
             <Input
               ref={inputRef}
               {...rest}

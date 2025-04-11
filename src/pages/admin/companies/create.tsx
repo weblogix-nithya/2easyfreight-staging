@@ -9,16 +9,34 @@ import {
   FormLabel,
   Grid,
   Input,
+  SimpleGrid,
   useColorModeValue,
-  useToast
+  useToast,
 } from "@chakra-ui/react";
+import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { CREATE_COMPANY_MUTATION, defaultCompany, paymentTerms } from "graphql/company";
+import {
+  CREATE_COMPANY_MUTATION,
+  defaultCompany,
+  paymentTerms,
+} from "graphql/company";
+import {
+  CompanyRate,
+  CREATE_COMPANY_RATE_MUTATION
+} from "graphql/CompanyRate";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
-import {useState } from "react";
-import Select from "react-select";
+import { useState } from "react";
+
+const regionOption = [
+  { value: "gc_north", label: "GC North" },
+  { value: "gc_south", label: "GC South" },
+  { value: "local", label: "Local" },
+  { value: "sunshine_coast_south", label: "Sunshine Coast South" },
+  { value: "sunshine_coast_north", label: "Sunshine Coast North" },
+  { value: "toowoomba", label: "Toowoomba" },
+];
 
 function CompanyCreate() {
   const toast = useToast();
@@ -27,8 +45,20 @@ function CompanyCreate() {
   const [company, setCompany] = useState(defaultCompany);
   const router = useRouter();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [companyRates, setCompanyRates] = useState<CompanyRate[]>([
+    {
+      id: undefined,
+      company_id: "",
+      area: "",
+      cbm_rate: 0,
+      minimum_charge: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ]);
+  const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
 
-  const [handleCreateCompany, { }] = useMutation(CREATE_COMPANY_MUTATION, {
+  const [handleCreateCompany, {}] = useMutation(CREATE_COMPANY_MUTATION, {
     variables: {
       input: {
         name: company.name,
@@ -49,22 +79,67 @@ function CompanyCreate() {
         lcl_rate: company.lcl_rate,
         rate_card_url: undefined,
         logo_url: undefined,
-        payment_term: company.payment_term ?? '7_days',
+        payment_term: company.payment_term ?? "7_days",
       },
     },
-    onCompleted: (data) => {
-      toast({
-        title: "Company created",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      router.push(`/admin/companies/${data.createCompany.id}`);
+    onCompleted: async (data) => {
+      try {
+        // Create rates for the new company
+        const validRates = companyRates.filter(rate => 
+          rate.area && 
+          rate.cbm_rate > 0 && 
+          rate.minimum_charge > 0
+        );
+        for (const rate of validRates) {
+          await createCompanyRate({
+            variables: {
+              company_id: data.createCompany.id,
+              area: rate.area,
+              cbm_rate: parseFloat(rate.cbm_rate.toString()),
+              minimum_charge: parseFloat(rate.minimum_charge.toString()),
+            },
+          });
+        }
+
+        toast({
+          title: "Company and rates created successfully",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+
+        router.push("/admin/companies");
+      } catch (error) {
+        showGraphQLErrorToast(error as any);
+      }
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
     },
   });
+  const handleRateChange = (index: number, field: string, value: any) => {
+    const updatedRates = [...companyRates];
+    updatedRates[index] = {
+      ...updatedRates[index],
+      [field]: value,
+    };
+    setCompanyRates(updatedRates);
+  };
+
+  const addNewRate = () => {
+    setCompanyRates([
+      ...companyRates,
+      {
+        id: undefined,
+        company_id: "",
+        area: "",
+        cbm_rate: 0,
+        minimum_charge: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+  };
   return (
     <AdminLayout>
       <Box
@@ -224,10 +299,15 @@ function CompanyCreate() {
               <Box className="!max-w-md w-full">
                 <Select
                   placeholder="Select Payment Terms"
-                  value={paymentTerms.find((term) => term.value === company.payment_term)}
+                  value={paymentTerms.find(
+                    (term) => term.value === company.payment_term,
+                  )}
                   options={paymentTerms}
                   onChange={(selectedOption) => {
-                    setCompany({ ...company, payment_term: selectedOption?.value });
+                    setCompany({
+                      ...company,
+                      payment_term: selectedOption?.value,
+                    });
                     console.log("Selected:", selectedOption);
                   }}
                   size="lg"
@@ -236,7 +316,6 @@ function CompanyCreate() {
                 />
               </Box>
             </Flex>
-
 
             <Divider />
             <h3 className="mt-6 mb-4">Billing</h3>
@@ -471,7 +550,58 @@ function CompanyCreate() {
             </Flex>
             <Divider />
 
-            <h3 className="mt-6 mb-4">Rates</h3>
+            <Flex justifyContent="space-between" alignItems="center" mb={4}>
+              <h3 className="mt-6 mb-4">Company Rates </h3>
+              <Button
+                fontSize="sm"
+                variant="brand"
+                fontWeight="500"
+                onClick={addNewRate}
+              >
+                Add New Rate
+              </Button>
+            </Flex>
+
+            {companyRates.map((rate, index) => (
+              <SimpleGrid key={index} columns={3} spacing={4} mb={4}>
+                <Select
+                    placeholder="Select Area"
+                    value={regionOption.find((opt) => opt.value === rate.area) || null}
+                    options={regionOption}
+                    onChange={(selectedOption: any) =>
+                      handleRateChange(index, "area", selectedOption?.value)
+                    }
+                    className="chakra-select"
+                    classNamePrefix="two-easy-select"
+                  />
+                <Input
+                  type="number"
+                  placeholder="CBM Rate"
+                  value={rate.cbm_rate}
+                  onChange={(e) =>
+                    handleRateChange(
+                      index,
+                      "cbm_rate",
+                      parseFloat(e.target.value),
+                    )
+                  }
+                />
+                <Input
+                  type="number"
+                  placeholder="Minimum Charge"
+                  value={rate.minimum_charge}
+                  onChange={(e) =>
+                    handleRateChange(
+                      index,
+                      "minimum_charge",
+                      parseFloat(e.target.value),
+                    )
+                  }
+                />
+              </SimpleGrid>
+            ))}
+            <Divider />
+            <h3 className="mt-6 mb-4">Rates </h3>
             <Flex alignItems="center" mb="16px">
               <FormLabel
                 display="flex"
