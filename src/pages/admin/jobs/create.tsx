@@ -334,6 +334,7 @@ function JobEdit() {
         job_status_id: 1,
         transport_type: job.transport_type,
         transport_location: job.transport_location,
+        company_area: job.company_area,
         media: undefined,
       },
     },
@@ -864,6 +865,18 @@ function JobEdit() {
   const handleJobCreation = () => {
     if (!validateAddresses()) return;
 
+    if ((job.job_type_id = null)) {
+      toast({
+        title: "Job Type Required",
+        description:
+          "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsSaving(true);
     handleCreateJob();
   };
@@ -1055,10 +1068,9 @@ function JobEdit() {
                           cbm_rate: null,
                           minimum_charge: null,
                         });
-                   
 
                         if (e.value) {
-                          console.log(e.value, "firstCompany");
+                          // console.log(e.value, "firstCompany");
                           getCompanyRates({
                             variables: {
                               company_id: String(e.value),
@@ -1092,6 +1104,11 @@ function JobEdit() {
                             (rate) => rate.area === e.value,
                           );
                           if (selectedRate) {
+                            setJob({
+                              ...job,
+                              company_area: selectedRate.area,
+                            });
+
                             setSelectedRegion({
                               area: selectedRate.area,
                               cbm_rate: selectedRate.cbm_rate,
@@ -1104,16 +1121,34 @@ function JobEdit() {
                               cbm_rate: selectedRate.cbm_rate,
                               minimum_charge: selectedRate.minimum_charge,
                             }));
+                            console.log(job, "job");
                           }
                         }}
                       />
 
                       <CustomInputFieldAdornment
-                        label="Custom Rate"
+                        label="Minium Rate"
                         placeholder=""
                         isDisabled={true}
                         name="minimum_charge"
                         value={selectedRegion?.minimum_charge || ""}
+                        addonsEnd={
+                          <Text mr="2" fontSize="sm">
+                            $
+                          </Text>
+                        }
+                        onChange={(e) => {}}
+                        //setJob({
+                        //  ...job,
+                        //  [e.target.name]: e.target.value,
+                        //})
+                      />
+                      <CustomInputFieldAdornment
+                        label="CBM Rate"
+                        placeholder=""
+                        isDisabled={true}
+                        name="cbm_rate"
+                        value={selectedRegion?.cbm_rate || ""}
                         addonsEnd={
                           <Text mr="2" fontSize="sm">
                             $
