@@ -41,6 +41,7 @@ import { TabsComponent } from "components/tabs/TabsComponet";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
+import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_DRIVERS_QUERY } from "graphql/driver";
@@ -164,6 +165,14 @@ function JobEdit() {
     transport_type: job.transport_type,
     transport_location: job.transport_location,
     job_items: jobItems, // Add job_items to the state
+  });
+
+  const [companyRates, setCompanyRates] = useState([]);
+
+  const [selectedRegion, setSelectedRegion] = useState({
+    area: "",
+    cbm_rate: 0,
+    minimum_charge: 0,
   });
 
   const tabs = [
@@ -373,9 +382,9 @@ function JobEdit() {
         }
         setRefinedData({
           ...refinedData,
-          min_rate: data?.company?.min_rate,
-          adjust_type: data?.company?.adjust_type,
-          adjust_sign: data?.company?.adjust_sign,
+          // min_rate: data?.company?.min_rate,
+          // adjust_type: data?.company?.adjust_type,
+          // adjust_sign: data?.company?.adjust_sign,
         });
       },
       onError(error) {
@@ -802,9 +811,9 @@ function JobEdit() {
       const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
-        min_rate: _entity.min_rate, // Add these properties to the options
-        adjust_type: _entity.adjust_type,
-        adjust_sign: _entity.adjust_sign,
+        // min_rate: _entity.min_rate, // Add these properties to the options
+        // adjust_type: _entity.adjust_type,
+        // adjust_sign: _entity.adjust_sign,
       }));
 
       setCompaniesOptions(newCompaniesOptions);
@@ -817,14 +826,28 @@ function JobEdit() {
       if (selectedCompany) {
         setRefinedData({
           ...refinedData,
-          min_rate: selectedCompany?.min_rate,
-          adjust_type: selectedCompany?.adjust_type,
-          adjust_sign: selectedCompany?.adjust_sign,
+          // min_rate: selectedCompany?.min_rate,
+          // adjust_type: selectedCompany?.adjust_type,
+          // adjust_sign: selectedCompany?.adjust_sign,
         });
       }
     },
   });
 
+  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
+    GET_COMPANY_RATE_QUERY,
+    {
+      variables: { company_id: job?.company_id || "" },
+      skip: !job?.company_id,
+      fetchPolicy: "network-only",
+      onCompleted: (data) => {
+        if (data?.getRatesByCompany) {
+          const rates = [...data.getRatesByCompany];
+          setCompanyRates(rates);
+        }
+      },
+    },
+  );
   const handleRemoveFromJobItems = (index: number) => {
     let _jobItems = [...jobItems];
     _jobItems.splice(index, 1);
@@ -1338,6 +1361,10 @@ function JobEdit() {
       customer_id: Number(job.customer_id),
       freight_type: refinedData.freight_type || selectedCategoryName,
       transport_type: job.transport_type,
+      service_choice: refinedData.service_choice,
+      cbm_rate: refinedData.cbm_rate,
+      minimum_charge: refinedData.minimum_charge,
+      area: refinedData.area,
       state: refinedData.state || selectedstate,
       state_code: refinedData.state_code || job.transport_location,
       job_pickup_address: {
@@ -1624,80 +1651,109 @@ function JobEdit() {
                             });
                           }}
                         />
-                        <CustomInputFieldAdornment
-                          label="Custom Rate"
-                          placeholder=""
-                          isDisabled={true}
-                          name="min_rate"
-                          value={refinedData?.min_rate}
-                          addonsStart={
-                            refinedData.adjust_sign ? (
-                              <Text ml="2" fontSize="sm">
-                                {refinedData.adjust_sign}
-                              </Text>
-                            ) : (
-                              <Text ml="2" fontSize="sm">
-                                + / -
-                              </Text>
-                            )
-                          }
-                          addonsEnd={
-                            refinedData.adjust_type ? (
-                              <Text mr="2" fontSize="sm">
-                                {refinedData.adjust_type}
-                              </Text>
-                            ) : (
-                              <Text mr="2" fontSize="sm">
-                                $ / %
-                              </Text>
-                            )
-                          }
-                          onChange={(e) => {}}
-                          //setJob({
-                          //  ...job,
-                          //  [e.target.name]: e.target.value,
-                          //})
-                        />
-                        {!isCompany && (
-                          <CustomInputField
-                            isSelect={true}
-                            optionsArray={companiesOptions}
-                            label="Company:"
-                            onInputChange={(e) => {
-                              onChangeSearchQuery(e);
-                            }}
-                            value={companiesOptions.find(
-                              (entity) => entity.value == job.company_id,
-                            )}
-                            placeholder=""
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                company_id: e.value || null,
-                                customer_id: null,
-                              });
-                              const selectedCompany = companiesOptions.find(
-                                (entity) => entity.value === e.value,
-                              );
 
-                              if (selectedCompany) {
-                                setRefinedData({
-                                  ...refinedData,
-                                  min_rate: selectedCompany.min_rate,
-                                  adjust_type: selectedCompany.adjust_type,
-                                  adjust_sign: selectedCompany.adjust_sign,
+                        {!isCompany && (
+                          <>
+                            <CustomInputField
+                              isSelect={true}
+                              optionsArray={companiesOptions}
+                              label="Company:"
+                              onInputChange={(e) => {
+                                onChangeSearchQuery(e);
+                              }}
+                              value={companiesOptions.find(
+                                (entity) => entity.value == job.company_id,
+                              )}
+                              placeholder=""
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  company_id: e.value || null,
+                                  customer_id: null,
                                 });
-                              }
-                              getCustomersByCompanyId({
-                                query: "",
-                                page: 1,
-                                first: 1000,
-                                orderByColumn: "id",
-                                orderByOrder: "ASC",
-                                company_id: e.value,
-                              });
-                            }}
-                          />
+                                const selectedCompany = companiesOptions.find(
+                                  (entity) => entity.value === e.value,
+                                );
+
+                                if (selectedCompany) {
+                                  setRefinedData({
+                                    ...refinedData,
+                                    // min_rate: selectedCompany.min_rate,
+                                    // adjust_type: selectedCompany.adjust_type,
+                                    // adjust_sign: selectedCompany.adjust_sign,
+                                  });
+                                }
+                                getCustomersByCompanyId({
+                                  query: "",
+                                  page: 1,
+                                  first: 1000,
+                                  orderByColumn: "id",
+                                  orderByOrder: "ASC",
+                                  company_id: e.value,
+                                });
+                              }}
+                            />
+                            {!isCompany && (
+                              <>
+                                <CustomInputField
+                                  isSelect={true}
+                                  optionsArray={companyRates.map((rate) => ({
+                                    value: rate.area,
+                                    label: rate.area,
+                                  }))}
+                                  label="Area :"
+                                  value={
+                                    selectedRegion.area
+                                      ? {
+                                          value: selectedRegion.area,
+                                          label: selectedRegion.area,
+                                        }
+                                      : null
+                                  }
+                                  placeholder="Select area"
+                                  onChange={(e) => {
+                                    const selectedRate = companyRates.find(
+                                      (rate) => rate.area === e.value,
+                                    );
+                                    if (selectedRate) {
+                                      setSelectedRegion({
+                                        area: selectedRate.area,
+                                        cbm_rate: selectedRate.cbm_rate,
+                                        minimum_charge:
+                                          selectedRate.minimum_charge,
+                                      });
+
+                                      setRefinedData((prev) => ({
+                                        ...prev,
+                                        area: selectedRate.area,
+                                        cbm_rate: selectedRate.cbm_rate,
+                                        minimum_charge:
+                                          selectedRate.minimum_charge,
+                                      }));
+                                    }
+                                  }}
+                                />
+
+                                <CustomInputFieldAdornment
+                                  label="Custom Rate"
+                                  placeholder=""
+                                  isDisabled={true}
+                                  name="minimum_charge"
+                                  value={selectedRegion?.minimum_charge || ""}
+                                  addonsEnd={
+                                    <Text mr="2" fontSize="sm">
+                                      $
+                                    </Text>
+                                  }
+                                  onChange={(e) => {}}
+                                  //setJob({
+                                  //  ...job,
+                                  //  [e.target.name]: e.target.value,
+                                  //})
+                                />
+                              </>
+                            )}
+                          </>
                         )}
 
                         <CustomInputField
@@ -1882,19 +1938,33 @@ function JobEdit() {
                           label="Type:"
                           optionsArray={filteredJobTypeOptions}
                           selectedJobId={job.job_type_id}
-                          value={
-                            job.job_type_id
-                              ? filteredJobTypeOptions.find(
-                                  (jobType) => jobType.value == job.job_type_id,
-                                )
-                              : null
-                          }
+                          value={filteredJobTypeOptions.find(
+                            (jobType) => jobType.value === job.job_type_id,
+                          )}
                           placeholder="Select type"
                           onChange={(e) => {
+                            // setJob({
+                            //   ...job,
+                            //   job_type_id: e.value || null,
+                            // });
+                            const selectedCategory = e.value;
+                            const selectedCategoryName =
+                              filteredJobTypeOptions.find(
+                                (job_category) =>
+                                  job_category.value === selectedCategory,
+                              )?.label;
+
                             setJob({
                               ...job,
-                              job_type_id: e.value || null,
+                              job_type_id: selectedCategory || null,
                             });
+
+                            setRefinedData({
+                              ...refinedData,
+                              service_choice: selectedCategoryName || null,
+                            });
+                            // console.log(refinedData, "n");
+                            // console.log(job, "job");
                           }}
                         />
 
