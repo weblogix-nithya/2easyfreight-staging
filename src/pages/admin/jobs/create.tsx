@@ -31,6 +31,7 @@ import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANYS_QUERY } from "graphql/company";
+import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
@@ -79,7 +80,7 @@ function JobEdit() {
   const { isAdmin, customerId, companyId, isCompany, isCustomer } = useSelector(
     (state: RootState) => state.user,
   );
-// console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
+  // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
@@ -96,12 +97,21 @@ function JobEdit() {
     ...defaultJobQuoteData,
     freight_type: "LCL",
   });
+  // const [companyRate, setCompanyRate] = useState({
+  //   company_id: "",
+  //   area: "",
+  //   cbm_rate: 0,
+  //   minimum_charge: 0
+  // });
+  const [companyRates, setCompanyRates] = useState([]);
+
+  const [selectedRegion, setSelectedRegion] = useState({
+    area: "",
+    cbm_rate: 0,
+    minimum_charge: 0,
+  });
   // console.log(refinedData, "refined to wp");
-  const [tempRate,setTempRate]=useState({
-    min_rate:0,
-    adjust_type:"",
-    adjust_sign:""
-  })
+
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
@@ -149,10 +159,10 @@ function JobEdit() {
     orderByColumn: "id",
     orderByOrder: "ASC",
   };
-  const defaultSelect = [
-    { value: 1, label: "option 1" },
-    { value: 2, label: "option 2" },
-  ];
+  // const defaultSelect = [
+  //   { value: 1, label: "option 1" },
+  //   { value: 2, label: "option 2" },
+  // ];
   const itemsTableColumns = useMemo(
     () => [
       {
@@ -199,6 +209,21 @@ function JobEdit() {
       },
     ],
     [],
+  );
+
+  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
+    GET_COMPANY_RATE_QUERY,
+    {
+      variables: { company_id: job?.company_id || "" },
+      skip: !job?.company_id,
+      fetchPolicy: "network-only",
+      onCompleted: (data) => {
+        if (data?.getRatesByCompany) {
+          const rates = [...data.getRatesByCompany];
+          setCompanyRates(rates);
+        }
+      },
+    },
   );
 
   useQuery(GET_ITEM_TYPES_QUERY, {
@@ -254,9 +279,9 @@ function JobEdit() {
       const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
-        min_rate: _entity.min_rate, // Add these properties to the options
-        adjust_type: _entity.adjust_type,
-        adjust_sign: _entity.adjust_sign,
+        // min_rate: _entity.min_rate, // Add these properties to the options
+        // adjust_type: _entity.adjust_type,
+        // adjust_sign: _entity.adjust_sign,
       }));
 
       setCompaniesOptions(newCompaniesOptions);
@@ -264,15 +289,15 @@ function JobEdit() {
       // If a company is already selected, update refinedData with its properties
       const selectedCompany = newCompaniesOptions.find(
         (entity: { value: number }) => entity.value == job.company_id,
-        (entity: { value: number }) => entity.value == job.company_id,
+        // (entity: { value: number }) => entity.value == job.company_id,
       );
 
       if (selectedCompany) {
         setRefinedData({
           ...refinedData,
-          min_rate: selectedCompany.min_rate,
-          adjust_type: selectedCompany.adjust_type,
-          adjust_sign: selectedCompany.adjust_sign,
+          // min_rate: selectedCompany.min_rate,
+          // adjust_type: selectedCompany.adjust_type,
+          // adjust_sign: selectedCompany.adjust_sign,
         });
         // console.log(selectedCompany.min_rate, "selected company min rate")
       }
@@ -284,9 +309,9 @@ function JobEdit() {
         if (companyWithId) {
           setRefinedData({
             ...refinedData,
-            min_rate: companyWithId.min_rate,
-            adjust_type: companyWithId.adjust_type,
-            adjust_sign: companyWithId.adjust_sign,
+            // min_rate: companyWithId.min_rate,
+            // adjust_type: companyWithId.adjust_type,
+            // adjust_sign: companyWithId.adjust_sign,
           });
           // console.log(companyWithId,'companywithid min rate')
         }
@@ -878,9 +903,12 @@ function JobEdit() {
       state: refinedData.state,
       state_code: refinedData.state_code,
       service_choice: refinedData.service_choice,
-      min_rate: refinedData.min_rate,
-      adjust_type: refinedData.adjust_type,
-      adjust_sign: refinedData.adjust_sign,
+      cbm_rate: refinedData.cbm_rate,
+      minimum_charge: refinedData.minimum_charge,
+      area: refinedData.area,
+      // min_rate: refinedData.min_rate,
+      // adjust_type: refinedData.adjust_type,
+      // adjust_sign: refinedData.adjust_sign,
       job_pickup_address: {
         state: pickUpDestination?.address_state,
         suburb: pickUpDestination?.address_city,
@@ -929,7 +957,7 @@ function JobEdit() {
       })),
     };
 
-    // console.log(payload,'quote payload');
+    console.log(payload, "quote payload");
 
     try {
       const response = await axios.post(apiUrl, payload, {
@@ -1021,57 +1049,84 @@ function JobEdit() {
                           company_id: e.value || null,
                           customer_id: null,
                         });
-                        const selectedCompany = companiesOptions.find(
-                          (entity) => entity.value === e.value,
-                        );
+                        setRefinedData({
+                          ...refinedData,
+                          area: null,
+                          cbm_rate: null,
+                          minimum_charge: null,
+                        });
+                   
 
-                        if (selectedCompany) {
-                          setRefinedData({
-                            ...refinedData,
-                            min_rate: selectedCompany.min_rate,
-                            adjust_type: selectedCompany.adjust_type,
-                            adjust_sign: selectedCompany.adjust_sign,
+                        if (e.value) {
+                          console.log(e.value, "firstCompany");
+                          getCompanyRates({
+                            variables: {
+                              company_id: String(e.value),
+                            },
                           });
                         }
                       }}
                     />
                   )}
+
                   {!isCompany && (
-                  <CustomInputFieldAdornment
-                    label="Custom Rate"
-                    placeholder=""
-                    isDisabled={true}
-                    name="min_rate"
-                    value={refinedData?.min_rate}
-                    addonsStart={
-                      refinedData?.adjust_sign ? (
-                        <Text ml="2" fontSize="sm">
-                          {refinedData?.adjust_sign}
-                        </Text>
-                      ) : (
-                        <Text ml="2" fontSize="sm">
-                          +/-
-                        </Text>
-                      )
-                    }
-                    addonsEnd={
-                      refinedData?.adjust_type ? (
-                        <Text mr="2" fontSize="sm">
-                          {refinedData?.adjust_type}
-                        </Text>
-                      ) : (
-                        <Text mr="2" fontSize="sm">
-                          $/%
-                        </Text>
-                      )
-                    }
-                    onChange={(e) => {}}
-                    //setJob({
-                    //  ...job,
-                    //  [e.target.name]: e.target.value,
-                    //})
-                  />
-                  )}                
+                    <>
+                      <CustomInputField
+                        isSelect={true}
+                        optionsArray={companyRates.map((rate) => ({
+                          value: rate.area,
+                          label: rate.area,
+                        }))}
+                        label="Area :"
+                        value={
+                          selectedRegion.area
+                            ? {
+                                value: selectedRegion.area,
+                                label: selectedRegion.area,
+                              }
+                            : null
+                        }
+                        placeholder="Select area"
+                        onChange={(e) => {
+                          const selectedRate = companyRates.find(
+                            (rate) => rate.area === e.value,
+                          );
+                          if (selectedRate) {
+                            setSelectedRegion({
+                              area: selectedRate.area,
+                              cbm_rate: selectedRate.cbm_rate,
+                              minimum_charge: selectedRate.minimum_charge,
+                            });
+
+                            setRefinedData((prev) => ({
+                              ...prev,
+                              area: selectedRate.area,
+                              cbm_rate: selectedRate.cbm_rate,
+                              minimum_charge: selectedRate.minimum_charge,
+                            }));
+                          }
+                        }}
+                      />
+
+                      <CustomInputFieldAdornment
+                        label="Custom Rate"
+                        placeholder=""
+                        isDisabled={true}
+                        name="minimum_charge"
+                        value={selectedRegion?.minimum_charge || ""}
+                        addonsEnd={
+                          <Text mr="2" fontSize="sm">
+                            $
+                          </Text>
+                        }
+                        onChange={(e) => {}}
+                        //setJob({
+                        //  ...job,
+                        //  [e.target.name]: e.target.value,
+                        //})
+                      />
+                    </>
+                  )}
                   <CustomInputField
                     isSelect={true}
                     optionsArray={customerOptions}
@@ -1330,66 +1385,106 @@ function JobEdit() {
                           })
                         }
                       />
-                      </>
-                    )}
-                      {/* Transport Type Select */}
-                      <CustomInputField
-                        key="transport_typeKey"
-                        isSelect={true}
-                        optionsArray={[
-                          { value: "import", label: "Import" },
-                          { value: "export", label: "Export" },
-                        ]}
-                        label="Transport Type"
-                        name="transport_type"
-                        value={[
-                          { value: "import", label: "Import" },
-                          { value: "export", label: "Export" },
-                        ].find((_e) => _e.value === job.transport_type)}
-                        placeholder=""
-                        onChange={(e) => {
-                          setJob({ ...job, transport_type: e.value });
-                          setRefinedData({
-                            ...refinedData,
-                            transport_type: e.value,
-                          });
-                        }}
-                      />
+                    </>
+                  )}
+                  {/* Transport Type Select */}
+                  <CustomInputField
+                    key="transport_typeKey"
+                    isSelect={true}
+                    optionsArray={[
+                      { value: "import", label: "Import" },
+                      { value: "export", label: "Export" },
+                    ]}
+                    label="Transport Type"
+                    name="transport_type"
+                    value={[
+                      { value: "import", label: "Import" },
+                      { value: "export", label: "Export" },
+                    ].find((_e) => _e.value === job.transport_type)}
+                    placeholder=""
+                    onChange={(e) => {
+                      setJob({ ...job, transport_type: e.value });
+                      setRefinedData({
+                        ...refinedData,
+                        transport_type: e.value,
+                      });
+                    }}
+                  />
 
-                      {/* Location Select */}
-                      <CustomInputField
-                        key="locationKey"
-                        isSelect={true}
-                        optionsArray={[
-                          { value: "VIC", label: "Victoria" },
-                          { value: "QLD", label: "Queensland" },
-                        ]}
-                        label="Location"
-                        name="transport_location"
-                        value={[
-                          { value: "VIC", label: "Victoria" },
-                          { value: "QLD", label: "Queensland" },
-                        ].find((_e) => _e.value === job.transport_location)}
-                        placeholder=""
-                        onChange={(e) => {
-                          const newState = {
-                            ...refinedData,
-                            state_code: e.value,
-                            state: e.label,
-                          };
-                          setJob({ ...job, transport_location: e.value });
-                          setRefinedData(newState);
-                        }}
-                      />
-                      <Text
-                        style={{
-                          color: "red",
-                          paddingLeft: "11.4rem",
-                          fontSize: "14px",
-                        }}
-                      >
-                        Note: For LCL and Airfreight Only
-                      </Text>
+                  {/* Location Select */}
+                  <CustomInputField
+                    key="locationKey"
+                    isSelect={true}
+                    optionsArray={[
+                      { value: "VIC", label: "Victoria" },
+                      { value: "QLD", label: "Queensland" },
+                    ]}
+                    label="Location"
+                    name="transport_location"
+                    value={[
+                      { value: "VIC", label: "Victoria" },
+                      { value: "QLD", label: "Queensland" },
+                    ].find((_e) => _e.value === job.transport_location)}
+                    placeholder=""
+                    onChange={(e) => {
+                      const newState = {
+                        ...refinedData,
+                        state_code: e.value,
+                        state: e.label,
+                      };
+                      setJob({ ...job, transport_location: e.value });
+                      setRefinedData(newState);
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: "red",
+                      paddingLeft: "11.4rem",
+                      paddingBottom: "1rem",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Note: For LCL and Airfreight Only
+                  </Text>
+
+                  {!isAdmin && job.transport_location === "QLD" && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={companyRates.map((rate) => ({
+                        value: rate.area,
+                        label: rate.area,
+                      }))}
+                      label="Area :"
+                      value={
+                        selectedRegion.area
+                          ? {
+                              value: selectedRegion.area,
+                              label: selectedRegion.area,
+                            }
+                          : null
+                      }
+                      placeholder="Select area"
+                      onChange={(e) => {
+                        const selectedRate = companyRates.find(
+                          (rate) => rate.area === e.value,
+                        );
+                        if (selectedRate) {
+                          setSelectedRegion({
+                            area: selectedRate.area,
+                            cbm_rate: selectedRate.cbm_rate,
+                            minimum_charge: selectedRate.minimum_charge,
+                          });
+
+                          setRefinedData((prev) => ({
+                            ...prev,
+                            area: selectedRate.area,
+                            cbm_rate: selectedRate.cbm_rate,
+                            minimum_charge: selectedRate.minimum_charge,
+                          }));
+                        }
+                      }}
+                    />
+                  )}
                 </Box>
 
                 <Divider className="my-12" />
@@ -1805,7 +1900,8 @@ function JobEdit() {
                             job.job_category_id == 2) &&
                             (job.transport_location === "VIC" ||
                               job.transport_location === "QLD") &&
-                            quoteCalculationRes && (
+                            quoteCalculationRes &&
+                            selectedRegion.area && (
                               <Flex
                                 height="100%"
                                 justifyContent="center"
