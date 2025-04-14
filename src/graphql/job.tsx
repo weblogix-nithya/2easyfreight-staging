@@ -32,8 +32,6 @@ export const GET_JOBS_QUERY = gql`
     $weight_to: Int
     $volume_from: Int
     $volume_to: Int
-    $company_area: String
-
   ) {
     jobs(
       query: $query
