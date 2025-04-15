@@ -26,14 +26,18 @@ export const PickupAddressBusinessNameCell = ({ row }: any) => (
   </>
 );
 export const JobDestinationsCell = ({ row }: any) => {
-  const filteredDestinations = row.original.job_destinations.filter(
-    (destination: any) => destination.is_pickup === false,
+  // Add null check and default empty array
+  const destinations = row?.original?.job_destinations || [];
+  const filteredDestinations = destinations.filter(
+    (destination: any) => destination?.is_pickup === false,
   );
 
   return (
     <>
-      <Text mb="2" flexWrap={"nowrap"}>
-        {formatAddress(filteredDestinations[0])}
+ <Text isTruncated w={"fit-content"}>
+        {filteredDestinations.length > 0
+          ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
+          : "-"}
       </Text>
       {filteredDestinations.length > 1 && ( // Only show View All if there are more deliveries
         <Popover placement="bottom" closeOnBlur={false}>
@@ -71,14 +75,15 @@ export const JobDestinationsCellExport = ({ row }: any) => {
   return formatAddress(filteredDestinations[0]);
 };
 export const JobDestinationBusinessNameCell = ({ row }: any) => {
-  const filteredDestinations = row.original.job_destinations.filter(
-    (destination: any) => destination.is_pickup === false,
+  // Add null check and default empty array
+  const destinations = row?.original?.job_destinations || [];
+  const filteredDestinations = destinations.filter(
+    (destination: any) => destination?.is_pickup === false,
   );
+
   return (
     <>
-      <Text mb="2" flexWrap={"nowrap"}>
-        {filteredDestinations[0]?.address_business_name || "-"}
-      </Text>
+      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
     </>
   );
 };
@@ -89,13 +94,18 @@ export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
   return filteredDestinations[0]?.address_business_name || "-";
 };
 export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
-  const filteredDestinations = row.original.job_destinations.filter(
-    (destination: any) => destination.is_pickup === false,
+  // Add null check and default empty array
+  const destinations = row?.original?.job_destinations || [];
+  const filteredDestinations = destinations.filter(
+    (destination: any) => destination?.is_pickup === false,
   );
+
   return (
     <>
-      <Text mb="2" flexWrap={"nowrap"}>
-        {formatAddress(filteredDestinations[0])}
+      <Text isTruncated w={"fit-content"}>
+        {filteredDestinations.length > 0
+          ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
+          : "-"}
       </Text>
       <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
     </>
@@ -408,8 +418,6 @@ export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
   dynamicTableUsers?: DynamicTableUser[],
-  isPending?: boolean,
-  isCompleted?: boolean,
 ) => {
   if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
     return [
@@ -435,9 +443,9 @@ export const getColumns = (
         id: "actions",
         Header: "Actions",
         accessor: "id" as const,
-        isView: isCustomer && (isCompleted || isPending),
+        isView: isCustomer,
         isEdit: isAdmin,
-        isTracking: isCustomer && !(isCompleted || isPending), // only display when Tab is In Progress in Customer Portal.
+        isTracking: isCustomer, // only display when Tab is In Progress in Customer Portal.
       },
     ];
   }
@@ -470,9 +478,9 @@ export const getColumns = (
     id: "actions",
     Header: "Actions",
     accessor: "id" as const,
-    isView: isCustomer && (isCompleted || isPending),
+    isView: isCustomer,
     isEdit: isAdmin,
-    isTracking: isCustomer && !(isCompleted || isPending), // only display when Tab is In Progress in Customer Portal.
+    isTracking: isCustomer, // only display when Tab is In Progress in Customer Portal.
   });
 
   return columns;

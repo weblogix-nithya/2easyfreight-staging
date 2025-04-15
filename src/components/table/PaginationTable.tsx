@@ -50,33 +50,34 @@ type PaginationTableProps<T extends object> = {
   onSortingChange?: any;
   restyleTable?: boolean;
 } & (
-    | {
+  | {
       isServerSide?: false;
       setQueryPageIndex?: never;
       setQueryPageSize?: never;
     }
-    | {
+  | {
       isServerSide: true;
       setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
       setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
     }
-  ) &
+) &
   (
     | {
-      showRowSelection?: false;
-      setSelectedRow?: never;
-      isFilterRowSelected?: never;
-    }
+        showRowSelection?: false;
+        setSelectedRow?: never;
+        isFilterRowSelected?: never;
+      }
     | {
-      showRowSelection: true;
-      setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
-      isFilterRowSelected: boolean;
-    }
+        showRowSelection: true;
+        setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+        isFilterRowSelected: boolean;
+      }
   );
 
 const PaginationTable = <T extends object>({
   columns,
   data,
+  showDriverGroups = false,
   isServerSide = false,
   options,
   plugins = [],
@@ -233,6 +234,44 @@ const PaginationTable = <T extends object>({
         <Tbody {...getTableBodyProps()}>
           {pageRows?.map((row, index) => {
             prepareRow(row);
+
+            if (row.original?.isDriverHeader) {
+              console.log("isDriverHeader",row.original)
+              return (
+                <Tr
+                  key={`driver-${row.original.id}`}
+                  bg="gray.50"
+                  borderTop="2px"
+                  borderColor="gray.200"
+                >
+                  <Td colSpan={columns.length} py={4}>
+                    <HStack spacing={4}>
+                      <Text fontWeight="bold" fontSize="md">
+                        Driver: {row.original.name}
+                      </Text>
+                      <Text color="gray.600">
+                        Rego: {row.original.registration_no}
+                      </Text>
+                      <Text color="gray.600">
+                        Mobile number: {row.original.phone_no}
+                      </Text>
+                      <Text color="gray.600">
+                        Weight: {row.original.no_max_capacity}
+                      </Text>
+                      <Text color="gray.600">
+                        Pallet Space: {row.original.current_pallets || 0}/
+                        {row.original.no_max_pallets}
+                      </Text>
+                      <Text color="gray.600">
+                        CBM: {row.original.current_volume || 0}/
+                        {row.original.no_max_volume}
+                      </Text>
+                    </HStack>
+                  </Td>
+                </Tr>
+              );
+            }
+
             return (
               <Tr
                 {...row.getRowProps()}
@@ -264,8 +303,8 @@ const PaginationTable = <T extends object>({
                                 fontSize="sm"
                                 // fontWeight="500"
                                 className="!text-[var(--chakra-colors-black-400)]"
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                               >
                                 <FontAwesomeIcon
                                   icon={faDownload}
@@ -291,8 +330,8 @@ const PaginationTable = <T extends object>({
                                 fontSize="sm"
                                 // fontWeight="500"
                                 className="!text-[var(--chakra-colors-black-400)]"
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                               >
                                 <FontAwesomeIcon
                                   icon={faPen}
@@ -316,8 +355,8 @@ const PaginationTable = <T extends object>({
                                 fontSize="sm"
                                 // fontWeight="500"
                                 className="!text-[var(--chakra-colors-black-400)]"
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                               >
                                 <FontAwesomeIcon
                                   icon={faEye}
@@ -332,8 +371,9 @@ const PaginationTable = <T extends object>({
                           //@ts-expect-error
                           cell.column.isTracking && (
                             <Link
-                              href={`${path || router.pathname}/tracking/${cell.value
-                                }`}
+                              href={`${path || router.pathname}/tracking/${
+                                cell.value
+                              }`}
                               fontWeight="700"
                             >
                               <Button
@@ -342,8 +382,8 @@ const PaginationTable = <T extends object>({
                                 fontSize="sm"
                                 // fontWeight="500"
                                 className="!text-[#3B68DB]"
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                               >
                                 Track
                               </Button>
@@ -362,8 +402,8 @@ const PaginationTable = <T extends object>({
                               onClick={() => {
                                 onDelete(cell.row.original.id);
                               }}
-                            // color={textColorSecondary}
-                            // borderRadius="7px"
+                              // color={textColorSecondary}
+                              // borderRadius="7px"
                             >
                               <FontAwesomeIcon
                                 icon={

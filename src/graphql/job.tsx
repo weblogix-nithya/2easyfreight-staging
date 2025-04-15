@@ -85,6 +85,12 @@ export const GET_JOBS_QUERY = gql`
           full_name
           no_max_capacity
           media_url
+          is_tailgated
+          registration_no
+          no_max_capacity
+          no_max_pallets
+          no_max_volume
+          phone_no
         }
         job_category_id
         job_category {
