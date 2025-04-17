@@ -360,7 +360,10 @@ function JobEdit() {
           ).toDateString(),
         );
         // jobDestinations without is_pickup
-        let _jobDestinations = data.job.job_destinations || [];
+        // let _jobDestinations = data.job.job_destinations || [];
+        let _jobDestinations = data.job.job_destinations.filter(
+          (destination: any) => !destination.is_pickup,
+        ) || [];
 
         setOriginalJobDestinations(_jobDestinations);
         setJobDestinations(_jobDestinations);
@@ -455,7 +458,6 @@ function JobEdit() {
         freight_type: selectedCategoryName,
         state_code: jobData.job.transport_location,
         state: selectedLocation?.label || null,
-        selected_depot: selectedDepot?.value || null,
       });
     }
   }, [jobData, jobCategories]); // Use 'jobData' instead of 'data'
@@ -514,6 +516,7 @@ function JobEdit() {
         is_dangerous_goods: job.is_dangerous_goods,
         is_tailgate_required: job.is_tailgate_required,
         timeslot: job.timeslot,
+        timeslot_depots: job.timeslot_depots,
         last_free_at: job.last_free_at,
         // sort_id: job.sort_id,
         quoted_price: job.quoted_price,
@@ -1440,7 +1443,7 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        tmslot_selected_depot: selectedDepot || null, // Pass selectedDepot here
+        timeslot_depots: selectedDepot || null, // Pass selectedDepot here
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1474,7 +1477,9 @@ function JobEdit() {
       // console.log("Response Data:", response.data);
       setQuoteCalculationRes(response?.data);
       toast({ title: "Quote Calculation Success", status: "success" });
-
+      console.log(isUpdateMode);
+      console.log(quoteCalculationRes);
+      console.log("Quote Calculation Response:", response.data);
       if (isUpdateMode) {
         await handleUpdateJobPriceCalculationDetail(quoteCalculationRes)
           .then((data) => {
@@ -2644,15 +2649,17 @@ function JobEdit() {
                                 <CustomInputField
                                   isSelect={true}
                                   optionsArray={depotOptions} // Use the state directly
-                                  label="Select Depot:"
+                                  label="Timeslot depots:"
                                   value={
-                                    selectedDepot
-                                      ? depotOptions.find((option) => option.value === selectedDepot) || null
-                                      : null
+                                    depotOptions.find((option) => option.value === job.timeslot_depots) || null
                                   }
                                   placeholder="Select a depot"
                                   onChange={(e) => {
                                     setSelectedDepot(e.value); // Update the selected depot directly
+                                    setJob({
+                                      ...job,
+                                      timeslot_depots: e.value, // Update job.timeslot_depots
+                                    });
                                   }}
                                 />
                               </Box>

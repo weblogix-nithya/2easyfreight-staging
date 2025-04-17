@@ -108,7 +108,7 @@ function JobEdit() {
       { value: "(Buccini Transport) - 28 Wyuna Court Hemmant 4174", label: "(Buccini Transport) - 28 Wyuna Court Hemmant 4174" },
       { value: "(ARROW TRANSPORT) - 8 Bishop Drive Port of Brisbane 4178", label: "(ARROW TRANSPORT) - 8 Bishop Drive Port of Brisbane 4178" },
     ],
-    selected_depot: "",
+    timeslot_depots: "",
   });
 
   // const [companyRate, setCompanyRate] = useState({
@@ -351,6 +351,7 @@ function JobEdit() {
         job_status_id: 1,
         transport_type: job.transport_type,
         transport_location: job.transport_location,
+        timeslot_depots: job.timeslot_depots,
         company_area: job.company_area,
         media: undefined,
       },
@@ -978,7 +979,7 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        tmslot_selected_depot: refinedData.selected_depot || null,
+        timeslot_depots: refinedData.timeslot_depots || null,
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1857,12 +1858,12 @@ function JobEdit() {
                               <CustomInputField
                                 isSelect={true}
                                 optionsArray={refinedData.depotOptions || []} // Dynamically updated options
-                                label="Select Depot:"
+                                label="Timeslot depots:"
                                 value={
-                                  refinedData.selected_depot
+                                  refinedData.timeslot_depots
                                     ? {
-                                      value: refinedData.selected_depot,
-                                      label: refinedData.selected_depot, // Use the same value for label
+                                      value: refinedData.timeslot_depots,
+                                      label: refinedData.timeslot_depots, // Use the same value for label
                                     }
                                     : null
                                 }
@@ -1870,7 +1871,11 @@ function JobEdit() {
                                 onChange={(e) => {
                                   setRefinedData({
                                     ...refinedData,
-                                    selected_depot: e.value,
+                                    timeslot_depots: e.value,
+                                  });
+                                  setJob({
+                                    ...job,
+                                    timeslot_depots: e.value, // Update job.timeslot_depots
                                   });
                                 }}
                               />
