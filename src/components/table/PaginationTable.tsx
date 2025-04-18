@@ -232,11 +232,53 @@ const PaginationTable = <T extends object>({
         </Thead>
 
         <Tbody {...getTableBodyProps()}>
+          {/* {console.log('Row Data:', {
+           pageRows,
+            page,
+            selectedFlatRows,
+            isFilterRowSelected,
+          })} */}
           {pageRows?.map((row, index) => {
             prepareRow(row);
-
             if (row.original?.isDriverHeader) {
-              console.log("isDriverHeader",row.original)
+              // debugger;
+              const driverJobs = data.filter(
+                (job) =>
+                  !job.isDriverHeader && job.driver_id === row.original.id,
+              );
+              const currentWeight = driverJobs.reduce(
+                (sum, job) => sum + (parseFloat(job.total_weight) || 0),
+                0,
+              );
+              const currentCBM = driverJobs.reduce(
+                (sum, job) => sum + (parseFloat(job.total_volume) || 0),
+                0,
+              );
+              // const currentPallets = driverJobs.reduce((sum, job) => sum + (parseInt(job.pallets) || 0), 0);
+              // Get first collection and last delivery times
+              const allTimes = driverJobs
+                .flatMap((job) =>
+                  job.job_destinations?.map((dest) => ({
+                    time: dest.updated_at,
+                    isPickup: dest.is_pickup,
+                  })),
+                )
+                .filter(Boolean);
+
+              const firstCollection = allTimes
+                .filter((t) => t.isPickup)
+                .sort(
+                  (a, b) =>
+                    new Date(a.time).getTime() - new Date(b.time).getTime(),
+                )[0]?.time;
+
+              const lastDelivery = allTimes
+                .filter((t) => !t.isPickup)
+                .sort(
+                  (a, b) =>
+                    new Date(b.time).getTime() - new Date(a.time).getTime(),
+                )[0]?.time;
+
               return (
                 <Tr
                   key={`driver-${row.original.id}`}
@@ -245,28 +287,50 @@ const PaginationTable = <T extends object>({
                   borderColor="gray.200"
                 >
                   <Td colSpan={columns.length} py={4}>
-                    <HStack spacing={4}>
-                      <Text fontWeight="bold" fontSize="md">
-                        Driver: {row.original.name}
-                      </Text>
-                      <Text color="gray.600">
-                        Rego: {row.original.registration_no}
-                      </Text>
-                      <Text color="gray.600">
-                        Mobile number: {row.original.phone_no}
-                      </Text>
-                      <Text color="gray.600">
-                        Weight: {row.original.no_max_capacity}
-                      </Text>
-                      <Text color="gray.600">
-                        Pallet Space: {row.original.current_pallets || 0}/
-                        {row.original.no_max_pallets}
-                      </Text>
-                      <Text color="gray.600">
-                        CBM: {row.original.current_volume || 0}/
-                        {row.original.no_max_volume}
-                      </Text>
-                    </HStack>
+                    <VStack spacing={2} align="stretch">
+                    <HStack spacing={4} justify="space-between">
+                        <Text fontWeight="bold" fontSize="md" flex="1">
+                          First Collection:{" "}
+                          {firstCollection
+                            ? formatDate(firstCollection, "HH:mm, DD/MM/YYYY")
+                            : "-"}{" "}
+                        </Text>
+                        <Text color="gray.600" flex="1">
+                          Current suburb: {row.original.current_suburb || "WIP"}
+                        </Text>
+                        <Text color="gray.600" flex="1">
+                          Last delivery:{" "}
+                          {lastDelivery
+                            ? formatDate(lastDelivery, "HH:mm, DD/MM/YYYY")
+                            : "-"}{" "}
+                        </Text>
+                        <Text color="gray.600" flex="1">
+                          Mobile Number: {row.original.phone_no || "-"}
+                        </Text>
+                      </HStack>
+                      <HStack spacing={4} justify="space-between">
+                        <Text fontWeight="bold" fontSize="md" flex="1">
+                          Driver Name: {row.original.name}
+                        </Text>
+                        <Text color="gray.600" flex="1">
+                          Rego: {row.original.registration_no}
+                        </Text>
+                        <Text color="gray.600" flex="1">
+                          TAILGATE: {row.original.has_tailgate ? "YES" : "NO"}
+                        </Text>
+                        <Text color="gray.600" flex="1">
+                          {/* Pallet space: {currentPallets || 0}/{row.original.no_max_pallets} */}
+                          Pallet space: {0}/{row.original.no_max_pallets}
+                        </Text>
+                        <Text color="gray.600" flex="1">
+                          Weight: {currentWeight || 0}/
+                          {row.original.no_max_capacity}
+                        </Text>
+                        <Text color="gray.600" flex="1">
+                          CBM: {currentCBM || 0}/{row.original.no_max_volume}
+                        </Text>
+                      </HStack>
+                    </VStack>
                   </Td>
                 </Tr>
               );

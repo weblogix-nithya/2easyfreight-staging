@@ -340,7 +340,7 @@ export default function JobIndex() {
     // Separate unassigned and assigned jobs
     const unassignedJobs = jobsData.filter((job) => !job.driver_id);
     const assignedJobs = jobsData.filter((job) => job.driver_id);
-
+console.log(assignedJobs,'dddd')
     // Group assigned jobs by driver
     const groupedByDriver = assignedJobs.reduce((acc, job) => {
       const driverId = job.driver_id;
@@ -350,6 +350,12 @@ export default function JobIndex() {
             id: driverId,
             name: job.driver?.full_name || "Unknown Driver",
             isDriverHeader: true,
+            is_tailgated: job.driver?.is_tailgated || false,
+            no_max_capacity: job.driver?.no_max_capacity || '-',
+            no_max_pallets: job.driver?.no_max_pallets || '-',
+            no_max_volume: job.driver?.no_max_volume || '-',
+            phone_no: job.driver?.phone_no || "-",
+            registration_no: job.driver?.registration_no || "-",
           },
           jobs: [],
         };

@@ -64,7 +64,6 @@ export const GET_JOBS_QUERY = gql`
       weight_to: $weight_to
       volume_from: $volume_from
       volume_to: $volume_to
-      
     ) {
       data {
         id
@@ -152,6 +151,13 @@ export const GET_JOBS_QUERY = gql`
           job_id
           lat
           lng
+          updated_at
+          media {
+            id
+            name
+            downloadable_url
+            collection_name
+          }
           job_destination_status_id
           route_point {
             id
@@ -180,6 +186,13 @@ export const GET_JOBS_QUERY = gql`
           job_id
           lat
           lng
+          updated_at
+          media {
+            id
+            name
+            downloadable_url
+            collection_name
+          }
         }
         job_items {
           id
@@ -536,7 +549,6 @@ export const UPDATE_JOB_MUTATION = gql`
   }
 `;
 
-
 export const BULK_UPDATE_JOB_MUTATION = gql`
   mutation bulkUpdateJob($input: [UpdateJobInput]!) {
     bulkUpdateJob(input: $input) {
@@ -565,7 +577,7 @@ export const SEND_CONSIGNMENT_DOCKET = gql`
 `;
 
 export interface UpdateJobInput {
-  id: number; 
+  id: number;
   name?: string;
   driver_id?: number;
   job_type_id?: number;
@@ -574,7 +586,7 @@ export interface UpdateJobInput {
   start_at?: Date;
   admin_notes?: string;
   booked_by?: string;
-  company_area:string;
+  company_area: string;
   reference_no?: string;
   customer_id?: string;
   company_id?: number;
@@ -604,7 +616,7 @@ export interface CreateJobInput {
   job_type_id?: number;
   customer_id?: string;
   company_id?: number;
-  company_area:string;
+  company_area: string;
   transport_type?: string; // Fixed from transportType
   transport_location?: string;
   ready_at?: string;
@@ -620,7 +632,7 @@ export interface CreateJobInput {
   admin_notes?: string;
   customer_notes?: string;
   base_notes?: string;
-  // job_price_quote?: JobPriceCalculationDetail[]; 
+  // job_price_quote?: JobPriceCalculationDetail[];
 }
 
 type Job = {
@@ -633,7 +645,7 @@ type Job = {
   // job_category_name?: string;
   job_status_id: number;
   job_type_id: number;
-  company_area:string;
+  company_area: string;
   //decline_reason_id: number;
   //driver_id: number;
   //region_id: number;
@@ -675,7 +687,6 @@ type Job = {
     | any;
 };
 
-
 export const defaultJob: Job = {
   id: null,
   name: "",
@@ -683,7 +694,7 @@ export const defaultJob: Job = {
   booked_by: "",
   //notes: "",
   job_category_id: 1,
-  company_area:"",
+  company_area: "",
   // job_category_name: undefined,
   job_status_id: null,
   job_type_id: 1,
@@ -758,7 +769,6 @@ export type JobItem = {
   dimension_depth: number;
   job_destination: string | null;
   item_type: ItemType;
-
 };
 
 export type JobQuoteData = {
@@ -784,7 +794,7 @@ export type JobQuoteData = {
 const defaultJobQuoteData: JobQuoteData = {
   freight_type: "",
   transport_type: "",
-  service_choice:'',
+  service_choice: "",
   state: "",
   state_code: "",
   created_at: "",
@@ -792,7 +802,7 @@ const defaultJobQuoteData: JobQuoteData = {
   stackable: false,
   cbm_rate: 0,
   minimum_charge: 0,
-  area: '',
+  area: "",
   job_pickup_address: {
     state: "",
     suburb: "",

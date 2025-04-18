@@ -1,5 +1,7 @@
 import {
+  Flex,
   Icon,
+  Link,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -11,12 +13,18 @@ import {
 } from "@chakra-ui/react";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
-import { formatAddress, formatTime, outputDynamicTable } from "helpers/helper";
+import {
+  formatAddress,
+  formatDate,
+  formatTime,
+  outputDynamicTable,
+} from "helpers/helper";
 import React from "react";
 import { MdMenu } from "react-icons/md";
 import { RootState } from "store/store";
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
+
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
     <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
@@ -34,7 +42,7 @@ export const JobDestinationsCell = ({ row }: any) => {
 
   return (
     <>
- <Text isTruncated w={"fit-content"}>
+      <Text isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
@@ -94,20 +102,51 @@ export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
   return filteredDestinations[0]?.address_business_name || "-";
 };
 export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
-  // Add null check and default empty array
   const destinations = row?.original?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
+  const showDeliveryTime =
+    row.original.job_status_id == 6 || row.original.job_status_id == 7;
+
+  // Only get media if not in status 6 or 7
+  const normalMedia =
+    filteredDestinations[0]?.media?.filter(
+      (item: any) => item.collection_name !== "signatures",
+    ) || [];
 
   return (
     <>
+      {filteredDestinations[0]?.updated_at && showDeliveryTime && (
+        <Text fontSize="sm" color="red.600" mb={1}>
+          Delivery time:{" "}
+          {formatDate(filteredDestinations[0].updated_at, "HH:mm, DD/MM/YYYY")}
+        </Text>
+      )}
       <Text isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
       </Text>
       <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
+      {normalMedia.length > 0 && (
+        <Flex gap={2} flexWrap="wrap">
+          {normalMedia.map((media: any, index: number) => (
+            <Link key={index} href={media.downloadable_url} isExternal>
+              <img
+                src={media.downloadable_url}
+                alt={media.name || "Delivery evidence"}
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  objectFit: "cover",
+                  borderRadius: "4px",
+                }}
+              />
+            </Link>
+          ))}
+        </Flex>
+      )}
     </>
   );
 };
@@ -269,6 +308,69 @@ export const ItemsCbmCellExport = ({ row }: any) => {
     return [`${item.volume?.toFixed(2)}cbm  \n`];
   });
 };
+export const PickupAddressWithTimeCell = ({ row }: any) => {
+  const pickupDest = row.original.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+  const showPickupTime =
+    row.original.job_status_id == 4 ||
+    row.original.job_status_id == 5 ||
+    row.original.job_status_id == 6 ||
+    row.original.job_status_id == 7;
+  
+  // Remove [0] as pickupDest is already a single object
+  const normalMedia = pickupDest?.media?.filter(
+    (item: any) => item.collection_name !== "signatures",
+  ) || [];
+
+  return (
+    <>
+      {pickupDest?.updated_at && showPickupTime && (
+        <Text fontSize="sm" color="red.600" mb={1}>
+          Collection time:{" "}
+          {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+        </Text>
+      )}
+      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+        {formatAddress(pickupDest)}
+      </Text>
+      <Text>{pickupDest?.address_business_name || "-"}</Text>
+      {normalMedia.length > 0 && (
+        <Flex gap={2} flexWrap="wrap">
+          {normalMedia.map((media: any, index: number) => (
+            <Link key={`media-${index}`} href={media.downloadable_url} isExternal>
+              <img
+                src={media.downloadable_url}
+                alt={media.name || "Pickup evidence"}
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  objectFit: "cover",
+                  borderRadius: "4px",
+                }}
+              />
+            </Link>
+          ))}
+        </Flex>
+      )}
+    </>
+  );
+};
+export const PickupAddressWithTimeCellExport = ({ row }: any) => {
+  const pickupDest = row.original.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+  const collectionTime = pickupDest?.updated_at
+    ? `Collection time: ${formatDate(
+        pickupDest.updated_at,
+        "HH:mm, DD/MM/YYYY",
+      )}\n`
+    : "";
+
+  return `${collectionTime}${formatAddress(
+    row.original.pick_up_destination,
+  )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
+};
 
 export const tableColumn = [
   {
@@ -319,10 +421,12 @@ export const tableColumn = [
   },
   {
     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-    Header: "Pickup Address and Name",
-    accessor:
-      "pick_up_destination.address_formatted,pick_up_destination.address_business_name" as const,
-    // width: "200px",
+    Header: "Pickup Address and ",
+    // accessor:
+    //   "pick_up_destination.address_formatted,pick_up_destination.address_business_name" as const,
+    width: "200px",
+    Cell: PickupAddressWithTimeCell, // Use the new cell component
+    CellExport: PickupAddressWithTimeCellExport,
   },
   {
     id: "pick_up_destination.address_business_name",
