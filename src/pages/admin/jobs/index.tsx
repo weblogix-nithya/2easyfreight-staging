@@ -121,7 +121,8 @@ export default function JobIndex() {
   );
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
     useState(filterDisplayNames); // Table Columns
-  const columns = useMemo(
+  
+    const columns = useMemo(
     () =>
       getColumns(
         isAdmin,
@@ -132,6 +133,24 @@ export default function JobIndex() {
       ),
     [isCustomer, isAdmin, dynamicTableUsers],
   );
+
+  const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
+  const companyColumns = useMemo(() => {
+    // Define only the columns you want to show for company users
+    console.log(columns,'my col')
+    return columns.filter(column => [
+      'name',                    // Delivery ID
+      'bookedBy',               // Booked By
+      'reference_no',
+      'job_category.name',      // Category
+      'job_type.name',          // Type
+      'job_status.name',        // Status
+      'ready_at',               // Date
+      'pick_up_destination.address_formatted,pick_up_destination.address_business_name', // Pickup From
+      'job_destinations.address,job_destinations.address_business_name',
+      'actions' 
+    ].includes(column.id));
+  }, [columns]);
 
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
@@ -737,7 +756,7 @@ console.log(assignedJobs,'dddd')
             <>
               {isAdmin && !loading && jobs?.jobs.data.length >= 0 && (
                 <PaginationTable
-                  columns={columns}
+                  columns={adminColumns}
                   // data={jobs?.jobs.data}
                   data={processJobData(jobs?.jobs.data)}
                   options={{
@@ -768,7 +787,7 @@ console.log(assignedJobs,'dddd')
                 !companyJobsLoading &&
                 companyJobs?.jobs.data.length >= 0 && (
                   <PaginationTable
-                    columns={columns}
+                    columns={companyColumns}
                     data={companyJobs?.jobs.data}
                     options={{
                       manualSortBy: true,

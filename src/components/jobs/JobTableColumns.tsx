@@ -1,7 +1,7 @@
 import {
-  Flex,
+  // Flex,
   Icon,
-  Link,
+  // Link,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -129,7 +129,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
           : "-"}
       </Text>
       <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
-      {normalMedia.length > 0 && (
+      {/* {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
@@ -146,7 +146,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
             </Link>
           ))}
         </Flex>
-      )}
+      )} */}
     </>
   );
 };
@@ -317,12 +317,10 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     row.original.job_status_id == 5 ||
     row.original.job_status_id == 6 ||
     row.original.job_status_id == 7;
-  
-  // Remove [0] as pickupDest is already a single object
-  const normalMedia = pickupDest?.media?.filter(
-    (item: any) => item.collection_name !== "signatures",
-  ) || [];
-
+  const normalMedia =
+    pickupDest?.media?.filter(
+      (item: any) => item.collection_name !== "signatures",
+    ) || [];
   return (
     <>
       {pickupDest?.updated_at && showPickupTime && (
@@ -335,10 +333,10 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
         {formatAddress(pickupDest)}
       </Text>
       <Text>{pickupDest?.address_business_name || "-"}</Text>
-      {normalMedia.length > 0 && (
+      {/* {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
-            <Link key={`media-${index}`} href={media.downloadable_url} isExternal>
+            <Link key={index} href={media.downloadable_url} isExternal>
               <img
                 src={media.downloadable_url}
                 alt={media.name || "Pickup evidence"}
@@ -352,7 +350,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
             </Link>
           ))}
         </Flex>
-      )}
+      )} */}
     </>
   );
 };
@@ -371,6 +369,32 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
     row.original.pick_up_destination,
   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
 };
+export const BookedByCell = ({ row }: any) => {
+console.log(row,'roww')
+  return (
+    <>
+     
+
+      <Text>{row.company?.name}</Text>
+     
+    </>
+  );
+};
+// export const BookedByCellExport = ({ row }: any) => {
+//   const pickupDest = row.original.job_destinations?.find(
+//     (dest: any) => dest.is_pickup === true,
+//   );
+//   const collectionTime = pickupDest?.updated_at
+//     ? `Collection time: ${formatDate(
+//         pickupDest.updated_at,
+//         "HH:mm, DD/MM/YYYY",
+//       )}\n`
+//     : "";
+
+//   return `${collectionTime}${formatAddress(
+//     row.original.pick_up_destination,
+//   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
+// };
 
 export const tableColumn = [
   {
@@ -383,6 +407,8 @@ export const tableColumn = [
     id: "bookedBy",
     Header: "Booked By",
     accessor: "company.name" as const,
+    Cell: BookedByCell, // Use the new cell component
+    // CellExport: BookedByCellExport,
   },
   {
     id: "reference_no",
