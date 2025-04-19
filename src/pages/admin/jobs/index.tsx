@@ -135,22 +135,25 @@ export default function JobIndex() {
   );
 
   const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
-  const companyColumns = useMemo(() => {
-    // Define only the columns you want to show for company users
-    console.log(columns,'my col')
-    return columns.filter(column => [
-      'name',                    // Delivery ID
-      'bookedBy',               // Booked By
-      'reference_no',
-      'job_category.name',      // Category
-      'job_type.name',          // Type
-      'job_status.name',        // Status
-      'ready_at',               // Date
-      'pick_up_destination.address_formatted,pick_up_destination.address_business_name', // Pickup From
-      'job_destinations.address,job_destinations.address_business_name',
-      'actions' 
-    ].includes(column.id));
-  }, [columns]);
+  console.log(columns, 'col');
+
+  const companyColumns = columns.filter(column => [
+    'name',
+    'company.name',
+    'reference_no',
+    'job_category.name',
+    'job_type.name',
+    'job_status.name',
+    'ready_at',
+    'pick_up_destination.address_formatted',
+    // 'pick_up_destination.address_business_name',
+    'job_destinations.address',
+    // 'job_destinations.address_business_name',
+    'actions'
+  ].includes(column.id));
+  
+  console.log(companyColumns, 'companyColumns');
+  
 
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
@@ -605,10 +608,10 @@ console.log(assignedJobs,'dddd')
           >
             <h1>Delivery Jobs</h1>
 
-            <Button variant="no-effects" onClick={onOpenSetting}>
+         {  isAdmin &&( <Button variant="no-effects" onClick={onOpenSetting}>
               <SettingsIcon className="mr-2" />
               Settings
-            </Button>
+            </Button>)}
           </Flex>
           <Flex minWidth="max-content" justifyContent="space-between">
             <Flex>

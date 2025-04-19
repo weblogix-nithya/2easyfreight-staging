@@ -77,3 +77,12 @@ export const UPDATE_COMPANY_RATE_MUTATION = gql`
     }
   }
 `;
+
+export const regionOption = [
+  { value: "gc_north", label: "GC North" },
+  { value: "gc_south", label: "GC South" },
+  { value: "local", label: "Local" },
+  { value: "sunshine_coast_south", label: "Sunshine Coast South" },
+  { value: "sunshine_coast_north", label: "Sunshine Coast North" },
+  { value: "toowoomba", label: "Toowoomba" },
+];
