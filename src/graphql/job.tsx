@@ -64,7 +64,6 @@ export const GET_JOBS_QUERY = gql`
       weight_to: $weight_to
       volume_from: $volume_from
       volume_to: $volume_to
-      
     ) {
       data {
         id
@@ -85,6 +84,12 @@ export const GET_JOBS_QUERY = gql`
           full_name
           no_max_capacity
           media_url
+          is_tailgated
+          registration_no
+          no_max_capacity
+          no_max_pallets
+          no_max_volume
+          phone_no
         }
         job_category_id
         job_category {
@@ -146,6 +151,13 @@ export const GET_JOBS_QUERY = gql`
           job_id
           lat
           lng
+          updated_at
+          media {
+            id
+            name
+            # downloadable_url
+            collection_name
+          }
           job_destination_status_id
           route_point {
             id
@@ -174,6 +186,13 @@ export const GET_JOBS_QUERY = gql`
           job_id
           lat
           lng
+          updated_at
+          media {
+            id
+            name
+            # downloadable_url
+            collection_name
+          }
         }
         job_items {
           id
@@ -532,7 +551,6 @@ export const UPDATE_JOB_MUTATION = gql`
   }
 `;
 
-
 export const BULK_UPDATE_JOB_MUTATION = gql`
   mutation bulkUpdateJob($input: [UpdateJobInput]!) {
     bulkUpdateJob(input: $input) {
@@ -618,7 +636,7 @@ export interface CreateJobInput {
   admin_notes?: string;
   customer_notes?: string;
   base_notes?: string;
-  // job_price_quote?: JobPriceCalculationDetail[]; 
+  // job_price_quote?: JobPriceCalculationDetail[];
 }
 
 type Job = {
@@ -673,7 +691,6 @@ type Job = {
   | any[]
   | any;
 };
-
 
 export const defaultJob: Job = {
   id: null,
@@ -759,7 +776,6 @@ export type JobItem = {
   dimension_depth: number;
   job_destination: string | null;
   item_type: ItemType;
-
 };
 
 export type JobQuoteData = {
@@ -793,7 +809,7 @@ const defaultJobQuoteData: JobQuoteData = {
   stackable: false,
   cbm_rate: 0,
   minimum_charge: 0,
-  area: '',
+  area: "",
   job_pickup_address: {
     state: "",
     suburb: "",

@@ -72,13 +72,25 @@ export default function JobIndex() {
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
   const [statusFilter, setStatusFilter] = useState("all");
   const [rangeDate, setRangeDate] = useState([null, null]);
-  
+
   const [isTableLoading, setIsTableLoading] = useState(false);
   const statusOptions = [
     { value: "all", label: "Show All", statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
-    { value: "current", label: "Current (Unassigned/Scheduled/En Route)", statusIds: [1, 2, 4] },
-    { value: "in_transit", label: "In Transit (Assigned/In Transit)", statusIds: [3, 5] },
-    { value: "completed", label: "Completed (Completed/Delivered)", statusIds: [6, 7] }
+    {
+      value: "current",
+      label: "Current (Unassigned/Scheduled/En Route)",
+      statusIds: [1, 2, 4],
+    },
+    {
+      value: "in_transit",
+      label: "In Transit (Assigned/In Transit)",
+      statusIds: [3, 5],
+    },
+    {
+      value: "completed",
+      label: "Completed (Completed/Delivered)",
+      statusIds: [6, 7],
+    },
   ];
   const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
     (state: RootState) => state.user,
@@ -109,7 +121,8 @@ export default function JobIndex() {
   );
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
     useState(filterDisplayNames); // Table Columns
-  const columns = useMemo(
+  
+    const columns = useMemo(
     () =>
       getColumns(
         isAdmin,
@@ -120,6 +133,24 @@ export default function JobIndex() {
       ),
     [isCustomer, isAdmin, dynamicTableUsers],
   );
+
+  const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
+  const companyColumns = useMemo(() => {
+    // Define only the columns you want to show for company users
+    console.log(columns,'my col')
+    return columns.filter(column => [
+      'name',                    // Delivery ID
+      'bookedBy',               // Booked By
+      'reference_no',
+      'job_category.name',      // Category
+      'job_type.name',          // Type
+      'job_status.name',        // Status
+      'ready_at',               // Date
+      'pick_up_destination.address_formatted,pick_up_destination.address_business_name', // Pickup From
+      'job_destinations.address,job_destinations.address_business_name',
+      'actions' 
+    ].includes(column.id));
+  }, [columns]);
 
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
@@ -324,6 +355,49 @@ export default function JobIndex() {
     },
   });
 
+  const processJobData = (jobsData: any[]) => {
+    // Separate unassigned and assigned jobs
+    const unassignedJobs = jobsData.filter((job) => !job.driver_id);
+    const assignedJobs = jobsData.filter((job) => job.driver_id);
+console.log(assignedJobs,'dddd')
+    // Group assigned jobs by driver
+    const groupedByDriver = assignedJobs.reduce((acc, job) => {
+      const driverId = job.driver_id;
+      if (!acc[driverId]) {
+        acc[driverId] = {
+          driverInfo: {
+            id: driverId,
+            name: job.driver?.full_name || "Unknown Driver",
+            isDriverHeader: true,
+            is_tailgated: job.driver?.is_tailgated || false,
+            no_max_capacity: job.driver?.no_max_capacity || '-',
+            no_max_pallets: job.driver?.no_max_pallets || '-',
+            no_max_volume: job.driver?.no_max_volume || '-',
+            phone_no: job.driver?.phone_no || "-",
+            registration_no: job.driver?.registration_no || "-",
+          },
+          jobs: [],
+        };
+      }
+      acc[driverId].jobs.push(job);
+      return acc;
+    }, {});
+
+    // Create final data array with headers and jobs
+    const processedData = [
+      ...unassignedJobs,
+      ...Object.values(groupedByDriver).flatMap((group) => [
+        (
+          group as {
+            driverInfo: { id: string; name: string; isDriverHeader: boolean };
+          }
+        ).driverInfo,
+        ...(group as { jobs: any[] }).jobs,
+      ]),
+    ];
+
+    return processedData;
+  };
   const orderByRelationship = useMemo(() => {
     let join = undefined as JoinOnClause;
     let column = sorting?.id ?? "id";
@@ -363,10 +437,13 @@ export default function JobIndex() {
       page: queryPageIndex + 1,
       first: 100,
       orderByRelationship: orderByRelationship,
-      between_at: rangeDate && rangeDate[0] ? {
-        from_at: rangeDate[0],
-        to_at: rangeDate[1]
-      } : undefined,
+      between_at:
+        rangeDate && rangeDate[0]
+          ? {
+              from_at: rangeDate[0],
+              to_at: rangeDate[1],
+            }
+          : undefined,
       job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
       ...mainJobFilter,
     },
@@ -385,10 +462,13 @@ export default function JobIndex() {
       first: queryPageSize,
       orderByRelationship: orderByRelationship,
       company_id: parseInt(companyId),
-      between_at: rangeDate && rangeDate[0] ? {
-        from_at: rangeDate[0],
-        to_at: rangeDate[1]
-      } : undefined,
+      between_at:
+        rangeDate && rangeDate[0]
+          ? {
+              from_at: rangeDate[0],
+              to_at: rangeDate[1],
+            }
+          : undefined,
       job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
       ...mainJobFilter,
     },
@@ -483,28 +563,30 @@ export default function JobIndex() {
     }
   };
 
-const handleStatusChange = (selectedOption: any) => {
-  setStatusFilter(selectedOption.value);
-  setQueryPageIndex(0);
-    
-  // Update job status IDs filter based on selection
-  let statusIds: number[] = [];
-  if (selectedOption.value !== "all") {
-    const option = statusOptions.find(opt => opt.value === selectedOption.value);
-    statusIds = option?.statusIds || [];
-  }
-  
-  // Store the status IDs in state or update the existing filter
-  const updatedJobFilter = {
-    ...mainJobFilter,
-    job_status_ids: statusIds.length > 0 ? statusIds : [1, 2, 3, 4, 5, 6, 7]
-  };
-  setMainJobFilter(updatedJobFilter);
-};
+  const handleStatusChange = (selectedOption: any) => {
+    setStatusFilter(selectedOption.value);
+    setQueryPageIndex(0);
 
-useEffect(() => {
-  setIsTableLoading(loading || companyJobsLoading);
-}, [companyJobsLoading, loading]);
+    // Update job status IDs filter based on selection
+    let statusIds: number[] = [];
+    if (selectedOption.value !== "all") {
+      const option = statusOptions.find(
+        (opt) => opt.value === selectedOption.value,
+      );
+      statusIds = option?.statusIds || [];
+    }
+
+    // Store the status IDs in state or update the existing filter
+    const updatedJobFilter = {
+      ...mainJobFilter,
+      job_status_ids: statusIds.length > 0 ? statusIds : [1, 2, 3, 4, 5, 6, 7],
+    };
+    setMainJobFilter(updatedJobFilter);
+  };
+
+  useEffect(() => {
+    setIsTableLoading(loading || companyJobsLoading);
+  }, [companyJobsLoading, loading]);
 
   return (
     <AdminLayout>
@@ -649,13 +731,13 @@ useEffect(() => {
               h="max-content"
               ml="4"
               sx={{
-                '.react-daterange-picker__wrapper': {
-                  border: '1px solid',
-                  borderColor: '#e3e3e3',
-                  padding: '6px',
-                  borderRadius: '0.375rem',
-                  marginTop: '-15px'
-                }
+                ".react-daterange-picker__wrapper": {
+                  border: "1px solid",
+                  borderColor: "#e3e3e3",
+                  padding: "6px",
+                  borderRadius: "0.375rem",
+                  marginTop: "-15px",
+                },
               }}
             >
               {/* @ts-ignore */}
@@ -666,70 +748,71 @@ useEffect(() => {
             tabs={isAdmin ? adminTabs : customerTabs}
             onChange={(tabId) => changeTab(tabId)}
           /> */}
-             {isTableLoading ? (
+          {isTableLoading ? (
             <Box textAlign="center" py={4} px={10}>
-              Loading  <Spinner size="sm" ml={2} />
+              Loading <Spinner size="sm" ml={2} />
             </Box>
           ) : (
-          <>
-          {isAdmin && !loading && jobs?.jobs.data.length >= 0 && (
-            <PaginationTable
-              columns={columns}
-              data={jobs?.jobs.data}
-              options={{
-                manualSortBy: true,
-                initialState: {
-                  pageIndex: queryPageIndex,
-                  pageSize: queryPageSize,
-                  sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
-                },
-                manualPagination: true,
-                pageCount: jobs?.jobs.paginatorInfo.lastPage,
-              }}
-              setQueryPageIndex={setQueryPageIndex}
-              setQueryPageSize={setQueryPageSize}
-              isServerSide
-              showPageSizeSelect
-              showRowSelection
-              setSelectedRow={setSelectedJobs}
-              isFilterRowSelected={isShowSelectedOnly}
-              isChecked={isChecked}
-              showManualPages
-              onSortingChange={handleSortingChange}
-              restyleTable
-            />
-          )}
+            <>
+              {isAdmin && !loading && jobs?.jobs.data.length >= 0 && (
+                <PaginationTable
+                  columns={adminColumns}
+                  // data={jobs?.jobs.data}
+                  data={processJobData(jobs?.jobs.data)}
+                  options={{
+                    manualSortBy: true,
+                    initialState: {
+                      pageIndex: queryPageIndex,
+                      pageSize: queryPageSize,
+                      sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
+                    },
+                    manualPagination: true,
+                    pageCount: jobs?.jobs.paginatorInfo.lastPage,
+                  }}
+                  setQueryPageIndex={setQueryPageIndex}
+                  setQueryPageSize={setQueryPageSize}
+                  isServerSide
+                  showPageSizeSelect
+                  showRowSelection
+                  setSelectedRow={setSelectedJobs}
+                  isFilterRowSelected={isShowSelectedOnly}
+                  isChecked={isChecked}
+                  showManualPages
+                  onSortingChange={handleSortingChange}
+                  restyleTable
+                />
+              )}
 
-          {isCompany &&
-            !companyJobsLoading &&
-            companyJobs?.jobs.data.length >= 0 && (
-              <PaginationTable
-                columns={columns}
-                data={companyJobs?.jobs.data}
-                options={{
-                  manualSortBy: true,
-                  initialState: {
-                    pageIndex: queryPageIndex,
-                    pageSize: queryPageSize,
-                    sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
-                  },
-                  manualPagination: true,
-                  pageCount: companyJobs?.jobs.paginatorInfo.lastPage,
-                }}
-                setQueryPageIndex={setQueryPageIndex}
-                setQueryPageSize={setQueryPageSize}
-                isServerSide
-                showPageSizeSelect
-                showRowSelection
-                setSelectedRow={setSelectedJobs}
-                isFilterRowSelected={isShowSelectedOnly}
-                isChecked={isChecked}
-                showManualPages
-                onSortingChange={handleSortingChange}
-              />
-            )}
+              {isCompany &&
+                !companyJobsLoading &&
+                companyJobs?.jobs.data.length >= 0 && (
+                  <PaginationTable
+                    columns={companyColumns}
+                    data={companyJobs?.jobs.data}
+                    options={{
+                      manualSortBy: true,
+                      initialState: {
+                        pageIndex: queryPageIndex,
+                        pageSize: queryPageSize,
+                        sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
+                      },
+                      manualPagination: true,
+                      pageCount: companyJobs?.jobs.paginatorInfo.lastPage,
+                    }}
+                    setQueryPageIndex={setQueryPageIndex}
+                    setQueryPageSize={setQueryPageSize}
+                    isServerSide
+                    showPageSizeSelect
+                    showRowSelection
+                    setSelectedRow={setSelectedJobs}
+                    isFilterRowSelected={isShowSelectedOnly}
+                    isChecked={isChecked}
+                    showManualPages
+                    onSortingChange={handleSortingChange}
+                  />
+                )}
             </>
-            )}
+          )}
         </SimpleGrid>
 
         {/* Floating Action Bar */}
