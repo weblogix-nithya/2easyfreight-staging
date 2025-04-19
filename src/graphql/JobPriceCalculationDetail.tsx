@@ -43,6 +43,8 @@ export const GET_JOB_PRICE_CALCULATION_DETAILS_QUERY = gql`
         fuel
         hand_unload
         dangerous_goods
+        time_slot
+        tail_lift
         stackable
         total
       }
@@ -72,6 +74,8 @@ export const CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
       fuel
       hand_unload
       dangerous_goods
+      time_slot
+      tail_lift
       stackable
       total
     }
@@ -93,6 +97,8 @@ export const UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
       fuel
       hand_unload
       dangerous_goods
+      time_slot
+      tail_lift
       stackable
       total
     }
@@ -122,11 +128,13 @@ export interface JobPriceCalculationDetail {
   dangerous_goods: number | null;
   stackable: number | null;
   total: number | null;
+  tail_lift: number | null,
+  time_slot: number | null,
 }
 
 
 export interface CreateJobPriceCalculationDetailInput {
-  job_id: number |null;
+  job_id: number | null;
   customer_id: number;
   cbm_auto: number;
   total_weight: number;
@@ -134,6 +142,8 @@ export interface CreateJobPriceCalculationDetailInput {
   fuel: number;
   hand_unload: number;
   dangerous_goods: number;
+  tail_lift: number,
+  time_slot: number,
   stackable: number;
   total: number;
 }
@@ -147,6 +157,8 @@ export interface UpdateJobPriceCalculationDetailInput {
   fuel?: number;
   hand_unload?: number;
   dangerous_goods?: number;
+  tail_lift?: number,
+  time_slot?: number,
   stackable?: number;
   total?: number;
 }
@@ -161,6 +173,8 @@ export const defaultJobPriceCalculationDetail: JobPriceCalculationDetail = {
   freight: null,
   fuel: null,
   hand_unload: null,
+  tail_lift: null,
+  time_slot: null,
   dangerous_goods: null,
   stackable: null,
   total: null,

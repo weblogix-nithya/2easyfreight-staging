@@ -258,6 +258,7 @@ export const GET_JOB_QUERY = gql`
       admin_notes
       transport_location
       transport_type
+      timeslot_depots
       # delivery_notes
       pick_up_notes
       base_notes
@@ -544,6 +545,7 @@ export const UPDATE_JOB_MUTATION = gql`
       quoted_price
       transport_type
       transport_location
+      timeslot_depots
       company_area
     }
   }
@@ -592,6 +594,7 @@ export interface UpdateJobInput {
   company_id?: number;
   transport_type?: string;
   transport_location?: string;
+  timeslot_depots?: string;
   ready_at?: string;
   drop_at?: string;
   pick_up_lng?: number;
@@ -619,6 +622,7 @@ export interface CreateJobInput {
   company_area: string;
   transport_type?: string; // Fixed from transportType
   transport_location?: string;
+  timeslot_depots?: string;
   ready_at?: string;
   drop_at?: string;
   pick_up_lng?: number;
@@ -674,17 +678,18 @@ type Job = {
   //is_tailgate_required: boolean;
   transport_type: string;
   transport_location: string;
+  timeslot_depots: string;
   // job_price_quote?: JobPriceCalculationDetail[];
   media: any[] | null;
   [key: string]:
-    | string
-    | number
-    | null
-    | boolean
-    | undefined
-    | Date
-    | any[]
-    | any;
+  | string
+  | number
+  | null
+  | boolean
+  | undefined
+  | Date
+  | any[]
+  | any;
 };
 
 export const defaultJob: Job = {
@@ -726,6 +731,7 @@ export const defaultJob: Job = {
   media: [],
   transport_type: "",
   transport_location: "",
+  timeslot_depots: "",
   // job_price_quote: []
 };
 
@@ -750,6 +756,7 @@ export type Surcharges = {
   time_slot: string | null;
   tail_lift: string | null;
   stackable: string | null;
+  timeslot_depots?: string | null; // Add this line
 };
 
 export type ItemType = {
@@ -794,7 +801,7 @@ export type JobQuoteData = {
 const defaultJobQuoteData: JobQuoteData = {
   freight_type: "",
   transport_type: "",
-  service_choice: "",
+  service_choice: '',
   state: "",
   state_code: "",
   created_at: "",
@@ -825,10 +832,12 @@ const defaultJobQuoteData: JobQuoteData = {
     hand_unload: false,
     dangerous_goods: false,
     time_slot: null,
+    timeslot_depots: null,
     tail_lift: null,
     stackable: null,
   },
   job_items: [],
+
 };
 
 export default defaultJobQuoteData;

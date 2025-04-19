@@ -23,7 +23,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
-import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
+// import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import JobInputTable from "components/jobs/JobInputTable";
@@ -93,10 +93,24 @@ function JobEdit() {
     ...defaultJobDestination,
     ...{ id: 1, address_line_1: "" },
   });
+  // const [refinedData, setRefinedData] = useState({
+  //   ...defaultJobQuoteData,
+  //   freight_type: "LCL",
+  // });
+
   const [refinedData, setRefinedData] = useState({
     ...defaultJobQuoteData,
     freight_type: "LCL",
+    depotOptions: [
+      { value: "(QUBE LOGISTICS) - 76 Port Drive Port of Brisbane 4178", label: "(QUBE LOGISTICS) - 76 Port Drive Port of Brisbane 4178" },
+      { value: "(MEDLOG) - 10 Peregrine Drive Port of Brisbane 4178", label: "(MEDLOG) - 10 Peregrine Drive Port of Brisbane 4178" },
+      { value: "(Interport) - 97 Freight Street Lytton 4178", label: "(Interport) - 97 Freight Street Lytton 4178" },
+      { value: "(Buccini Transport) - 28 Wyuna Court Hemmant 4174", label: "(Buccini Transport) - 28 Wyuna Court Hemmant 4174" },
+      { value: "(ARROW TRANSPORT) - 8 Bishop Drive Port of Brisbane 4178", label: "(ARROW TRANSPORT) - 8 Bishop Drive Port of Brisbane 4178" },
+    ],
+    timeslot_depots: "",
   });
+
   // const [companyRate, setCompanyRate] = useState({
   //   company_id: "",
   //   area: "",
@@ -141,6 +155,7 @@ function JobEdit() {
   const [isSameDayJob, setIsSameDayJob] = useState(true);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
+
 
   let re =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -225,6 +240,8 @@ function JobEdit() {
       },
     },
   );
+
+
 
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: defaultVariables,
@@ -334,6 +351,7 @@ function JobEdit() {
         job_status_id: 1,
         transport_type: job.transport_type,
         transport_location: job.transport_location,
+        timeslot_depots: job.timeslot_depots,
         company_area: job.company_area,
         media: undefined,
       },
@@ -378,6 +396,8 @@ function JobEdit() {
         fuel: Number(quoteCalculationRes.fuel),
         hand_unload: Number(quoteCalculationRes.hand_unload),
         dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
+        time_slot: Number(quoteCalculationRes.time_slot),
+        tail_lift: Number(quoteCalculationRes.tail_lift),
         stackable: Number(quoteCalculationRes.stackable),
         total: Number(quoteCalculationRes.total),
       });
@@ -453,7 +473,7 @@ function JobEdit() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: (data) => {
       /*toast({
         title: "Media updated",
@@ -655,8 +675,12 @@ function JobEdit() {
         (total, item) => total + item.volume || 0,
         0,
       );
+      // const totalWeight = jobItems.reduce(
+      //   (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+      //   0,
+      // );
       const totalWeight = jobItems.reduce(
-        (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+        (total, item) => total + (item.weight || 0),
         0,
       );
       setTempcalculation({
@@ -903,11 +927,11 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const payload = {
@@ -916,12 +940,20 @@ function JobEdit() {
       state: refinedData.state,
       state_code: refinedData.state_code,
       service_choice: refinedData.service_choice,
-      cbm_rate: refinedData.cbm_rate,
-      minimum_charge: refinedData.minimum_charge,
-      area: refinedData.area,
+      // cbm_rate: refinedData.cbm_rate,
+      // minimum_charge: refinedData.minimum_charge,
+      // area: refinedData.area,
       // min_rate: refinedData.min_rate,
       // adjust_type: refinedData.adjust_type,
       // adjust_sign: refinedData.adjust_sign,
+      company_rates: job.transport_location === "QLD"
+        ? companyRates.map((rate) => ({
+          company_id: rate.company_id,
+          area: rate.area,
+          cbm_rate: rate.cbm_rate,
+          minimum_charge: rate.minimum_charge,
+        }))
+        : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
         suburb: pickUpDestination?.address_city,
@@ -931,11 +963,11 @@ function JobEdit() {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -946,7 +978,8 @@ function JobEdit() {
       surcharges: {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
-        time_slot: job.timeslot || null,
+        time_slot: job.is_inbound_connect || null,
+        timeslot_depots: refinedData.timeslot_depots || null,
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1081,7 +1114,7 @@ function JobEdit() {
                     />
                   )}
 
-                  {!isCompany && (
+                  {/* {!isCompany && (
                     <>
                       <CustomInputField
                         isSelect={true}
@@ -1093,9 +1126,9 @@ function JobEdit() {
                         value={
                           selectedRegion.area
                             ? {
-                                value: selectedRegion.area,
-                                label: selectedRegion.area,
-                              }
+                              value: selectedRegion.area,
+                              label: selectedRegion.area,
+                            }
                             : null
                         }
                         placeholder="Select area"
@@ -1137,11 +1170,7 @@ function JobEdit() {
                             $
                           </Text>
                         }
-                        onChange={(e) => {}}
-                        //setJob({
-                        //  ...job,
-                        //  [e.target.name]: e.target.value,
-                        //})
+                        onChange={(e) => { }}
                       />
                       <CustomInputFieldAdornment
                         label="CBM Rate"
@@ -1154,14 +1183,11 @@ function JobEdit() {
                             $
                           </Text>
                         }
-                        onChange={(e) => {}}
-                        //setJob({
-                        //  ...job,
-                        //  [e.target.name]: e.target.value,
-                        //})
+                        onChange={(e) => { }}
                       />
                     </>
-                  )}
+                  )} */}
+
                   <CustomInputField
                     isSelect={true}
                     optionsArray={customerOptions}
@@ -1193,7 +1219,7 @@ function JobEdit() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1208,7 +1234,7 @@ function JobEdit() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1258,11 +1284,11 @@ function JobEdit() {
                       setIsSameDayJob(today === e.target.value);
                       setIsTomorrowJob(
                         new Date(e.target.value).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
+                        new Date(
+                          new Date(today).setDate(
+                            new Date(today).getDate() + 1,
+                          ),
+                        ).toDateString(),
                       );
                     }}
                   />
@@ -1454,7 +1480,7 @@ function JobEdit() {
                       { value: "VIC", label: "Victoria" },
                       { value: "QLD", label: "Queensland" },
                     ]}
-                    label="Location"
+                    label="State"
                     name="transport_location"
                     value={[
                       { value: "VIC", label: "Victoria" },
@@ -1482,7 +1508,7 @@ function JobEdit() {
                     Note: For LCL and Airfreight Only
                   </Text>
 
-                  {!isAdmin && job.transport_location === "QLD" && (
+                  {/* {!isAdmin && job.transport_location === "QLD" && (
                     <CustomInputField
                       isSelect={true}
                       optionsArray={companyRates.map((rate) => ({
@@ -1493,9 +1519,9 @@ function JobEdit() {
                       value={
                         selectedRegion.area
                           ? {
-                              value: selectedRegion.area,
-                              label: selectedRegion.area,
-                            }
+                            value: selectedRegion.area,
+                            label: selectedRegion.area,
+                          }
                           : null
                       }
                       placeholder="Select area"
@@ -1519,7 +1545,7 @@ function JobEdit() {
                         }
                       }}
                     />
-                  )}
+                  )} */}
                 </Box>
 
                 <Divider className="my-12" />
@@ -1827,6 +1853,36 @@ function JobEdit() {
                             </RadioGroup>
                           </Flex>
 
+                          {job.job_category_id === 1 && job.is_inbound_connect === true && (
+                            <Box>
+                              <CustomInputField
+                                isSelect={true}
+                                optionsArray={refinedData.depotOptions || []} // Dynamically updated options
+                                label="Timeslot depots:"
+                                value={
+                                  refinedData.timeslot_depots
+                                    ? {
+                                      value: refinedData.timeslot_depots,
+                                      label: refinedData.timeslot_depots, // Use the same value for label
+                                    }
+                                    : null
+                                }
+                                placeholder="Select a depot"
+                                onChange={(e) => {
+                                  setRefinedData({
+                                    ...refinedData,
+                                    timeslot_depots: e.value,
+                                  });
+                                  setJob({
+                                    ...job,
+                                    timeslot_depots: e.value, // Update job.timeslot_depots
+                                  });
+                                }}
+                              />
+
+                            </Box>
+                          )}
+
                           <Flex
                             flexDirection="column"
                             alignItems="flex-start"
@@ -1935,8 +1991,7 @@ function JobEdit() {
                             job.job_category_id == 2) &&
                             (job.transport_location === "VIC" ||
                               job.transport_location === "QLD") &&
-                            quoteCalculationRes &&
-                            selectedRegion.area && (
+                            quoteCalculationRes && (
                               <Flex
                                 height="100%"
                                 justifyContent="center"
@@ -2035,6 +2090,50 @@ function JobEdit() {
                                           color="blue.600"
                                         >
                                           {quoteCalculationRes.hand_unload}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Time Slot */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Time Slot:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.time_slot}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* tail_lift */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Tail Lift:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.tail_lift}
                                         </Text>
                                       </Flex>
 
