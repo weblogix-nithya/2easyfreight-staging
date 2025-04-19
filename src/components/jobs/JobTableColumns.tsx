@@ -395,6 +395,58 @@ console.log(row,'roww')
 //     row.original.pick_up_destination,
 //   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
 // };
+export const JobTypeCell: React.FC<{ row: { original: { job_type?: { name: string } } } }> = ({ row }) => {
+  const getTypeColor = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'standard':
+        return 'purple.500';
+      case 'urgent':
+        return 'red.500';
+      case 'express':
+        return 'orange.500';
+      default:
+        return 'purple.500';
+    }
+  };
+
+  return (
+    <Text color={getTypeColor(row.original.job_type?.name)} fontWeight="bold">
+      {row.original.job_type?.name || '-'}
+    </Text>
+  );
+};
+export const StatusCell = ({ row }: any) => {
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'scheduled':
+        return 'blue.500';
+      case 'unassigned':
+        return 'gray.500';
+      case 'in transit':
+        return 'green.400';
+      case 'en route for pickup':
+        return 'orange.400';
+      case 'assigned':
+        return 'purple.400';
+      default:
+        return 'black';
+    }
+  };
+
+  return (
+    <Text color={getStatusColor(row.original.job_status?.name)} fontWeight="bold">
+      {row.original.job_status?.name || '-'}
+    </Text>
+  );
+};
+
+export const CustomerReferenceCell = ({ row }: any) => {
+  return (
+    <Text py={1}>
+      {row.original.reference_no || '-'}
+    </Text>
+  );
+};
 
 export const tableColumn = [
   {
@@ -413,24 +465,28 @@ export const tableColumn = [
   {
     id: "reference_no",
     Header: "Customer Reference",
-    accessor: "reference_no" as const,
+    // accessor: "reference_no" as const,
+    Cell: CustomerReferenceCell,
+    width: "50px",
   },
   {
     id: "job_category.name",
     Header: "category",
     accessor: "job_category.name" as const,
-    // width: "100px",
+    width: "100px",
   },
   {
     id: "job_type.name",
     Header: "Type",
     accessor: "job_type.name" as const,
+    Cell: JobTypeCell,  // Add this line
     // width: "100px",
   },
   {
     id: "job_status.name",
     Header: "Status",
     accessor: "job_status.name" as const,
+    Cell: StatusCell,  // Add this line
     // width: "100px",
   },
   {
@@ -443,11 +499,11 @@ export const tableColumn = [
     id: "pick_up_address",
     Header: "Pickup From",
     accessor: "pick_up_address" as const,
-    // width: "150px",
+    width: "150px",
   },
   {
     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-    Header: "Pickup Address and ",
+    Header: "Pickup Address and Name ",
     // accessor:
     //   "pick_up_destination.address_formatted,pick_up_destination.address_business_name" as const,
     width: "200px",
@@ -462,6 +518,7 @@ export const tableColumn = [
   {
     id: "job_destinations.address",
     Header: "Delivery Address",
+    width: "100px",
     Cell: JobDestinationsCell,
     CellExport: JobDestinationsCellExport,
   },
@@ -573,6 +630,7 @@ export const getColumns = (
         id: "actions",
         Header: "Actions",
         accessor: "id" as const,
+        width: "150px",
         isView: isCustomer,
         isEdit: isAdmin,
         isTracking: isCustomer, // only display when Tab is In Progress in Customer Portal.
