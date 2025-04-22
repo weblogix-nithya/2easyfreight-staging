@@ -3,6 +3,7 @@ import { gql } from "@apollo/client";
 export interface CompanyRate {
   id: string;
   company_id: string;
+  seafreight_id: number;
   area: string;
   cbm_rate: number;
   minimum_charge: number;
@@ -13,6 +14,7 @@ export interface CompanyRate {
 export const CREATE_COMPANY_RATE_MUTATION = gql`
   mutation CreateCompanyRate(
     $company_id: ID!
+    $seafreight_id: ID
     $area: String!
     $cbm_rate: Float!
     $minimum_charge: Float!
@@ -20,6 +22,7 @@ export const CREATE_COMPANY_RATE_MUTATION = gql`
     createCompanyRate(
       input: {
         company_id: $company_id
+        seafreight_id: $seafreight_id
         area: $area
         cbm_rate: $cbm_rate
         minimum_charge: $minimum_charge
@@ -27,6 +30,7 @@ export const CREATE_COMPANY_RATE_MUTATION = gql`
     ) {
       id
       company_id
+      seafreight_id
       area
       cbm_rate
       minimum_charge
@@ -41,6 +45,7 @@ export const GET_COMPANY_RATE_QUERY = gql`
     getRatesByCompany(company_id: $company_id) {
       id
       company_id
+      seafreight_id
       area
       cbm_rate
       minimum_charge
@@ -54,6 +59,7 @@ export const UPDATE_COMPANY_RATE_MUTATION = gql`
   mutation UpdateCompanyRate(
     $id: ID!
     $company_id: ID!
+    $seafreight_id: ID
     $area: String!
     $cbm_rate: Float!
     $minimum_charge: Float!
@@ -62,6 +68,7 @@ export const UPDATE_COMPANY_RATE_MUTATION = gql`
       id: $id
       input: {
         company_id: $company_id
+        seafreight_id: $seafreight_id
         area: $area
         cbm_rate: $cbm_rate
         minimum_charge: $minimum_charge
@@ -69,6 +76,7 @@ export const UPDATE_COMPANY_RATE_MUTATION = gql`
     ) {
       id
       company_id
+      seafreight_id
       area
       cbm_rate
       minimum_charge
