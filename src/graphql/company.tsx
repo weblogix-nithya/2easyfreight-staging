@@ -110,6 +110,15 @@ export const UPDATE_COMPANY_MUTATION = gql`
   }
 `;
 
+export const GET_LIST_OF_SEAFREIGHTS = gql`
+  query {
+    allSeafreights {
+      id
+      location_name
+    }
+  }
+`;
+
 export const DELETE_COMPANY_MUTATION = gql`
   mutation deleteCompany($id: ID!) {
     deleteCompany(id: $id) {

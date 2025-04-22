@@ -45,7 +45,7 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
   defaultCompany,
   DELETE_COMPANY_MUTATION,
-  GET_COMPANY_QUERY,
+  GET_COMPANY_QUERY, GET_LIST_OF_SEAFREIGHTS,
   paymentTerms,
   UPDATE_COMPANY_MUTATION,
 } from "graphql/company";
@@ -64,15 +64,6 @@ import debounce from "lodash.debounce";
 // Next.js and React imports
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-
-const regionOption = [
-  { value: "gc_north", label: "GC North" },
-  { value: "gc_south", label: "GC South" },
-  { value: "local", label: "Local" },
-  { value: "sunshine_coast_south", label: "Sunshine Coast South" },
-  { value: "sunshine_coast_north", label: "Sunshine Coast North" },
-  { value: "toowoomba", label: "Toowoomba" },
-];
 
 function CompanyEdit() {
   const toast = useToast();
@@ -100,6 +91,7 @@ function CompanyEdit() {
 
   const [companyRate, setCompanyRate] = useState<Partial<CompanyRate>>({
     company_id: id as string,
+    seafreight_id: null,
     area: "",
     cbm_rate: 0,
     minimum_charge: 0,
@@ -136,11 +128,11 @@ function CompanyEdit() {
     return Object.keys(company).some(key => {
       // Skip these fields from comparison
       if (key === 'rate_card_url' || key === 'logo_url') return false;
-      
+
       // Handle null/undefined cases
       const companyValue = (company as any)[key] ?? '';
       const initialValue = (initialCompany as any)[key] ?? '';
-      
+
       return companyValue !== initialValue;
     });
   };
@@ -156,6 +148,32 @@ function CompanyEdit() {
       }
     },
   });
+  const [regionOption, setRegionOption] = useState([]);
+
+  const {
+    data: seafreightData,
+    loading: seafreightLoading,
+    error: seafreightError,
+  } = useQuery(GET_LIST_OF_SEAFREIGHTS, {
+    onCompleted(data) {
+      const options = data.allSeafreights.map((item: any) => ({
+        value: item.id,
+        label: item.location_name,
+      }));
+      setRegionOption(options);
+    },
+    onError(error) {
+      console.error("GraphQL Error:", error);
+      toast({
+        title: "Error fetching seafreights",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    },
+  });
+
 
   useEffect(() => {
     if (company.id) {
@@ -178,6 +196,7 @@ function CompanyEdit() {
       {
         id: undefined,
         company_id: String(company.id),
+        seafreight_id: null,
         area: "",
         cbm_rate: 0,
         minimum_charge: 0,
@@ -192,12 +211,13 @@ function CompanyEdit() {
 
       for (const rate of companyRates) {
         const prevRate = prevCompanyRates.find(pr => pr.id === rate.id);
-        
+
         if (!prevRate) {
           // Create new rate
           await createCompanyRate({
             variables: {
               company_id: String(company.id),
+              seafreight_id: rate.seafreight_id,
               area: rate.area,
               cbm_rate: parseFloat(rate.cbm_rate.toString()),
               minimum_charge: parseFloat(rate.minimum_charge.toString())
@@ -213,6 +233,7 @@ function CompanyEdit() {
             variables: {
               id: rate.id,
               company_id: String(company.id),
+              seafreight_id: rate.seafreight_id,
               area: rate.area,
               cbm_rate: parseFloat(rate.cbm_rate.toString()),
               minimum_charge: parseFloat(rate.minimum_charge.toString())
@@ -220,7 +241,7 @@ function CompanyEdit() {
           });
         }
       }
-      
+
       const { data } = await getCompanyRates();
       if (data?.getRatesByCompany) {
         setCompanyRates(data.getRatesByCompany);
@@ -249,13 +270,13 @@ function CompanyEdit() {
   const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
   const [updateCompanyRate] = useMutation(UPDATE_COMPANY_RATE_MUTATION);
 
-  const [handleUpdateCompany, {}] = useMutation(UPDATE_COMPANY_MUTATION, {
+  const [handleUpdateCompany, { }] = useMutation(UPDATE_COMPANY_MUTATION, {
     variables: {
       input: { ...company, rate_card_url: undefined, logo_url: undefined },
     },
     onCompleted: async (data) => {
       try {
-        console.log(data,'oncompletedata UPD CMP')
+        console.log(data, 'oncompletedata UPD CMP')
         if (companyRatesData?.companyRate) {
           // Update existing rate
           await updateCompanyRate({
@@ -263,6 +284,7 @@ function CompanyEdit() {
               id: companyRatesData.companyRate.id,
               input: {
                 company_id: data.company.id,
+                seafreight_id: companyRate.seafreight_id || null,
                 area: companyRate.area || "",
                 cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
                 minimum_charge: parseFloat(
@@ -277,6 +299,7 @@ function CompanyEdit() {
             variables: {
               input: {
                 company_id: data.company.id,
+                seafreight_id: companyRate.seafreight_id || null,
                 area: companyRate.area || "",
                 cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
                 minimum_charge: parseFloat(
@@ -304,7 +327,7 @@ function CompanyEdit() {
     },
   });
 
-  const [handleDeleteCompany, {}] = useMutation(DELETE_COMPANY_MUTATION, {
+  const [handleDeleteCompany, { }] = useMutation(DELETE_COMPANY_MUTATION, {
     variables: {
       id: id,
     },
@@ -350,17 +373,18 @@ function CompanyEdit() {
   const hasRateChanges = () => {
     // Check if there are any new rates (rates without IDs)
     const hasNewRates = companyRates.some(rate => !rate.id);
-    
+
     // Check if there are any modified existing rates
     const hasModifiedRates = companyRates.some(rate => {
       const prevRate = prevCompanyRates.find(pr => pr.id === rate.id);
       return prevRate && (
+        prevRate.seafreight_id !== rate.seafreight_id ||
         prevRate.area !== rate.area ||
         prevRate.cbm_rate !== rate.cbm_rate ||
         prevRate.minimum_charge !== rate.minimum_charge
       );
     });
-  
+
     return hasNewRates || hasModifiedRates;
   };
 
@@ -455,7 +479,7 @@ function CompanyEdit() {
     },
   });
 
-  const [addCustomerToCompany, {}] = useMutation(UPDATE_CUSTOMER_MUTATION, {
+  const [addCustomerToCompany, { }] = useMutation(UPDATE_CUSTOMER_MUTATION, {
     variables: {
       input: {
         id: selectCustomerId,
@@ -478,7 +502,7 @@ function CompanyEdit() {
     },
   });
 
-  const [removeCustomerFromCompany, {}] = useMutation(
+  const [removeCustomerFromCompany, { }] = useMutation(
     UPDATE_CUSTOMER_MUTATION,
     {
       variables: {
@@ -1280,7 +1304,7 @@ function CompanyEdit() {
                             alignItems="center"
                             mb={4}
                           >
-                            <Select
+                            {/* <Select
                               name="region"
                               options={regionOption}
                               value={regionOption.find(
@@ -1289,6 +1313,26 @@ function CompanyEdit() {
                               onChange={(selectedOption) =>
                                 handleRateChange(index, "area", selectedOption?.value)
                               }
+                              className="basic-single"
+                              classNamePrefix="select"
+                            /> */}
+                            <Select
+                              name="region"
+                              options={regionOption}
+                              value={
+                                regionOption.find(
+                                  (option) => option.value === String(rate.seafreight_id)
+                                ) || null
+                              }
+                              onChange={(selectedOption) => {
+                                const updatedRates = [...companyRates];
+                                updatedRates[index] = {
+                                  ...updatedRates[index],
+                                  seafreight_id: selectedOption?.value,
+                                  area: selectedOption?.label,
+                                };
+                                setCompanyRates(updatedRates);
+                              }}
                               className="basic-single"
                               classNamePrefix="select"
                             />
@@ -1318,7 +1362,7 @@ function CompanyEdit() {
                               variant="main"
                               fontSize="sm"
                             />
-                         
+
                             {/* <Button
                               colorScheme="red"
                               size="sm"

@@ -102,11 +102,11 @@ function JobEdit() {
     ...defaultJobQuoteData,
     freight_type: "LCL",
     depotOptions: [
-      { value: "(QUBE LOGISTICS) - 76 Port Drive Port of Brisbane 4178", label: "(QUBE LOGISTICS) - 76 Port Drive Port of Brisbane 4178" },
-      { value: "(MEDLOG) - 10 Peregrine Drive Port of Brisbane 4178", label: "(MEDLOG) - 10 Peregrine Drive Port of Brisbane 4178" },
-      { value: "(Interport) - 97 Freight Street Lytton 4178", label: "(Interport) - 97 Freight Street Lytton 4178" },
-      { value: "(Buccini Transport) - 28 Wyuna Court Hemmant 4174", label: "(Buccini Transport) - 28 Wyuna Court Hemmant 4174" },
-      { value: "(ARROW TRANSPORT) - 8 Bishop Drive Port of Brisbane 4178", label: "(ARROW TRANSPORT) - 8 Bishop Drive Port of Brisbane 4178" },
+      { value: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane", label: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane" },
+      { value: "(MEDLOG) 10 Peregrine Drive Port of Brisbane", label: "(MEDLOG) 10 Peregrine Drive Port of Brisbane" },
+      { value: "(Interport) 97 Freight Street Lytton", label: "(Interport) 97 Freight Street Lytton" },
+      { value: "(Buccini Transport) 28 Wyuna Court Hemmant", label: "(Buccini Transport) 28 Wyuna Court Hemmant" },
+      { value: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane", label: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane" },
     ],
     timeslot_depots: "",
   });
@@ -949,6 +949,7 @@ function JobEdit() {
       company_rates: job.transport_location === "QLD"
         ? companyRates.map((rate) => ({
           company_id: rate.company_id,
+          seafreight_id: rate.seafreight_id,
           area: rate.area,
           cbm_rate: rate.cbm_rate,
           minimum_charge: rate.minimum_charge,
@@ -1003,14 +1004,12 @@ function JobEdit() {
       })),
     };
 
-    console.log(payload, "quote payload");
-
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
       });
 
-      // console.log("Response Data:", response.data);
+      console.log("Response Data:", response.data);
       setQuoteCalculationRes(response?.data);
       setIsQuotePrice(true);
     } catch (error) {
