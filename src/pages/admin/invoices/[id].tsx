@@ -64,11 +64,11 @@ function InvoiceEdit() {
     isHandleUpdateInvoiceLineItemsLoading,
     setIsHandleUpdateInvoiceLineItemsLoading,
   ] = useState(false);
-    const [job, setJob] = useState(defaultJob);
-    const [jobDestinations, setJobDestinations] = useState([]);
-    const [pickUpDestination, setPickUpDestination] = useState(
-      defaultJobDestination,
-    );
+  const [job, setJob] = useState(defaultJob);
+  const [jobDestinations, setJobDestinations] = useState([]);
+  const [pickUpDestination, setPickUpDestination] = useState(
+    defaultJobDestination,
+  );
   const [isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
@@ -119,19 +119,19 @@ function InvoiceEdit() {
     variables: {
       id: invoice.job_id,
     },
-    skip: !invoice?.job_id, 
+    skip: !invoice?.job_id,
     onCompleted: (data) => {
-      console.log(data,'d')
-           // jobDestinations without is_pickup
+      console.log(data, 'd')
+      // jobDestinations without is_pickup
       let _jobDestinations = data.job.job_destinations;
 
       setJobDestinations(_jobDestinations);
-      console.log(jobDestinations,'jd')
+      console.log(jobDestinations, 'jd')
 
       setPickUpDestination(
         data.job.pick_up_destination
           ? data.job.pick_up_destination
-          : { ...defaultJobDestination},
+          : { ...defaultJobDestination },
       );
       console.log(pickUpDestination, 'pjd')
     },
@@ -221,7 +221,7 @@ function InvoiceEdit() {
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, {}] = useMutation(
+  const [handleUpdateApproveInvoice, { }] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
@@ -319,7 +319,7 @@ function InvoiceEdit() {
       },
     });
 
-  const [handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -337,7 +337,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -354,7 +354,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleGenerateInvoicePdf, {}] = useMutation(
+  const [handleGenerateInvoicePdf, { }] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -388,7 +388,7 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleDeleteInvoiceLineItem, {}] = useMutation(
+  const [handleDeleteInvoiceLineItem, { }] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -655,7 +655,12 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
-                    <Box pl={6}>Delivery : {jobDestinations.map(destination => destination.address_city).join(", ")}</Box>
+                    <Box pl={6}>Delivery :
+                      {jobDestinations
+                        .filter((destination) => destination.is_pickup === false)
+                        .map((destination) => destination.address_city)
+                        .join(", ")}
+                    </Box>
                   </Flex>
                   <Flex alignItems="center" mb="16px">
                     <FormLabel
