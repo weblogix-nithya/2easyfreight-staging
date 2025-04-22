@@ -1,5 +1,5 @@
 // Chakra imports
-import { useMutation } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -19,7 +19,8 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
   CREATE_COMPANY_MUTATION,
   defaultCompany,
-  paymentTerms,
+  GET_LIST_OF_SEAFREIGHTS,
+  paymentTerms
 } from "graphql/company";
 import {
   CompanyRate,
@@ -29,14 +30,7 @@ import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-const regionOption = [
-  { value: "gc_north", label: "GC North" },
-  { value: "gc_south", label: "GC South" },
-  { value: "local", label: "Local" },
-  { value: "sunshine_coast_south", label: "Sunshine Coast South" },
-  { value: "sunshine_coast_north", label: "Sunshine Coast North" },
-  { value: "toowoomba", label: "Toowoomba" },
-];
+
 
 function CompanyCreate() {
   const toast = useToast();
@@ -49,6 +43,7 @@ function CompanyCreate() {
     {
       id: undefined,
       company_id: "",
+      seafreight_id: null,
       area: "",
       cbm_rate: 0,
       minimum_charge: 0,
@@ -58,7 +53,7 @@ function CompanyCreate() {
   ]);
   const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
 
-  const [handleCreateCompany, {}] = useMutation(CREATE_COMPANY_MUTATION, {
+  const [handleCreateCompany, { }] = useMutation(CREATE_COMPANY_MUTATION, {
     variables: {
       input: {
         name: company.name,
@@ -85,15 +80,20 @@ function CompanyCreate() {
     onCompleted: async (data) => {
       try {
         // Create rates for the new company
-        const validRates = companyRates.filter(rate => 
-          rate.area && 
-          rate.cbm_rate > 0 && 
+        const validRates = companyRates.filter(rate =>
+          rate.seafreight_id &&
+          rate.area &&
+          rate.cbm_rate > 0 &&
           rate.minimum_charge > 0
         );
+
+        console.log("validRates", validRates);
+
         for (const rate of validRates) {
           await createCompanyRate({
             variables: {
               company_id: data.createCompany.id,
+              seafreight_id: rate.seafreight_id,
               area: rate.area,
               cbm_rate: parseFloat(rate.cbm_rate.toString()),
               minimum_charge: parseFloat(rate.minimum_charge.toString()),
@@ -117,6 +117,7 @@ function CompanyCreate() {
       showGraphQLErrorToast(error);
     },
   });
+
   const handleRateChange = (index: number, field: string, value: any) => {
     const updatedRates = [...companyRates];
     updatedRates[index] = {
@@ -126,12 +127,39 @@ function CompanyCreate() {
     setCompanyRates(updatedRates);
   };
 
+  const [regionOption, setRegionOption] = useState([]);
+
+  const {
+    data: seafreightData,
+    loading: seafreightLoading,
+    error: seafreightError,
+  } = useQuery(GET_LIST_OF_SEAFREIGHTS, {
+    onCompleted(data) {
+      const options = data.allSeafreights.map((item: any) => ({
+        value: item.id,
+        label: item.location_name,
+      }));
+      setRegionOption(options);
+    },
+    onError(error) {
+      console.error("GraphQL Error:", error);
+      toast({
+        title: "Error fetching seafreights",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    },
+  });
+
   const addNewRate = () => {
     setCompanyRates([
       ...companyRates,
       {
         id: undefined,
         company_id: "",
+        seafreight_id: null,
         area: "",
         cbm_rate: 0,
         minimum_charge: 0,
@@ -140,6 +168,7 @@ function CompanyCreate() {
       },
     ]);
   };
+  console.log("companyRates", companyRates);
   return (
     <AdminLayout>
       <Box
@@ -565,15 +594,26 @@ function CompanyCreate() {
             {companyRates.map((rate, index) => (
               <SimpleGrid key={index} columns={3} spacing={4} mb={4}>
                 <Select
-                    placeholder="Select Area"
-                    value={regionOption.find((opt) => opt.value === rate.area) || null}
-                    options={regionOption}
-                    onChange={(selectedOption: any) =>
-                      handleRateChange(index, "area", selectedOption?.value)
-                    }
-                    className="chakra-select"
-                    classNamePrefix="two-easy-select"
-                  />
+                  name="region"
+                  options={regionOption}
+                  value={
+                    regionOption.find(
+                      (option) => option.value === String(rate.seafreight_id)
+                    ) || null
+                  }
+                  onChange={(selectedOption) => {
+                    const updatedRates = [...companyRates];
+                    updatedRates[index] = {
+                      ...updatedRates[index],
+                      seafreight_id: Number(selectedOption?.value),
+                      area: selectedOption?.label,
+                    };
+                    console.log("Selected:", updatedRates);
+                    setCompanyRates(updatedRates);
+                  }}
+                  className="basic-single"
+                  classNamePrefix="select"
+                />
                 <Input
                   type="number"
                   placeholder="CBM Rate"
