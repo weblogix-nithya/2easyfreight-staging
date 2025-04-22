@@ -49,6 +49,10 @@ type PaginationTableProps<T extends object> = {
   isChecked?: boolean;
   onSortingChange?: any;
   restyleTable?: boolean;
+  getRowProps?: (row: any) => {
+    className?: string;
+    style?: React.CSSProperties;
+  };
 } & (
   | {
       isServerSide?: false;
@@ -94,6 +98,7 @@ const PaginationTable = <T extends object>({
   isChecked,
   onSortingChange,
   restyleTable = false,
+  getRowProps,
 }: PaginationTableProps<T>) => {
   const textColor = useColorModeValue("secondaryGray.900", "white");
   const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
@@ -339,8 +344,10 @@ const PaginationTable = <T extends object>({
             return (
               <Tr
                 {...row.getRowProps()}
+                {...(getRowProps ? getRowProps(row) : {})}
                 key={`row-${index}`}
                 onClick={isChecked ? () => row.toggleRowSelected() : undefined}
+                // bg={index % 2 === 0 ? "white" : "gray.50"} 
               >
                 {row?.cells?.map((cell, index) => {
                   let data;

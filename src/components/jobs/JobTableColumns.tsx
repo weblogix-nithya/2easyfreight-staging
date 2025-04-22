@@ -1,7 +1,9 @@
+import { useMutation } from "@apollo/client";
+import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
-  // Flex,
+  Flex,
   Icon,
-  // Link,
+  IconButton,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -10,20 +12,36 @@ import {
   PopoverHeader,
   PopoverTrigger,
   Text,
+  Textarea,
+  useToast,
 } from "@chakra-ui/react";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
+import { UPDATE_JOB_MUTATION } from "graphql/job";
 import {
   formatAddress,
   formatDate,
   formatTime,
   outputDynamicTable,
 } from "helpers/helper";
-import React from "react";
+import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
 import { RootState } from "store/store";
+
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
+
+export const getJobRowProps = (row: any) => {
+  return {
+    style: {
+      cursor: 'pointer',
+    },
+    bg: row.original.job_status?.id == 1 ? 'yellow.50' : 
+        [6, 7].includes(Number(row.original.job_status?.id)) ? 'green.50' : 
+        'white',
+    _hover: { bg: 'gray.100' }
+  };
+};
 
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
@@ -370,13 +388,10 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
 };
 export const BookedByCell = ({ row }: any) => {
-console.log(row,'roww')
+  console.log(row, "roww");
   return (
     <>
-     
-
       <Text>{row.company?.name}</Text>
-     
     </>
   );
 };
@@ -395,59 +410,160 @@ console.log(row,'roww')
 //     row.original.pick_up_destination,
 //   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
 // };
-export const JobTypeCell: React.FC<{ row: { original: { job_type?: { name: string } } } }> = ({ row }) => {
+export const JobTypeCell: React.FC<{
+  row: { original: { job_type?: { name: string } } };
+}> = ({ row }) => {
   const getTypeColor = (type: string) => {
     switch (type?.toLowerCase()) {
-      case 'standard':
-        return 'purple.500';
-      case 'urgent':
-        return 'red.500';
-      case 'express':
-        return 'orange.500';
+      case "standard":
+        return "purple.500";
+      case "urgent":
+        return "red.500";
+      case "express":
+        return "orange.500";
       default:
-        return 'purple.500';
+        return "purple.500";
     }
   };
 
   return (
     <Text color={getTypeColor(row.original.job_type?.name)} fontWeight="bold">
-      {row.original.job_type?.name || '-'}
+      {row.original.job_type?.name || "-"}
     </Text>
   );
 };
 export const StatusCell = ({ row }: any) => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'scheduled':
-        return 'blue.500';
-      case 'unassigned':
-        return 'gray.500';
-      case 'in transit':
-        return 'green.400';
-      case 'en route for pickup':
-        return 'orange.400';
-      case 'assigned':
-        return 'purple.400';
+      case "scheduled":
+        return "blue.500";
+      case "unassigned":
+        return "gray.500";
+      case "in transit":
+        return "green.400";
+      case "en route for pickup":
+        return "orange.400";
+      case "assigned":
+        return "purple.400";
       default:
-        return 'black';
+        return "black";
     }
   };
 
   return (
-    <Text color={getStatusColor(row.original.job_status?.name)} fontWeight="bold">
-      {row.original.job_status?.name || '-'}
+    <Text
+      color={getStatusColor(row.original.job_status?.name)}
+      fontWeight="bold"
+    >
+      {row.original.job_status?.name || "-"}
     </Text>
   );
 };
 
 export const CustomerReferenceCell = ({ row }: any) => {
-  return (
-    <Text py={1}>
-      {row.original.reference_no || '-'}
-    </Text>
-  );
+  return <Text>{row.original.reference_no || "-"}</Text>;
 };
 
+export const AdminNotesCell = ({ row }: any) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [notes, setNotes] = useState(row.original.admin_notes ?? "");
+  const [displayNotes, setDisplayNotes] = useState(
+    row.original.admin_notes ?? "",
+  );
+  const toast = useToast();
+
+  const [updateAdminNotes] = useMutation(UPDATE_JOB_MUTATION, {
+    onCompleted: () => {
+      setDisplayNotes(notes);
+      toast({
+        title: "Notes updated",
+        status: "success",
+        duration: 2000,
+      });
+      setIsEditing(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+      });
+    },
+  });
+
+  const handleSave = () => {
+    updateAdminNotes({
+      variables: {
+        input: {
+          id: parseInt(row.original.id),
+          admin_notes: notes,
+          customer_id: row.original.customer_id,
+          company_id: row.original.company_id,
+          job_type_id: row.original.job_type_id,
+        },
+      },
+    });
+  };
+
+  return (
+    <Flex gap={2} alignItems="center">
+      <Text maxW="200px" noOfLines={2}>
+        {displayNotes || "-"}
+      </Text>
+      <Popover
+        isOpen={isEditing}
+        onClose={() => {
+          setNotes(displayNotes);
+          setIsEditing(false);
+        }}
+      >
+        <PopoverTrigger>
+          <IconButton
+            aria-label="Edit notes"
+            icon={<EditIcon />}
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsEditing(true)}
+          />
+        </PopoverTrigger>
+        <PopoverContent p={4}>
+          <PopoverArrow />
+          <PopoverCloseButton />
+          <Flex direction="column" gap={2}>
+            <Textarea
+              value={notes}
+              onChange={(e: any) => setNotes(e.target.value)}
+              size="sm"
+              rows={4}
+              resize="none"
+              mb={2}
+            />
+            <Flex gap={2} justifyContent="flex-end">
+              <IconButton
+                aria-label="Save notes"
+                icon={<CheckIcon />}
+                size="sm"
+                colorScheme="green"
+                onClick={handleSave}
+              />
+              <IconButton
+                aria-label="Cancel editing"
+                icon={<CloseIcon />}
+                size="sm"
+                colorScheme="red"
+                onClick={() => {
+                  setNotes(displayNotes);
+                  setIsEditing(false);
+                }}
+              />
+            </Flex>
+          </Flex>
+        </PopoverContent>
+      </Popover>
+    </Flex>
+  );
+};
 export const tableColumn = [
   {
     id: "name",
@@ -479,14 +595,14 @@ export const tableColumn = [
     id: "job_type.name",
     Header: "Type",
     accessor: "job_type.name" as const,
-    Cell: JobTypeCell,  // Add this line
+    Cell: JobTypeCell, // Add this line
     // width: "100px",
   },
   {
     id: "job_status.name",
     Header: "Status",
     accessor: "job_status.name" as const,
-    Cell: StatusCell,  // Add this line
+    Cell: StatusCell, // Add this line
     // width: "100px",
   },
   {
@@ -599,6 +715,13 @@ export const tableColumn = [
     accessor: "driver.full_name" as const,
     enableSorting: true,
   },
+  {
+    id: "admin_notes",
+    Header: "Admin Notes",
+    accessor: "admin_notes" as const,
+    Cell: AdminNotesCell,
+    show: isCustomer,
+  },
 ];
 
 export const getColumns = (
@@ -631,8 +754,8 @@ export const getColumns = (
         Header: "Actions",
         accessor: "id" as const,
         width: "150px",
-        isView: isCustomer,
-        isEdit: isAdmin,
+        isView: !isAdmin ? true : false,
+        isEdit: isAdmin ? true : false,
         isTracking: isCustomer, // only display when Tab is In Progress in Customer Portal.
       },
     ];

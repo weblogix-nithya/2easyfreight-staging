@@ -1,5 +1,6 @@
-import { useQuery } from "@apollo/client";
-import { SettingsIcon } from "@chakra-ui/icons";
+// Third-party imports
+import { useQuery } from '@apollo/client';
+import { SettingsIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -13,55 +14,54 @@ import {
   TagLabel,
   useColorModeValue,
   useDisclosure,
-} from "@chakra-ui/react";
-import DateRangePicker from "@wojtekmaj/react-daterange-picker";
-import { Select } from "chakra-react-select";
-import { FullChevronDown } from "components/icons/Icons";
-import ActionBar from "components/jobs/ActionBar";
-import FilterJobsModal from "components/jobs/FilterJobsModal";
+} from '@chakra-ui/react';
+import DateRangePicker from '@wojtekmaj/react-daterange-picker';
+import { Select } from 'chakra-react-select';
+// Local imports
+import { FullChevronDown } from 'components/icons/Icons';
+import ActionBar from 'components/jobs/ActionBar';
+import FilterJobsModal from 'components/jobs/FilterJobsModal';
 import {
   defaultJobFilter,
   defaultSelectedFilter,
   filterDisplayNames,
   SelectedFilter,
-} from "components/jobs/Filters";
-import JobBulkAssignModal from "components/jobs/JobBulkAssignModal";
+} from 'components/jobs/Filters';
+import JobBulkAssignModal from 'components/jobs/JobBulkAssignModal';
 import {
   getBulkAssignColumns,
   getColumns,
   tableColumn,
-} from "components/jobs/JobTableColumns";
-import JobTableSettingsModal from "components/jobs/JobTableSettingsModal";
-import { SearchBar } from "components/navbar/searchBar/SearchBar";
-import PaginationTable from "components/table/PaginationTable";
-// import { TabsComponent } from "components/tabs/TabsComponet";
-import { GET_AVAILABLE_DRIVERS_QUERY } from "graphql/driver";
+} from 'components/jobs/JobTableColumns';
+import JobTableSettingsModal from 'components/jobs/JobTableSettingsModal';
+import { SearchBar } from 'components/navbar/searchBar/SearchBar';
+import PaginationTable from 'components/table/PaginationTable';
+import { GET_AVAILABLE_DRIVERS_QUERY } from 'graphql/driver';
 import {
   DynamicTableUser,
   GET_DYNAMIC_TABLE_USERS_QUERY,
-} from "graphql/dynamicTableUser";
-import { GET_JOBS_QUERY } from "graphql/job";
-import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
-import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
-import { JoinOnClause } from "graphql/types/types";
+} from 'graphql/dynamicTableUser';
+import { GET_JOBS_QUERY } from 'graphql/job';
+import { GET_JOB_CATEGORIES_QUERY } from 'graphql/jobCategories';
+import { GET_JOB_STATUSES_QUERY } from 'graphql/jobStatus';
+import { JoinOnClause } from 'graphql/types/types';
 import {
   outputDynamicTableBody,
   outputDynamicTableHeader,
-} from "helpers/helper";
-import AdminLayout from "layouts/admin";
-import debounce from "lodash.debounce";
-import { destroyCookie, parseCookies, setCookie } from "nookies";
-import React, { useEffect, useMemo, useState } from "react";
-import { downloadExcel } from "react-export-table-to-excel";
-import { FaFileExcel } from "react-icons/fa";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+} from 'helpers/helper';
+import AdminLayout from 'layouts/admin';
+import debounce from 'lodash.debounce';
+import { destroyCookie, parseCookies, setCookie } from 'nookies';
+import React, { useEffect, useMemo, useState } from 'react';
+import { downloadExcel } from 'react-export-table-to-excel';
+import { FaFileExcel } from 'react-icons/fa';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   setIsFilterTicked,
   setJobFilters,
   setJobMainFilters,
-} from "store/jobFilterSlice";
-import { RootState } from "store/store";
+} from 'store/jobFilterSlice';
+import { RootState } from 'store/store';
 
 export default function JobIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
@@ -74,8 +74,15 @@ export default function JobIndex() {
   const [rangeDate, setRangeDate] = useState([null, null]);
 
   const [isTableLoading, setIsTableLoading] = useState(false);
-  const statusOptions = [
-    { value: "all", label: "Show All", statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+  const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
+    (state: RootState) => state.user,
+  );
+  const adminStatusOptions = [
+    {
+      value: "all",
+      label: "Show All",
+      statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
     {
       value: "current",
       label: "Current (Unassigned/Scheduled/En Route)",
@@ -92,9 +99,28 @@ export default function JobIndex() {
       statusIds: [6, 7],
     },
   ];
-  const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
-    (state: RootState) => state.user,
-  );
+
+  const companyStatusOptions = [
+    {
+      value: "all",
+      label: "Show All",
+      statusIds: [1, 2, 3, 4, 5, 6, 7],
+    },
+    {
+      value: "Open",
+      label: "Open",
+      statusIds: [1],
+    },
+    {
+      value: "Completed",
+      label: "Completed",
+      statusIds: [6, 7],
+    },
+  ];
+
+  // Replace the statusOptions with a conditional assignment
+  const statusOptions = !isCompany ? companyStatusOptions : adminStatusOptions;
+
   const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
   const cookies = parseCookies();
@@ -121,8 +147,8 @@ export default function JobIndex() {
   );
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
     useState(filterDisplayNames); // Table Columns
-  
-    const columns = useMemo(
+
+  const columns = useMemo(
     () =>
       getColumns(
         isAdmin,
@@ -135,25 +161,26 @@ export default function JobIndex() {
   );
 
   const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
-  console.log(columns, 'col');
+  console.log(columns, "col");
 
-  const companyColumns = columns.filter(column => [
-    'name',
-    'company.name',
-    'reference_no',
-    'job_category.name',
-    'job_type.name',
-    'job_status.name',
-    'ready_at',
-    'pick_up_destination.address_formatted',
-    // 'pick_up_destination.address_business_name',
-    'job_destinations.address',
-    // 'job_destinations.address_business_name',
-    'actions'
-  ].includes(column.id));
-  
-  console.log(companyColumns, 'companyColumns');
-  
+  const companyColumns = columns.filter((column) =>
+    [
+      "name",
+      "company.name",
+      "reference_no",
+      "job_category.name",
+      "job_type.name",
+      "job_status.name",
+      "ready_at",
+      "pick_up_destination.address_formatted",
+      // 'pick_up_destination.address_business_name',
+      "job_destinations.address",
+      // 'job_destinations.address_business_name',
+      "actions",
+    ].includes(column.id),
+  );
+
+  console.log(companyColumns, "companyColumns");
 
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
@@ -255,37 +282,6 @@ export default function JobIndex() {
     onClose: onCloseBulkAssign,
   } = useDisclosure();
 
-  const adminTabs = [
-    {
-      id: 1,
-      tabName: "Open",
-      hash: "open",
-    },
-    {
-      id: 2,
-      tabName: "Complete",
-      hash: "complete",
-    },
-  ];
-
-  const customerTabs = [
-    {
-      id: 1,
-      tabName: "Pending",
-      hash: "pending",
-    },
-    {
-      id: 3,
-      tabName: "In progress",
-      hash: "in-progress",
-    },
-    {
-      id: 2,
-      tabName: "Complete",
-      hash: "complete",
-    },
-  ];
-
   // const changeTab = useMemo(() => {
   //   return debounce((tab) => {
   //     // setIsPending(tab == 1);
@@ -362,7 +358,7 @@ export default function JobIndex() {
     // Separate unassigned and assigned jobs
     const unassignedJobs = jobsData.filter((job) => !job.driver_id);
     const assignedJobs = jobsData.filter((job) => job.driver_id);
-console.log(assignedJobs,'dddd')
+    console.log(assignedJobs, "dddd");
     // Group assigned jobs by driver
     const groupedByDriver = assignedJobs.reduce((acc, job) => {
       const driverId = job.driver_id;
@@ -373,9 +369,9 @@ console.log(assignedJobs,'dddd')
             name: job.driver?.full_name || "Unknown Driver",
             isDriverHeader: true,
             is_tailgated: job.driver?.is_tailgated || false,
-            no_max_capacity: job.driver?.no_max_capacity || '-',
-            no_max_pallets: job.driver?.no_max_pallets || '-',
-            no_max_volume: job.driver?.no_max_volume || '-',
+            no_max_capacity: job.driver?.no_max_capacity || "-",
+            no_max_pallets: job.driver?.no_max_pallets || "-",
+            no_max_volume: job.driver?.no_max_volume || "-",
             phone_no: job.driver?.phone_no || "-",
             registration_no: job.driver?.registration_no || "-",
           },
@@ -608,10 +604,12 @@ console.log(assignedJobs,'dddd')
           >
             <h1>Delivery Jobs</h1>
 
-         {  isAdmin &&( <Button variant="no-effects" onClick={onOpenSetting}>
-              <SettingsIcon className="mr-2" />
-              Settings
-            </Button>)}
+            {isAdmin && (
+              <Button variant="no-effects" onClick={onOpenSetting}>
+                <SettingsIcon className="mr-2" />
+                Settings
+              </Button>
+            )}
           </Flex>
           <Flex minWidth="max-content" justifyContent="space-between">
             <Flex>
@@ -783,6 +781,19 @@ console.log(assignedJobs,'dddd')
                   showManualPages
                   onSortingChange={handleSortingChange}
                   restyleTable
+                  // getRowProps={getJobRowProps}
+                  getRowProps={(row) => ({
+                    style: {
+                      cursor: "pointer",
+                    },
+                    bg:
+                      row.original.job_status?.id === 1
+                        ? "yellow.50"
+                        : [6, 7].includes(Number(row.original.job_status?.id))
+                        ? "green.50"
+                        : "white",
+                    _hover: { bg: "gray.100" },
+                  })}
                 />
               )}
 
@@ -812,6 +823,19 @@ console.log(assignedJobs,'dddd')
                     isChecked={isChecked}
                     showManualPages
                     onSortingChange={handleSortingChange}
+                    // getRowProps={getJobRowProps}
+                    getRowProps={(row) => ({
+                      style: {
+                        cursor: "pointer",
+                      },
+                      bg:
+                        row.original.job_status?.id == 1
+                          ? "yellow.50"
+                          : [6, 7].includes(Number(row.original.job_status?.id))
+                          ? "green.50"
+                          : "white",
+                      _hover: { bg: "gray.100" },
+                    })}
                   />
                 )}
             </>
@@ -873,5 +897,5 @@ console.log(assignedJobs,'dddd')
         />
       </Box>
     </AdminLayout>
-  );
-}
+  ); // Close JobIndex function
+} // Close export default
