@@ -12,11 +12,11 @@ import {
   Input,
   Radio,
   RadioGroup,
+  // Select,
   Stack,
   Textarea,
   useColorModeValue,
-  useToast,
-} from "@chakra-ui/react";
+  useToast} from "@chakra-ui/react";
 // Font awesome icons
 import { faUser } from "@fortawesome/pro-solid-svg-icons";
 import { faMapLocationDot } from "@fortawesome/pro-solid-svg-icons";
@@ -38,13 +38,13 @@ import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useMemo, useState} from "react";
 
 function CustomerEdit() {
   const toast = useToast();
-  let menuBg = useColorModeValue("white", "navy.800");
+  // let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // const textColorSecondary = "gray.400";
   const [customer, setCustomer] = useState(defaultCustomer);
   const [tabId, setTabId] = useState(0);
   const router = useRouter();
@@ -115,6 +115,9 @@ function CustomerEdit() {
       setQueryPageIndex(0);
     }, 300);
   }, []);
+
+
+
 
   return (
     <AdminLayout>
@@ -248,6 +251,8 @@ function CustomerEdit() {
                     <FontAwesomeIcon icon={faMapLocationDot} className="mr-1" />
                     Addresses
                   </Button>
+                 
+
                   <Button
                     disabled={tabId == 2}
                     onClick={() => setTabId(2)}
@@ -679,7 +684,10 @@ function CustomerEdit() {
                         </RadioGroup>
                       </Flex>
                     </Flex>
-                  </FormControl>
+
+                   
+                </FormControl>
+
                 )}
 
                 {tabId == 1 && (
@@ -697,6 +705,8 @@ function CustomerEdit() {
                     customer={customer}
                   ></CustomerVehicleHiresTab>
                 )}
+
+              
               </GridItem>
             </Grid>
           )}

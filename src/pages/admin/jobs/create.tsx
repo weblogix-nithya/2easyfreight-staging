@@ -11,6 +11,7 @@ import {
   GridItem,
   Radio,
   RadioGroup,
+  // SelectField,
   SimpleGrid,
   Stack,
   Text,
@@ -22,6 +23,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
+// import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import JobInputTable from "components/jobs/JobInputTable";
@@ -29,6 +31,7 @@ import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANYS_QUERY } from "graphql/company";
+import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
@@ -77,7 +80,7 @@ function JobEdit() {
   const { isAdmin, customerId, companyId, isCompany, isCustomer } = useSelector(
     (state: RootState) => state.user,
   );
-
+  // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
@@ -90,11 +93,39 @@ function JobEdit() {
     ...defaultJobDestination,
     ...{ id: 1, address_line_1: "" },
   });
+  // const [refinedData, setRefinedData] = useState({
+  //   ...defaultJobQuoteData,
+  //   freight_type: "LCL",
+  // });
+
   const [refinedData, setRefinedData] = useState({
     ...defaultJobQuoteData,
     freight_type: "LCL",
+    depotOptions: [
+      { value: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane", label: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane" },
+      { value: "(MEDLOG) 10 Peregrine Drive Port of Brisbane", label: "(MEDLOG) 10 Peregrine Drive Port of Brisbane" },
+      { value: "(Interport) 97 Freight Street Lytton", label: "(Interport) 97 Freight Street Lytton" },
+      { value: "(Buccini Transport) 28 Wyuna Court Hemmant", label: "(Buccini Transport) 28 Wyuna Court Hemmant" },
+      { value: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane", label: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane" },
+    ],
+    timeslot_depots: "",
   });
-  console.log(refinedData, "refined to wp");
+
+  // const [companyRate, setCompanyRate] = useState({
+  //   company_id: "",
+  //   area: "",
+  //   cbm_rate: 0,
+  //   minimum_charge: 0
+  // });
+  const [companyRates, setCompanyRates] = useState([]);
+
+  const [selectedRegion, setSelectedRegion] = useState({
+    area: "",
+    cbm_rate: 0,
+    minimum_charge: 0,
+  });
+  // console.log(refinedData, "refined to wp");
+
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
@@ -125,6 +156,7 @@ function JobEdit() {
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
 
+
   let re =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
@@ -142,10 +174,10 @@ function JobEdit() {
     orderByColumn: "id",
     orderByOrder: "ASC",
   };
-  const defaultSelect = [
-    { value: 1, label: "option 1" },
-    { value: 2, label: "option 2" },
-  ];
+  // const defaultSelect = [
+  //   { value: 1, label: "option 1" },
+  //   { value: 2, label: "option 2" },
+  // ];
   const itemsTableColumns = useMemo(
     () => [
       {
@@ -194,6 +226,23 @@ function JobEdit() {
     [],
   );
 
+  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
+    GET_COMPANY_RATE_QUERY,
+    {
+      variables: { company_id: job?.company_id || "" },
+      skip: !job?.company_id,
+      fetchPolicy: "network-only",
+      onCompleted: (data) => {
+        if (data?.getRatesByCompany) {
+          const rates = [...data.getRatesByCompany];
+          setCompanyRates(rates);
+        }
+      },
+    },
+  );
+
+
+
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: defaultVariables,
     onCompleted: (data) => {
@@ -220,7 +269,6 @@ function JobEdit() {
     },
   });
 
-  
   useQuery(GET_JOB_TYPES_QUERY, {
     variables: defaultVariables,
     onCompleted: (data) => {
@@ -245,16 +293,46 @@ function JobEdit() {
       orderByOrder: "ASC",
     },
     onCompleted: (data) => {
-      setCompaniesOptions([]);
-      data.companys.data.map((_entity: any) => {
-        setCompaniesOptions((companys) => [
-          ...companys,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
-      });
+      const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
+        value: parseInt(_entity.id),
+        label: _entity.name,
+        // min_rate: _entity.min_rate, // Add these properties to the options
+        // adjust_type: _entity.adjust_type,
+        // adjust_sign: _entity.adjust_sign,
+      }));
+
+      setCompaniesOptions(newCompaniesOptions);
+
+      // If a company is already selected, update refinedData with its properties
+      const selectedCompany = newCompaniesOptions.find(
+        (entity: { value: number }) => entity.value == job.company_id,
+        // (entity: { value: number }) => entity.value == job.company_id,
+      );
+
+      if (selectedCompany) {
+        setRefinedData({
+          ...refinedData,
+          // min_rate: selectedCompany.min_rate,
+          // adjust_type: selectedCompany.adjust_type,
+          // adjust_sign: selectedCompany.adjust_sign,
+        });
+        // console.log(selectedCompany.min_rate, "selected company min rate")
+      }
+
+      if (!isAdmin) {
+        const companyWithId = newCompaniesOptions.find(
+          (entity: { value: number }) => entity.value == companyId,
+        );
+        if (companyWithId) {
+          setRefinedData({
+            ...refinedData,
+            // min_rate: companyWithId.min_rate,
+            // adjust_type: companyWithId.adjust_type,
+            // adjust_sign: companyWithId.adjust_sign,
+          });
+          // console.log(companyWithId,'companywithid min rate')
+        }
+      }
     },
   });
 
@@ -273,6 +351,8 @@ function JobEdit() {
         job_status_id: 1,
         transport_type: job.transport_type,
         transport_location: job.transport_location,
+        timeslot_depots: job.timeslot_depots,
+        company_area: job.company_area,
         media: undefined,
       },
     },
@@ -316,6 +396,8 @@ function JobEdit() {
         fuel: Number(quoteCalculationRes.fuel),
         hand_unload: Number(quoteCalculationRes.hand_unload),
         dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
+        time_slot: Number(quoteCalculationRes.time_slot),
+        tail_lift: Number(quoteCalculationRes.tail_lift),
         stackable: Number(quoteCalculationRes.stackable),
         total: Number(quoteCalculationRes.total),
       });
@@ -391,7 +473,7 @@ function JobEdit() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: (data) => {
       /*toast({
         title: "Media updated",
@@ -583,26 +665,32 @@ function JobEdit() {
     }
     _jobItems[index] = value;
     setJobItems(_jobItems);
-      // recalculateTempCalculations(_jobItems);
-
-  };
-  
-useEffect(() => {
-  // Recalculate cbm_auto and total_weight whenever jobItems change
-  const calculateTotals = () => {
-    const cbmAuto = jobItems.reduce((total, item) => total + item.volume || 0, 0);
-    const totalWeight = jobItems.reduce(
-      (total, item) => total + (item.quantity || 0) * (item.weight || 0),
-      0
-    );
-    setTempcalculation({
-      cbm_auto: parseFloat(cbmAuto.toFixed(2)), // Rounded to 2 decimal points
-      total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
-    });
+    // recalculateTempCalculations(_jobItems);
   };
 
-  calculateTotals();
-}, [jobItems]);
+  useEffect(() => {
+    // Recalculate cbm_auto and total_weight whenever jobItems change
+    const calculateTotals = () => {
+      const cbmAuto = jobItems.reduce(
+        (total, item) => total + item.volume || 0,
+        0,
+      );
+      // const totalWeight = jobItems.reduce(
+      //   (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+      //   0,
+      // );
+      const totalWeight = jobItems.reduce(
+        (total, item) => total + (item.weight || 0),
+        0,
+      );
+      setTempcalculation({
+        cbm_auto: parseFloat(cbmAuto.toFixed(2)), // Rounded to 2 decimal points
+        total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
+      });
+    };
+
+    calculateTotals();
+  }, [jobItems]);
 
   const addToJobItems = () => {
     let nextId = jobItems[jobItems.length - 1].id + 1;
@@ -652,10 +740,16 @@ useEffect(() => {
       );
       setCustomerOptions(_customerOptions);
       if (isCustomer) {
+        // console.log(customerSelected, "customerSelected");
+
         setJob({ ...job, ...{ customer_id: customerId } });
-        setCustomerSelected({
-          ..._customerOptions.find((_e) => _e.value === customerId).entity,
-        });
+        const selectedCustomer = _customerOptions.find(
+          (_e) => _e.value === customerId,
+        )?.entity;
+        if (selectedCustomer) {
+          setCustomerSelected(selectedCustomer);
+          // Update refinedData with the new properties
+        }
         getCustomerAddresses();
       }
     },
@@ -795,25 +889,49 @@ useEffect(() => {
   const handleJobCreation = () => {
     if (!validateAddresses()) return;
 
+    if ((job.job_type_id = null)) {
+      toast({
+        title: "Job Type Required",
+        description:
+          "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsSaving(true);
     handleCreateJob();
   };
 
   const sendFreightData = async () => {
+    // console.log(' quotedata',refinedData.adjust_sign,refinedData.min_rate,refinedData.adjust_type)
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
+    if ((job.job_type_id = null)) {
+      toast({
+        title: "Job Type Required",
+        description:
+          "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
     const today = new Date().toISOString(); // Gets current date and time in ISO format
 
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const payload = {
@@ -821,6 +939,22 @@ useEffect(() => {
       transport_type: job.transport_type,
       state: refinedData.state,
       state_code: refinedData.state_code,
+      service_choice: refinedData.service_choice,
+      // cbm_rate: refinedData.cbm_rate,
+      // minimum_charge: refinedData.minimum_charge,
+      // area: refinedData.area,
+      // min_rate: refinedData.min_rate,
+      // adjust_type: refinedData.adjust_type,
+      // adjust_sign: refinedData.adjust_sign,
+      company_rates: job.transport_location === "QLD"
+        ? companyRates.map((rate) => ({
+          company_id: rate.company_id,
+          seafreight_id: rate.seafreight_id,
+          area: rate.area,
+          cbm_rate: rate.cbm_rate,
+          minimum_charge: rate.minimum_charge,
+        }))
+        : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
         suburb: pickUpDestination?.address_city,
@@ -830,11 +964,11 @@ useEffect(() => {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -845,7 +979,8 @@ useEffect(() => {
       surcharges: {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
-        time_slot: job.timeslot || null,
+        time_slot: job.is_inbound_connect || null,
+        timeslot_depots: refinedData.timeslot_depots || null,
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -868,8 +1003,6 @@ useEffect(() => {
         updated_at: refinedData.updated_at || today,
       })),
     };
-
-    console.log(payload);
 
     try {
       const response = await axios.post(apiUrl, payload, {
@@ -961,9 +1094,98 @@ useEffect(() => {
                           company_id: e.value || null,
                           customer_id: null,
                         });
+                        setRefinedData({
+                          ...refinedData,
+                          area: null,
+                          cbm_rate: null,
+                          minimum_charge: null,
+                        });
+
+                        if (e.value) {
+                          // console.log(e.value, "firstCompany");
+                          getCompanyRates({
+                            variables: {
+                              company_id: String(e.value),
+                            },
+                          });
+                        }
                       }}
                     />
                   )}
+
+                  {/* {!isCompany && (
+                    <>
+                      <CustomInputField
+                        isSelect={true}
+                        optionsArray={companyRates.map((rate) => ({
+                          value: rate.area,
+                          label: rate.area,
+                        }))}
+                        label="Area :"
+                        value={
+                          selectedRegion.area
+                            ? {
+                              value: selectedRegion.area,
+                              label: selectedRegion.area,
+                            }
+                            : null
+                        }
+                        placeholder="Select area"
+                        onChange={(e) => {
+                          const selectedRate = companyRates.find(
+                            (rate) => rate.area === e.value,
+                          );
+                          if (selectedRate) {
+                            setJob({
+                              ...job,
+                              company_area: selectedRate.area,
+                            });
+
+                            setSelectedRegion({
+                              area: selectedRate.area,
+                              cbm_rate: selectedRate.cbm_rate,
+                              minimum_charge: selectedRate.minimum_charge,
+                            });
+
+                            setRefinedData((prev) => ({
+                              ...prev,
+                              area: selectedRate.area,
+                              cbm_rate: selectedRate.cbm_rate,
+                              minimum_charge: selectedRate.minimum_charge,
+                            }));
+                            console.log(job, "job");
+                          }
+                        }}
+                      />
+
+                      <CustomInputFieldAdornment
+                        label="Minium Rate"
+                        placeholder=""
+                        isDisabled={true}
+                        name="minimum_charge"
+                        value={selectedRegion?.minimum_charge || ""}
+                        addonsEnd={
+                          <Text mr="2" fontSize="sm">
+                            $
+                          </Text>
+                        }
+                        onChange={(e) => { }}
+                      />
+                      <CustomInputFieldAdornment
+                        label="CBM Rate"
+                        placeholder=""
+                        isDisabled={true}
+                        name="cbm_rate"
+                        value={selectedRegion?.cbm_rate || ""}
+                        addonsEnd={
+                          <Text mr="2" fontSize="sm">
+                            $
+                          </Text>
+                        }
+                        onChange={(e) => { }}
+                      />
+                    </>
+                  )} */}
 
                   <CustomInputField
                     isSelect={true}
@@ -980,12 +1202,15 @@ useEffect(() => {
                         ...job,
                         customer_id: e.value || null,
                       });
-                      setCustomerSelected({
-                        ...customerOptions.find((_e) => _e.value === e.value)
-                          .entity,
-                      });
+                      const selectedCustomer = customerOptions.find(
+                        (_e) => _e.value === e.value,
+                      )?.entity;
+                      if (selectedCustomer) {
+                        setCustomerSelected(selectedCustomer);
+                      }
                     }}
                   />
+
                   <CustomInputField
                     label="Operator phone:"
                     placeholder=""
@@ -993,7 +1218,7 @@ useEffect(() => {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1008,7 +1233,7 @@ useEffect(() => {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1058,11 +1283,11 @@ useEffect(() => {
                       setIsSameDayJob(today === e.target.value);
                       setIsTomorrowJob(
                         new Date(e.target.value).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
+                        new Date(
+                          new Date(today).setDate(
+                            new Date(today).getDate() + 1,
+                          ),
+                        ).toDateString(),
                       );
                     }}
                   />
@@ -1152,18 +1377,18 @@ useEffect(() => {
                         (job_category) =>
                           job_category.value === selectedCategory,
                       )?.label;
-                  
+
                       setJob({
                         ...job,
                         job_type_id: selectedCategory || null,
                       });
-                  
+
                       setRefinedData({
                         ...refinedData,
                         service_choice: selectedCategoryName || null,
                       });
-                      console.log(refinedData, "n");
-                      console.log(job,'job')
+                      // console.log(refinedData, "n");
+                      // console.log(job, "job");
                     }}
                   />
 
@@ -1220,66 +1445,106 @@ useEffect(() => {
                           })
                         }
                       />
-                      {/* Transport Type Select */}
-                      <CustomInputField
-                        key="transport_typeKey"
-                        isSelect={true}
-                        optionsArray={[
-                          { value: "import", label: "Import" },
-                          { value: "export", label: "Export" },
-                        ]}
-                        label="Transport Type"
-                        name="transport_type"
-                        value={[
-                          { value: "import", label: "Import" },
-                          { value: "export", label: "Export" },
-                        ].find((_e) => _e.value === job.transport_type)}
-                        placeholder=""
-                        onChange={(e) => {
-                          setJob({ ...job, transport_type: e.value });
-                          setRefinedData({
-                            ...refinedData,
-                            transport_type: e.value,
-                          });
-                        }}
-                      />
-
-                      {/* Location Select */}
-                      <CustomInputField
-                        key="locationKey"
-                        isSelect={true}
-                        optionsArray={[
-                          { value: "VIC", label: "Victoria" },
-                          { value: "QLD", label: "Queensland" },
-                        ]}
-                        label="Location"
-                        name="transport_location"
-                        value={[
-                          { value: "VIC", label: "Victoria" },
-                          { value: "QLD", label: "Queensland" },
-                        ].find((_e) => _e.value === job.transport_location)}
-                        placeholder=""
-                        onChange={(e) => {
-                          const newState = {
-                            ...refinedData,
-                            state_code: e.value,
-                            state: e.label,
-                          };
-                          setJob({ ...job, transport_location: e.value });
-                          setRefinedData(newState);
-                        }}
-                      />
-                      <Text
-                        style={{
-                          color: "red",
-                          paddingLeft: "11.4rem",
-                          fontSize: "14px",
-                        }}
-                      >
-                        Note: For LCL and Airfreight Only
-                      </Text>
                     </>
                   )}
+                  {/* Transport Type Select */}
+                  <CustomInputField
+                    key="transport_typeKey"
+                    isSelect={true}
+                    optionsArray={[
+                      { value: "import", label: "Import" },
+                      { value: "export", label: "Export" },
+                    ]}
+                    label="Transport Type"
+                    name="transport_type"
+                    value={[
+                      { value: "import", label: "Import" },
+                      { value: "export", label: "Export" },
+                    ].find((_e) => _e.value === job.transport_type)}
+                    placeholder=""
+                    onChange={(e) => {
+                      setJob({ ...job, transport_type: e.value });
+                      setRefinedData({
+                        ...refinedData,
+                        transport_type: e.value,
+                      });
+                    }}
+                  />
+
+                  {/* Location Select */}
+                  <CustomInputField
+                    key="locationKey"
+                    isSelect={true}
+                    optionsArray={[
+                      { value: "VIC", label: "Victoria" },
+                      { value: "QLD", label: "Queensland" },
+                    ]}
+                    label="State"
+                    name="transport_location"
+                    value={[
+                      { value: "VIC", label: "Victoria" },
+                      { value: "QLD", label: "Queensland" },
+                    ].find((_e) => _e.value === job.transport_location)}
+                    placeholder=""
+                    onChange={(e) => {
+                      const newState = {
+                        ...refinedData,
+                        state_code: e.value,
+                        state: e.label,
+                      };
+                      setJob({ ...job, transport_location: e.value });
+                      setRefinedData(newState);
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: "red",
+                      paddingLeft: "11.4rem",
+                      paddingBottom: "1rem",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Note: For LCL and Airfreight Only
+                  </Text>
+
+                  {/* {!isAdmin && job.transport_location === "QLD" && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={companyRates.map((rate) => ({
+                        value: rate.area,
+                        label: rate.area,
+                      }))}
+                      label="Area :"
+                      value={
+                        selectedRegion.area
+                          ? {
+                            value: selectedRegion.area,
+                            label: selectedRegion.area,
+                          }
+                          : null
+                      }
+                      placeholder="Select area"
+                      onChange={(e) => {
+                        const selectedRate = companyRates.find(
+                          (rate) => rate.area === e.value,
+                        );
+                        if (selectedRate) {
+                          setSelectedRegion({
+                            area: selectedRate.area,
+                            cbm_rate: selectedRate.cbm_rate,
+                            minimum_charge: selectedRate.minimum_charge,
+                          });
+
+                          setRefinedData((prev) => ({
+                            ...prev,
+                            area: selectedRate.area,
+                            cbm_rate: selectedRate.cbm_rate,
+                            minimum_charge: selectedRate.minimum_charge,
+                          }));
+                        }
+                      }}
+                    />
+                  )} */}
                 </Box>
 
                 <Divider className="my-12" />
@@ -1587,6 +1852,36 @@ useEffect(() => {
                             </RadioGroup>
                           </Flex>
 
+                          {job.job_category_id === 1 && job.is_inbound_connect === true && (
+                            <Box>
+                              <CustomInputField
+                                isSelect={true}
+                                optionsArray={refinedData.depotOptions || []} // Dynamically updated options
+                                label="Timeslot depots:"
+                                value={
+                                  refinedData.timeslot_depots
+                                    ? {
+                                      value: refinedData.timeslot_depots,
+                                      label: refinedData.timeslot_depots, // Use the same value for label
+                                    }
+                                    : null
+                                }
+                                placeholder="Select a depot"
+                                onChange={(e) => {
+                                  setRefinedData({
+                                    ...refinedData,
+                                    timeslot_depots: e.value,
+                                  });
+                                  setJob({
+                                    ...job,
+                                    timeslot_depots: e.value, // Update job.timeslot_depots
+                                  });
+                                }}
+                              />
+
+                            </Box>
+                          )}
+
                           <Flex
                             flexDirection="column"
                             alignItems="flex-start"
@@ -1794,6 +2089,50 @@ useEffect(() => {
                                           color="blue.600"
                                         >
                                           {quoteCalculationRes.hand_unload}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Time Slot */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Time Slot:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.time_slot}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* tail_lift */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Tail Lift:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.tail_lift}
                                         </Text>
                                       </Flex>
 
