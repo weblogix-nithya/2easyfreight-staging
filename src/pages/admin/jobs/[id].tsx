@@ -778,6 +778,8 @@ function JobEdit() {
           dangerous_goods: data.jobPriceCalculationDetail?.dangerous_goods,
           freight: data.jobPriceCalculationDetail?.freight,
           fuel: data.jobPriceCalculationDetail?.fuel,
+          time_slot: data.jobPriceCalculationDetail?.time_slot,
+          tailgate: data.jobPriceCalculationDetail?.tailgate,
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail?.stackable,
           total_price: data.jobPriceCalculationDetail?.total_price,
@@ -1246,12 +1248,13 @@ function JobEdit() {
             }
           }
         }
-        if (job.job_type_id && !filteredOptions.some(opt => Number(opt.value) === Number(job.job_type_id))) {
+        if (job.job_type_id && !filteredOptions.some(opt => Number(opt.value) == Number(job.job_type_id))) {
           setJob({
             ...job,
             job_type_id: null
           });
         }
+
         setFilteredJobTypeOptions(filteredOptions);
       } catch (error) {
         console.error(
@@ -1264,7 +1267,6 @@ function JobEdit() {
     calculateFilteredOptions();
   }, [
     job.job_category_id,
-
     jobDateAt,
     pickUpDestination,
     jobTypeOptions,
@@ -1408,11 +1410,19 @@ function JobEdit() {
       (item) => item.value == job.transport_location,
     )?.label;
 
+    const selectedJobTypeName = jobTypeOptions.find(
+      (job_type) => job_type.value == job.job_type_id,
+    )?.label;
+
+    const selectedDepot = depotOptions.find(
+      (depot) => depot.value === job.timeslot_depots,
+    )?.label;
+
     const payload = {
       customer_id: Number(job.customer_id),
       freight_type: refinedData.freight_type || selectedCategoryName,
       transport_type: job.transport_type,
-      service_choice: refinedData.service_choice,
+      service_choice: selectedJobTypeName || refinedData.service_choice,
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
@@ -1452,7 +1462,7 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        timeslot_depots: selectedDepot || null, // Pass selectedDepot here
+        timeslot_depots: job.timeslot_depots || selectedDepot, // Pass selectedDepot here
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1487,9 +1497,7 @@ function JobEdit() {
       setQuoteCalculationRes(response?.data);
       const calculationData = quoteCalculationRes || response?.data;
       toast({ title: "Quote Calculation Success", status: "success" });
-      console.log(isUpdateMode);
-      console.log(calculationData);
-      console.log(quoteCalculationRes);
+
       if (isUpdateMode) {
         await handleUpdateJobPriceCalculationDetail(calculationData)
           .then((data) => {
@@ -2002,6 +2010,8 @@ function JobEdit() {
                           ) : null}
                           placeholder="Select type"
                           onChange={(e) => {
+
+                            //console.log(e, "e");
                             // setJob({
                             //   ...job,
                             //   job_type_id: e.value || null,
@@ -2022,6 +2032,7 @@ function JobEdit() {
                               ...refinedData,
                               service_choice: selectedCategoryName || null,
                             });
+
                             // console.log(refinedData, "n");
                             // console.log(job, "job");
                           }}
@@ -2637,7 +2648,12 @@ function JobEdit() {
                                   }
                                   placeholder="Select a depot"
                                   onChange={(e) => {
-                                    setSelectedDepot(e.value); // Update the selected depot directly
+
+                                    setSelectedDepot(e.value);
+                                    setRefinedData(prevData => ({
+                                      ...prevData,
+                                      timeslot_depots: e.value
+                                    })); // Update the selected depot directly
                                     setJob({
                                       ...job,
                                       timeslot_depots: e.value, // Update job.timeslot_depots
