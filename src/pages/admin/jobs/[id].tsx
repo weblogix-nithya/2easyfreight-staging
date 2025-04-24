@@ -1246,7 +1246,12 @@ function JobEdit() {
             }
           }
         }
-
+        if (job.job_type_id && !filteredOptions.some(opt => Number(opt.value) === Number(job.job_type_id))) {
+          setJob({
+            ...job,
+            job_type_id: null
+          });
+        }
         setFilteredJobTypeOptions(filteredOptions);
       } catch (error) {
         console.error(
@@ -1380,7 +1385,8 @@ function JobEdit() {
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
     // console.log(string, "st");
     if (!validateAddresses()) return;
-
+    // Remove duplicate check that was causing multiple API calls
+    setButtonText("Get A Quote");
     const today = new Date().toISOString(); // Get current date and time in ISO format
 
     const jobDestination1 =
@@ -1474,15 +1480,16 @@ function JobEdit() {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
       });
-
+      
       // console.log("Response Data:", response.data);
       setQuoteCalculationRes(response?.data);
+      const calculationData =  quoteCalculationRes || response?.data;
       toast({ title: "Quote Calculation Success", status: "success" });
       console.log(isUpdateMode);
+      console.log(calculationData);
       console.log(quoteCalculationRes);
-      console.log("Quote Calculation Response:", response.data);
       if (isUpdateMode) {
-        await handleUpdateJobPriceCalculationDetail(quoteCalculationRes)
+        await handleUpdateJobPriceCalculationDetail(calculationData)
           .then((data) => {
             // console.log("Updated successfully:", data);
             toast({
@@ -1499,16 +1506,16 @@ function JobEdit() {
         await handleCreateJobPriceCalculationDetail({
           job_id: Number(job.id),
           customer_id: Number(job.customer_id),
-          cbm_auto: Number(quoteCalculationRes.cbm_auto), // Ensure type casting
-          total_weight: Number(quoteCalculationRes.total_weight),
-          freight: Number(quoteCalculationRes.freight),
-          fuel: Number(quoteCalculationRes.fuel),
-          hand_unload: Number(quoteCalculationRes.hand_unload),
-          dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
-          time_slot: Number(quoteCalculationRes.time_slot),
-          tail_lift: Number(quoteCalculationRes.tail_lift),
-          stackable: Number(quoteCalculationRes.stackable),
-          total: Number(quoteCalculationRes.total),
+          cbm_auto: Number(calculationData.cbm_auto), // Ensure type casting
+          total_weight: Number(calculationData.total_weight),
+          freight: Number(calculationData.freight),
+          fuel: Number(calculationData.fuel),
+          hand_unload: Number(calculationData.hand_unload),
+          dangerous_goods: Number(calculationData.dangerous_goods),
+          time_slot: Number(calculationData.time_slot),
+          tail_lift: Number(calculationData.tail_lift),
+          stackable: Number(calculationData.stackable),
+          total: Number(calculationData.total),
         });
       }
     } catch (error) {
@@ -1517,7 +1524,6 @@ function JobEdit() {
   };
 
   const handleSaveJobPriceCalculation = () => {
-    if (isUpdateMode) {
       // console.log("update");
       const hasChanged =
         prevJobState.freight_type !== refinedData.freight_type ||
@@ -1535,52 +1541,25 @@ function JobEdit() {
             item.dimension_width !== jobItems[index].dimension_width ||
             item.dimension_depth !== jobItems[index].dimension_depth,
         );
-
-      if (hasChanged) {
-        setButtonText("Get A Quote");
-        sendFreightData("update");
-      } else {
-        // setIsSaving(true);
-        // handleUpdateJob();
-        toast({
-          title: "No changes detected",
-          description: "No changes detected, no need to update.",
-          status: "info",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
+      if (isUpdateMode) {
+        if (hasChanged) {
+          setButtonText("Get A Quote");
+          sendFreightData("update");
+        } else {
+          // setIsSaving(true);
+          // handleUpdateJob();
+          toast({
+            title: "No changes detected",
+            description: "No changes detected, no need to update.",
+            status: "info",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
     } else {
       // console.log("add");
       setButtonText("Get A Quote");
       sendFreightData("new");
-    }
-
-    const hasChanged =
-      prevJobState.freight_type !== refinedData.freight_type ||
-      prevJobState.transport_type !== job.transport_type ||
-      prevJobState.transport_location !== job.transport_location ||
-      prevJobState.job_items.some(
-        (item, index) =>
-          item.id !== jobItems[index].id ||
-          item.name !== jobItems[index].name ||
-          item.notes !== jobItems[index].notes ||
-          item.quantity !== jobItems[index].quantity ||
-          item.volume !== jobItems[index].volume ||
-          item.weight !== jobItems[index].weight ||
-          item.dimension_height !== jobItems[index].dimension_height ||
-          item.dimension_width !== jobItems[index].dimension_width ||
-          item.dimension_depth !== jobItems[index].dimension_depth,
-      );
-
-    if (hasChanged) {
-      setButtonText("Get A Quote");
-      sendFreightData("update");
-    } else {
-      setIsSaving(true);
-      sendFreightData("new");
-      setButtonText("Get A Quote");
-      // handleUpdateJob();
     }
   };
 
@@ -2016,9 +1995,9 @@ function JobEdit() {
                           label="Type:"
                           optionsArray={filteredJobTypeOptions}
                           selectedJobId={job.job_type_id}
-                          value={filteredJobTypeOptions.find(
+                          value={job.job_type_id ? filteredJobTypeOptions.find(
                             (jobType) => jobType.value === job.job_type_id,
-                          )}
+                          ) : null}
                           placeholder="Select type"
                           onChange={(e) => {
                             // setJob({
@@ -2026,11 +2005,11 @@ function JobEdit() {
                             //   job_type_id: e.value || null,
                             // });
                             const selectedCategory = e.value;
-                            const selectedCategoryName =
-                              filteredJobTypeOptions.find(
+                            const selectedCategoryName = selectedCategory 
+                            ? filteredJobTypeOptions.find(
                                 (job_category) =>
                                   job_category.value === selectedCategory,
-                              )?.label;
+                              )?.label: null;
 
                             setJob({
                               ...job,
