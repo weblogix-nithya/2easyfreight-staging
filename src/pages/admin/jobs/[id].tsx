@@ -1325,6 +1325,8 @@ function JobEdit() {
             fuel: Number(quoteCalculationRes.fuel),
             hand_unload: Number(quoteCalculationRes.hand_unload),
             dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
+            time_slot: Number(quoteCalculationRes.time_slot),
+            tail_lift: Number(quoteCalculationRes.tail_lift),
             stackable: Number(quoteCalculationRes.stackable),
             total: Number(quoteCalculationRes.total),
           },
@@ -1480,10 +1482,10 @@ function JobEdit() {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
       });
-      
+
       // console.log("Response Data:", response.data);
       setQuoteCalculationRes(response?.data);
-      const calculationData =  quoteCalculationRes || response?.data;
+      const calculationData = quoteCalculationRes || response?.data;
       toast({ title: "Quote Calculation Success", status: "success" });
       console.log(isUpdateMode);
       console.log(calculationData);
@@ -1524,38 +1526,38 @@ function JobEdit() {
   };
 
   const handleSaveJobPriceCalculation = () => {
-      // console.log("update");
-      const hasChanged =
-        prevJobState.freight_type !== refinedData.freight_type ||
-        prevJobState.transport_type !== job.transport_type ||
-        prevJobState.transport_location !== job.transport_location ||
-        prevJobState.job_items.some(
-          (item, index) =>
-            item.id !== jobItems[index].id ||
-            item.name !== jobItems[index].name ||
-            item.notes !== jobItems[index].notes ||
-            item.quantity !== jobItems[index].quantity ||
-            item.volume !== jobItems[index].volume ||
-            item.weight !== jobItems[index].weight ||
-            item.dimension_height !== jobItems[index].dimension_height ||
-            item.dimension_width !== jobItems[index].dimension_width ||
-            item.dimension_depth !== jobItems[index].dimension_depth,
-        );
-      if (isUpdateMode) {
-        if (hasChanged) {
-          setButtonText("Get A Quote");
-          sendFreightData("update");
-        } else {
-          // setIsSaving(true);
-          // handleUpdateJob();
-          toast({
-            title: "No changes detected",
-            description: "No changes detected, no need to update.",
-            status: "info",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
+    // console.log("update");
+    const hasChanged =
+      prevJobState.freight_type !== refinedData.freight_type ||
+      prevJobState.transport_type !== job.transport_type ||
+      prevJobState.transport_location !== job.transport_location ||
+      prevJobState.job_items.some(
+        (item, index) =>
+          item.id !== jobItems[index].id ||
+          item.name !== jobItems[index].name ||
+          item.notes !== jobItems[index].notes ||
+          item.quantity !== jobItems[index].quantity ||
+          item.volume !== jobItems[index].volume ||
+          item.weight !== jobItems[index].weight ||
+          item.dimension_height !== jobItems[index].dimension_height ||
+          item.dimension_width !== jobItems[index].dimension_width ||
+          item.dimension_depth !== jobItems[index].dimension_depth,
+      );
+    if (isUpdateMode) {
+      if (hasChanged) {
+        setButtonText("Get A Quote");
+        sendFreightData("update");
+      } else {
+        // setIsSaving(true);
+        // handleUpdateJob();
+        toast({
+          title: "No changes detected",
+          description: "No changes detected, no need to update.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } else {
       // console.log("add");
       setButtonText("Get A Quote");
@@ -2005,11 +2007,11 @@ function JobEdit() {
                             //   job_type_id: e.value || null,
                             // });
                             const selectedCategory = e.value;
-                            const selectedCategoryName = selectedCategory 
-                            ? filteredJobTypeOptions.find(
+                            const selectedCategoryName = selectedCategory
+                              ? filteredJobTypeOptions.find(
                                 (job_category) =>
                                   job_category.value === selectedCategory,
-                              )?.label: null;
+                              )?.label : null;
 
                             setJob({
                               ...job,
@@ -2858,6 +2860,28 @@ function JobEdit() {
                                               color="blue.600"
                                             >
                                               {quoteCalculationRes.hand_unload}
+                                            </Text>
+                                          </Flex>
+
+                                          {/* Time Slot */}
+                                          <Flex
+                                            justify="space-between"
+                                            align="center"
+                                          >
+                                            <Text
+                                              fontSize="sm"
+                                              fontWeight="500"
+                                              color="gray.700"
+                                              pr={2}
+                                            >
+                                              Time Slot:
+                                            </Text>
+                                            <Text
+                                              fontSize="sm"
+                                              fontWeight="600"
+                                              color="blue.600"
+                                            >
+                                              {quoteCalculationRes.time_slot}
                                             </Text>
                                           </Flex>
 
