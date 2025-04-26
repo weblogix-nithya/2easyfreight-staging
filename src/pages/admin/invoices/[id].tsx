@@ -64,11 +64,11 @@ function InvoiceEdit() {
     isHandleUpdateInvoiceLineItemsLoading,
     setIsHandleUpdateInvoiceLineItemsLoading,
   ] = useState(false);
-    const [job, setJob] = useState(defaultJob);
-    const [jobDestinations, setJobDestinations] = useState([]);
-    const [pickUpDestination, setPickUpDestination] = useState(
-      defaultJobDestination,
-    );
+  const [job, setJob] = useState(defaultJob);
+  const [jobDestinations, setJobDestinations] = useState([]);
+  const [pickUpDestination, setPickUpDestination] = useState(
+    defaultJobDestination,
+  );
   const [isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
@@ -119,7 +119,7 @@ function InvoiceEdit() {
     variables: {
       id: invoice.job_id,
     },
-    skip: !invoice?.job_id, 
+    skip: !invoice?.job_id,
     onCompleted: (data) => {
       // console.log(data,'d')
            // jobDestinations without is_pickup
@@ -131,7 +131,7 @@ function InvoiceEdit() {
       setPickUpDestination(
         data.job.pick_up_destination
           ? data.job.pick_up_destination
-          : { ...defaultJobDestination},
+          : { ...defaultJobDestination },
       );
       // console.log(pickUpDestination, 'pjd')
     },
@@ -221,7 +221,7 @@ function InvoiceEdit() {
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, {}] = useMutation(
+  const [handleUpdateApproveInvoice, { }] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
@@ -319,7 +319,7 @@ function InvoiceEdit() {
       },
     });
 
-  const [handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -337,7 +337,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -354,7 +354,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleGenerateInvoicePdf, {}] = useMutation(
+  const [handleGenerateInvoicePdf, { }] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -388,7 +388,7 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleDeleteInvoiceLineItem, {}] = useMutation(
+  const [handleDeleteInvoiceLineItem, { }] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -655,7 +655,12 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
-                    <Box pl={6}>Delivery : {jobDestinations.map(destination => destination.address_city).join(", ")}</Box>
+                    <Box pl={6}>Delivery :
+                      {jobDestinations
+                        .filter((destination) => destination.is_pickup === false)
+                        .map((destination) => destination.address_city)
+                        .join(", ")}
+                    </Box>
                   </Flex>
                   <Flex alignItems="center" mb="16px">
                     <FormLabel
@@ -800,13 +805,14 @@ function InvoiceEdit() {
                             <Td maxWidth="160px">
                               <Input
                                 variant="main"
-                                value={invoiceLineItem.unit_amount}
+                                value={invoiceLineItem.unit_amount ?? 0}
                                 onChange={(e) => {
                                   let items = [...invoiceLineItems];
                                   let item = { ...invoiceLineItems[index] };
-                                  item[e.target.name] = e.target.value;
+                                  item[e.target.name] = e.target.value || 0;
+                                  item.unit_amount = parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
                                   item.line_amount = (
-                                    item.quantity * parseFloat(e.target.value)
+                                    (item.quantity || 0) * item.unit_amount
                                   ).toFixed(2);
                                   items[index] = item;
                                   setInvoiceLineItems(items);
@@ -827,8 +833,9 @@ function InvoiceEdit() {
                                 isLoaded={!invoiceLoading}
                                 w="75%"
                               >
+
                                 {formatCurrency(
-                                  invoiceLineItem.unit_amount,
+                                  invoiceLineItem.unit_amount ?? 0,
                                   invoiceLineItem.currency,
                                 )}
                               </Skeleton>
@@ -873,7 +880,7 @@ function InvoiceEdit() {
                               <Input
                                 disabled={true}
                                 variant="main"
-                                value={invoiceLineItem.line_amount}
+                                value={invoiceLineItem.line_amount ?? 0}
                                 onChange={(e) => {
                                   let items = [...invoiceLineItems];
                                   let item = { ...invoiceLineItems[index] };
@@ -898,7 +905,7 @@ function InvoiceEdit() {
                                 w="75%"
                               >
                                 {formatCurrency(
-                                  invoiceLineItem.line_amount,
+                                  invoiceLineItem.line_amount ?? 0,
                                   invoiceLineItem.currency,
                                 )}
                               </Skeleton>

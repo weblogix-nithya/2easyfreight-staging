@@ -794,6 +794,8 @@ function JobEdit() {
           dangerous_goods: data.jobPriceCalculationDetail?.dangerous_goods,
           freight: data.jobPriceCalculationDetail?.freight,
           fuel: data.jobPriceCalculationDetail?.fuel,
+          time_slot: data.jobPriceCalculationDetail?.time_slot,
+          tailgate: data.jobPriceCalculationDetail?.tailgate,
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail?.stackable,
           total_price: data.jobPriceCalculationDetail?.total_price,
@@ -810,6 +812,8 @@ function JobEdit() {
           fuel: data.jobPriceCalculationDetail?.fuel,
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail.stackable,
+          time_slot: data.jobPriceCalculationDetail?.time_slot,
+          tailgate: data.jobPriceCalculationDetail?.tailgate,
         });
         setButtonText("Quote");
 
@@ -1256,6 +1260,12 @@ function JobEdit() {
             }
           }
         }
+        if (job.job_type_id && !filteredOptions.some(opt => Number(opt.value) == Number(job.job_type_id))) {
+          setJob({
+            ...job,
+            job_type_id: null
+          });
+        }
 
         setFilteredJobTypeOptions(filteredOptions);
       } catch (error) {
@@ -1269,7 +1279,6 @@ function JobEdit() {
     calculateFilteredOptions();
   }, [
     job.job_category_id,
-
     jobDateAt,
     pickUpDestination,
     jobTypeOptions,
@@ -1317,6 +1326,7 @@ function JobEdit() {
   );
 
   const handleUpdateJobPriceCalculationDetail = (quoteCalculationRes: any) => {
+    //console.log(quoteCalculationRes, "quoteCalculationRes");
     return new Promise((resolve, reject) => {
       updateJobPriceCalculationDetail({
         variables: {
@@ -1330,17 +1340,20 @@ function JobEdit() {
             fuel: Number(quoteCalculationRes.fuel),
             hand_unload: Number(quoteCalculationRes.hand_unload),
             dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
+            time_slot: Number(quoteCalculationRes.time_slot),
+            tail_lift: Number(quoteCalculationRes.tail_lift),
             stackable: Number(quoteCalculationRes.stackable),
             total: Number(quoteCalculationRes.total),
           },
         },
       })
         .then(({ data }) => {
+          //console.log("Mutation response:", data);
           resolve(data);
         })
         .catch((error) => {
-          // reject(error);
-          // showGraphQLErrorToast(error);
+          reject(error);
+          showGraphQLErrorToast(error);
         });
     });
   };
@@ -1390,7 +1403,8 @@ function JobEdit() {
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
     // console.log(string, "st");
     if (!validateAddresses()) return;
-
+    // Remove duplicate check that was causing multiple API calls
+    setButtonText("Get A Quote");
     const today = new Date().toISOString(); // Get current date and time in ISO format
 
     const jobDestination1 =
@@ -1410,11 +1424,19 @@ function JobEdit() {
       (item) => item.value == job.transport_location,
     )?.label;
 
+    const selectedJobTypeName = jobTypeOptions.find(
+      (job_type) => job_type.value == job.job_type_id,
+    )?.label;
+
+    const selectedDepot = depotOptions.find(
+      (depot) => depot.value === job.timeslot_depots,
+    )?.label;
+
     const payload = {
       customer_id: Number(job.customer_id),
       freight_type: refinedData.freight_type || selectedCategoryName,
       transport_type: job.transport_type,
-      service_choice: refinedData.service_choice,
+      service_choice: selectedJobTypeName || refinedData.service_choice,
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
@@ -1455,7 +1477,7 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        timeslot_depots: selectedDepot || null, // Pass selectedDepot here
+        timeslot_depots: job.timeslot_depots || selectedDepot, // Pass selectedDepot here
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1486,16 +1508,25 @@ function JobEdit() {
         headers: { "Content-Type": "application/json" },
       });
 
-      // console.log("Response Data:", response.data);
-      setQuoteCalculationRes(response?.data);
+      //console.log("Response Data:", response.data);
+      setQuoteCalculationRes({
+        ...response?.data,
+        time_slot: response?.data?.time_slot || 0, // Ensure time_slot is set
+      });
+      const calculationData = response?.data;
+      setQuoteCalculationRes({
+        ...calculationData,
+        time_slot: calculationData?.time_slot || 0, // Ensure time_slot is set
+      });
       toast({ title: "Quote Calculation Success", status: "success" });
       // console.log(isUpdateMode);
       // console.log(quoteCalculationRes);
       // console.log("Quote Calculation Response:", response.data);
       if (isUpdateMode) {
-        await handleUpdateJobPriceCalculationDetail(quoteCalculationRes)
+        //console.log("Update mode");
+        await handleUpdateJobPriceCalculationDetail(calculationData)
           .then((data) => {
-            // console.log("Updated successfully:", data);
+            //console.log("Updated successfully:", data);
             toast({
               title: "Quote price updated",
               status: "success",
@@ -1507,19 +1538,20 @@ function JobEdit() {
             console.error("Error updating job price:", error);
           });
       } else {
+        //console.log("Update mode");
         await handleCreateJobPriceCalculationDetail({
           job_id: Number(job.id),
           customer_id: Number(job.customer_id),
-          cbm_auto: Number(quoteCalculationRes.cbm_auto), // Ensure type casting
-          total_weight: Number(quoteCalculationRes.total_weight),
-          freight: Number(quoteCalculationRes.freight),
-          fuel: Number(quoteCalculationRes.fuel),
-          hand_unload: Number(quoteCalculationRes.hand_unload),
-          dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
-          time_slot: Number(quoteCalculationRes.time_slot),
-          tail_lift: Number(quoteCalculationRes.tail_lift),
-          stackable: Number(quoteCalculationRes.stackable),
-          total: Number(quoteCalculationRes.total),
+          cbm_auto: Number(calculationData.cbm_auto), // Ensure type casting
+          total_weight: Number(calculationData.total_weight),
+          freight: Number(calculationData.freight),
+          fuel: Number(calculationData.fuel),
+          hand_unload: Number(calculationData.hand_unload),
+          dangerous_goods: Number(calculationData.dangerous_goods),
+          time_slot: Number(calculationData.time_slot),
+          tail_lift: Number(calculationData.tail_lift),
+          stackable: Number(calculationData.stackable),
+          total: Number(calculationData.total),
         });
       }
     } catch (error) {
@@ -1528,45 +1560,7 @@ function JobEdit() {
   };
 
   const handleSaveJobPriceCalculation = () => {
-    if (isUpdateMode) {
-      // console.log("update");
-      const hasChanged =
-        prevJobState.freight_type !== refinedData.freight_type ||
-        prevJobState.transport_type !== job.transport_type ||
-        prevJobState.transport_location !== job.transport_location ||
-        prevJobState.job_items.some(
-          (item, index) =>
-            item.id !== jobItems[index].id ||
-            item.name !== jobItems[index].name ||
-            item.notes !== jobItems[index].notes ||
-            item.quantity !== jobItems[index].quantity ||
-            item.volume !== jobItems[index].volume ||
-            item.weight !== jobItems[index].weight ||
-            item.dimension_height !== jobItems[index].dimension_height ||
-            item.dimension_width !== jobItems[index].dimension_width ||
-            item.dimension_depth !== jobItems[index].dimension_depth,
-        );
-
-      if (hasChanged) {
-        setButtonText("Get A Quote");
-        sendFreightData("update");
-      } else {
-        // setIsSaving(true);
-        // handleUpdateJob();
-        toast({
-          title: "No changes detected",
-          description: "No changes detected, no need to update.",
-          status: "info",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } else {
-      // console.log("add");
-      setButtonText("Get A Quote");
-      sendFreightData("new");
-    }
-
+    //console.log(isUpdateMode);
     const hasChanged =
       prevJobState.freight_type !== refinedData.freight_type ||
       prevJobState.transport_type !== job.transport_type ||
@@ -1583,15 +1577,25 @@ function JobEdit() {
           item.dimension_width !== jobItems[index].dimension_width ||
           item.dimension_depth !== jobItems[index].dimension_depth,
       );
-
-    if (hasChanged) {
-      setButtonText("Get A Quote");
-      sendFreightData("update");
+    if (isUpdateMode) {
+      if (hasChanged) {
+        setButtonText("Quote");
+        sendFreightData("update");
+      } else {
+        // setIsSaving(true);
+        // handleUpdateJob();
+        toast({
+          title: "No changes detected",
+          description: "No changes detected, no need to update.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } else {
-      setIsSaving(true);
+      // console.log("add");
+      setButtonText("Quote");
       sendFreightData("new");
-      setButtonText("Get A Quote");
-      // handleUpdateJob();
     }
   };
 
@@ -1902,21 +1906,23 @@ function JobEdit() {
                           label="Type:"
                           optionsArray={filteredJobTypeOptions}
                           selectedJobId={job.job_type_id}
-                          value={filteredJobTypeOptions.find(
+                          value={job.job_type_id ? filteredJobTypeOptions.find(
                             (jobType) => jobType.value === job.job_type_id,
-                          )}
+                          ) : null}
                           placeholder="Select type"
                           onChange={(e) => {
+
+                            //console.log(e, "e");
                             // setJob({
                             //   ...job,
                             //   job_type_id: e.value || null,
                             // });
                             const selectedCategory = e.value;
-                            const selectedCategoryName =
-                              filteredJobTypeOptions.find(
+                            const selectedCategoryName = selectedCategory
+                              ? filteredJobTypeOptions.find(
                                 (job_category) =>
                                   job_category.value === selectedCategory,
-                              )?.label;
+                              )?.label : null;
 
                             setJob({
                               ...job,
@@ -1927,6 +1933,7 @@ function JobEdit() {
                               ...refinedData,
                               service_choice: selectedCategoryName || null,
                             });
+
                             // console.log(refinedData, "n");
                             // console.log(job, "job");
                           }}
@@ -2531,30 +2538,31 @@ function JobEdit() {
                               </SimpleGrid>
                             </Flex>
 
-                            {job.job_category_id == 1 &&
-                              job.is_inbound_connect == 1 && (
-                                <Box>
-                                  <CustomInputField
-                                    isSelect={true}
-                                    optionsArray={depotOptions} // Use the state directly
-                                    label="Timeslot depots:"
-                                    value={
-                                      depotOptions.find(
-                                        (option) =>
-                                          option.value === job.timeslot_depots,
-                                      ) || null
-                                    }
-                                    placeholder="Select a depot"
-                                    onChange={(e) => {
-                                      setSelectedDepot(e.value); // Update the selected depot directly
-                                      setJob({
-                                        ...job,
-                                        timeslot_depots: e.value, // Update job.timeslot_depots
-                                      });
-                                    }}
-                                  />
-                                </Box>
-                              )}
+                            {job.job_category_id == 1 && job.is_inbound_connect == 1 && (
+                              <Box>
+                                <CustomInputField
+                                  isSelect={true}
+                                  optionsArray={depotOptions} // Use the state directly
+                                  label="Timeslot depots:"
+                                  value={
+                                    depotOptions.find((option) => option.value === job.timeslot_depots) || null
+                                  }
+                                  placeholder="Select a depot"
+                                  onChange={(e) => {
+
+                                    setSelectedDepot(e.value);
+                                    setRefinedData(prevData => ({
+                                      ...prevData,
+                                      timeslot_depots: e.value
+                                    })); // Update the selected depot directly
+                                    setJob({
+                                      ...job,
+                                      timeslot_depots: e.value, // Update job.timeslot_depots
+                                    });
+                                  }}
+                                />
+                              </Box>
+                            )}
 
                             <Flex alignItems="center" width="100%" pt={7}>
                               <SimpleGrid columns={{ sm: 1 }} width="100%">
@@ -2769,6 +2777,28 @@ function JobEdit() {
                                               color="blue.600"
                                             >
                                               {quoteCalculationRes.hand_unload}
+                                            </Text>
+                                          </Flex>
+
+                                          {/* Time Slot */}
+                                          <Flex
+                                            justify="space-between"
+                                            align="center"
+                                          >
+                                            <Text
+                                              fontSize="sm"
+                                              fontWeight="500"
+                                              color="gray.700"
+                                              pr={2}
+                                            >
+                                              Time Slot:
+                                            </Text>
+                                            <Text
+                                              fontSize="sm"
+                                              fontWeight="600"
+                                              color="blue.600"
+                                            >
+                                              {quoteCalculationRes.time_slot}
                                             </Text>
                                           </Flex>
 
