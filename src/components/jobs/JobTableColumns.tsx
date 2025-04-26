@@ -390,7 +390,7 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
 };
 export const BookedByCell = ({ row }: any) => {
-  console.log(row, "roww");
+  // console.log(row, "roww");
   return (
     <>
       <Text>{row.company?.name}</Text>

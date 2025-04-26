@@ -161,7 +161,7 @@ export default function JobIndex() {
   );
 
   const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
-  console.log(columns, "col");
+  // console.log(columns, "col");
 
   const companyColumns = columns.filter((column) =>
     [
@@ -180,7 +180,7 @@ export default function JobIndex() {
     ].includes(column.id),
   );
 
-  console.log(companyColumns, "companyColumns");
+  // console.log(companyColumns, "companyColumns");
 
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
@@ -358,7 +358,7 @@ export default function JobIndex() {
     // Separate unassigned and assigned jobs
     const unassignedJobs = jobsData.filter((job) => !job.driver_id);
     const assignedJobs = jobsData.filter((job) => job.driver_id);
-    console.log(assignedJobs, "dddd");
+    // console.log(assignedJobs, "dddd");
     // Group assigned jobs by driver
     const groupedByDriver = assignedJobs.reduce((acc, job) => {
       const driverId = job.driver_id;

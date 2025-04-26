@@ -103,7 +103,7 @@ export default function CustomerAddressesTab(props: any) {
 
   useEffect(() => {
     // onChangeSearchQuery.cancel();
-    console.log("useEffect");
+    // console.log("useEffect");
 
     if (googleAddress) {
       updateCustomerAddress(googleAddress.value.place_id);

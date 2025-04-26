@@ -93,7 +93,7 @@ export default function ReportsTab(props: { jobObject: any }) {
   );
 
   const handleDownloadPod = () => {
-    console.log("download pod"); //TODO: download pod
+    // console.log("download pod"); //TODO: download pod
   };
   useEffect(() => {
     setJob(jobObject);
