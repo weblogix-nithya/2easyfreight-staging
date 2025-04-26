@@ -1,5 +1,6 @@
 // @ts-nocheck
 import {
+  // Box,
   Button,
   ButtonGroup,
   HStack,
@@ -112,6 +113,8 @@ const PaginationTable = <T extends object>({
     { value: 30, label: "30 / page" },
     { value: 50, label: "50 / page" },
     { value: 100, label: "100 / page" },
+    { value: 150, label: "150 / page" },
+    { value: 200, label: "200 / page" },
   ];
 
   const {
@@ -189,9 +192,57 @@ const PaginationTable = <T extends object>({
     if (!isChecked) toggleAllRowsSelected(isChecked);
   }, [isChecked]);
 
+  // const renderCell = useCallback((cell: any, row: any) => {
+  //   if (cell.column.Header === "DELIVERY ID") {
+  //     return (
+  //       <Text
+  //         cursor="pointer"
+  //         color="primary.400"
+  //         onClick={(e) => {
+  //           e.stopPropagation();
+  //           if (!isLoadingDetails) {
+  //             setIsLoadingDetails(true);
+  //             const essentialData = {
+  //               id: row.original.id,
+  //               name: row.original.name,
+  //               status: row.original.job_status,
+  //               type: row.original.job_type
+  //             };
+              
+  //             dispatch(setRightSideBarJob(essentialData));
+  //             dispatch(setIsShowRightSideBar(true));
+              
+  //             setTimeout(() => {
+  //               onMarkerClick?.({ job_id: row.original.id });
+  //               getJob({ 
+  //                 variables: { id: row.original.id },
+  //                 onCompleted: () => setIsLoadingDetails(false)
+  //               });
+  //             }, 0);
+  //           }
+  //         }}
+  //       >
+  //         {cell.render("Cell")}
+  //       </Text>
+  //     );
+  //   }
+  //   return cell.render("Cell");
+  // }, [isLoadingDetails, dispatch, getJob, onMarkerClick]);
+
   return (
-    <VStack w="full" align="start" spacing={4}>
-      <Table colorScheme="white" {...getTableProps()}>
+    <VStack
+      w="full"
+      align="start"
+      spacing={4}
+      position="relative"
+    >
+      <Table
+        colorScheme="white"
+        mb="0px"
+        {...getTableProps()}
+        variant="simple"
+        width="max-content"
+      >
         <Thead>
           {headerGroups.map((headerGroup, index) => (
             <Tr
@@ -346,8 +397,7 @@ const PaginationTable = <T extends object>({
                 {...row.getRowProps()}
                 {...(getRowProps ? getRowProps(row) : {})}
                 key={`row-${index}`}
-                onClick={isChecked ? () => row.toggleRowSelected() : undefined}
-                // bg={index % 2 === 0 ? "white" : "gray.50"} 
+                // bg={index % 2 === 0 ? "white" : "gray.50"}
               >
                 {row?.cells?.map((cell, index) => {
                   let data;
@@ -542,27 +592,25 @@ const PaginationTable = <T extends object>({
                         paddingInlineEnd={restyleTable && 2}
                         pr="20px"
                       >
-                        {
-                          // @ts-expect-error
-                          cell.column.type === "date" ? (
-                            <Text>
-                              {cell.value
-                                ? formatDate(cell.value, "DD/MM/YYYY")
-                                : "-"}
-                            </Text>
-                          ) : cell.column.type === "money" ? (
-                            <Text>
-                              {cell.value ? formatCurrency(cell.value) : "$0"}
-                            </Text>
-                          ) : cell.column.type === "boolean" ? (
-                            <Text>
-                              {cell.value == true
-                                ? cell.column.trueLabel || "Yes"
-                                : cell.column.falseLabel || "No"}
-                            </Text>
-                          ) : (
-                            cell.render("Cell")
-                          )
+                        {cell.column.type === "date" ? (
+                          <Text>
+                            {cell.value
+                              ? formatDate(cell.value, "DD/MM/YYYY")
+                              : "-"}
+                          </Text>
+                        ) : cell.column.type === "money" ? (
+                          <Text>
+                            {cell.value ? formatCurrency(cell.value) : "$0"}
+                          </Text>
+                        ) : cell.column.type === "boolean" ? (
+                          <Text>
+                            {cell.value == true
+                              ? cell.column.trueLabel || "Yes"
+                              : cell.column.falseLabel || "No"}
+                          </Text>
+                        ) : (
+                          cell.render("Cell")
+                        )
                         }
                         {cell.column.showCompany == true && (
                           <Text className="text-gray-400">
@@ -579,8 +627,14 @@ const PaginationTable = <T extends object>({
           })}
         </Tbody>
       </Table>
-
-      <HStack w="full" justify="space-between">
+      {/* </Box> */}
+      <HStack
+        w="full"
+        justify="space-between"
+        // position="sticky"
+        // bottom={0}
+        // bg="white"
+      >
         {!isFilterRowSelected && showPageSizeSelect && (
           <HStack minW="xs">
             <Select
