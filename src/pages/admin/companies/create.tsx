@@ -87,7 +87,7 @@ function CompanyCreate() {
           rate.minimum_charge > 0
         );
 
-        console.log("validRates", validRates);
+        // console.log("validRates", validRates);
 
         for (const rate of validRates) {
           await createCompanyRate({
@@ -168,7 +168,7 @@ function CompanyCreate() {
       },
     ]);
   };
-  console.log("companyRates", companyRates);
+  // console.log("companyRates", companyRates);
   return (
     <AdminLayout>
       <Box
@@ -337,7 +337,7 @@ function CompanyCreate() {
                       ...company,
                       payment_term: selectedOption?.value,
                     });
-                    console.log("Selected:", selectedOption);
+                    // console.log("Selected:", selectedOption);
                   }}
                   size="lg"
                   className="select mb-0"
@@ -608,7 +608,7 @@ function CompanyCreate() {
                       seafreight_id: Number(selectedOption?.value),
                       area: selectedOption?.label,
                     };
-                    console.log("Selected:", updatedRates);
+                    // console.log("Selected:", updatedRates);
                     setCompanyRates(updatedRates);
                   }}
                   className="basic-single"

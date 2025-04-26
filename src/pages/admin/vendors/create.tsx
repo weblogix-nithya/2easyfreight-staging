@@ -304,7 +304,7 @@ function VendorCreate() {
                   options={paymentTerms}
                   onChange={(selectedOption) => {
                     setVendor({ ...vendor, payment_term: selectedOption?.value });
-                    console.log("Selected:", selectedOption);
+                    // console.log("Selected:", selectedOption);
                   }}
                   size="lg"
                   className="select mb-0"
@@ -343,7 +343,7 @@ function VendorCreate() {
                         // updated_at: currentDateTime
                       }
                     });
-                    console.log("Selected:", selectedOption);
+                    // console.log("Selected:", selectedOption);
                   }}
                   size="lg"
                   className="select mb-0"
