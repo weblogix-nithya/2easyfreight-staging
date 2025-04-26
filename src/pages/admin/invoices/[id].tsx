@@ -805,13 +805,14 @@ function InvoiceEdit() {
                             <Td maxWidth="160px">
                               <Input
                                 variant="main"
-                                value={invoiceLineItem.unit_amount}
+                                value={invoiceLineItem.unit_amount ?? 0}
                                 onChange={(e) => {
                                   let items = [...invoiceLineItems];
                                   let item = { ...invoiceLineItems[index] };
-                                  item[e.target.name] = e.target.value;
+                                  item[e.target.name] = e.target.value || 0;
+                                  item.unit_amount = parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
                                   item.line_amount = (
-                                    item.quantity * parseFloat(e.target.value)
+                                    (item.quantity || 0) * item.unit_amount
                                   ).toFixed(2);
                                   items[index] = item;
                                   setInvoiceLineItems(items);
@@ -832,8 +833,9 @@ function InvoiceEdit() {
                                 isLoaded={!invoiceLoading}
                                 w="75%"
                               >
+
                                 {formatCurrency(
-                                  invoiceLineItem.unit_amount,
+                                  invoiceLineItem.unit_amount ?? 0,
                                   invoiceLineItem.currency,
                                 )}
                               </Skeleton>
@@ -878,7 +880,7 @@ function InvoiceEdit() {
                               <Input
                                 disabled={true}
                                 variant="main"
-                                value={invoiceLineItem.line_amount}
+                                value={invoiceLineItem.line_amount ?? 0}
                                 onChange={(e) => {
                                   let items = [...invoiceLineItems];
                                   let item = { ...invoiceLineItems[index] };
@@ -903,7 +905,7 @@ function InvoiceEdit() {
                                 w="75%"
                               >
                                 {formatCurrency(
-                                  invoiceLineItem.line_amount,
+                                  invoiceLineItem.line_amount ?? 0,
                                   invoiceLineItem.currency,
                                 )}
                               </Skeleton>

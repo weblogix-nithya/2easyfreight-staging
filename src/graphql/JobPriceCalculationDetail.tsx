@@ -12,6 +12,8 @@ export const GET_JOB_PRICE_CALCULATION_DETAIL_QUERY = gql`
       total_weight
       freight
       fuel
+      time_slot
+      tail_lift
       hand_unload
       dangerous_goods
       stackable

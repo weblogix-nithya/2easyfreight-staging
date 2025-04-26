@@ -796,6 +796,8 @@ function JobEdit() {
           fuel: data.jobPriceCalculationDetail?.fuel,
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail.stackable,
+          time_slot: data.jobPriceCalculationDetail?.time_slot,
+          tailgate: data.jobPriceCalculationDetail?.tailgate,
         });
         setButtonText("Quote");
 
@@ -1314,6 +1316,7 @@ function JobEdit() {
   );
 
   const handleUpdateJobPriceCalculationDetail = (quoteCalculationRes: any) => {
+    //console.log(quoteCalculationRes, "quoteCalculationRes");
     return new Promise((resolve, reject) => {
       updateJobPriceCalculationDetail({
         variables: {
@@ -1335,11 +1338,12 @@ function JobEdit() {
         },
       })
         .then(({ data }) => {
+          //console.log("Mutation response:", data);
           resolve(data);
         })
         .catch((error) => {
-          // reject(error);
-          // showGraphQLErrorToast(error);
+          reject(error);
+          showGraphQLErrorToast(error);
         });
     });
   };
@@ -1493,15 +1497,23 @@ function JobEdit() {
         headers: { "Content-Type": "application/json" },
       });
 
-      // console.log("Response Data:", response.data);
-      setQuoteCalculationRes(response?.data);
-      const calculationData = quoteCalculationRes || response?.data;
+      //console.log("Response Data:", response.data);
+      setQuoteCalculationRes({
+        ...response?.data,
+        time_slot: response?.data?.time_slot || 0, // Ensure time_slot is set
+      });
+      const calculationData = response?.data;
+      setQuoteCalculationRes({
+        ...calculationData,
+        time_slot: calculationData?.time_slot || 0, // Ensure time_slot is set
+      });
       toast({ title: "Quote Calculation Success", status: "success" });
-
+      console.log(isUpdateMode);
       if (isUpdateMode) {
+        //console.log("Update mode");
         await handleUpdateJobPriceCalculationDetail(calculationData)
           .then((data) => {
-            // console.log("Updated successfully:", data);
+            //console.log("Updated successfully:", data);
             toast({
               title: "Quote price updated",
               status: "success",
@@ -1513,6 +1525,7 @@ function JobEdit() {
             console.error("Error updating job price:", error);
           });
       } else {
+        //console.log("Update mode");
         await handleCreateJobPriceCalculationDetail({
           job_id: Number(job.id),
           customer_id: Number(job.customer_id),
@@ -1534,7 +1547,7 @@ function JobEdit() {
   };
 
   const handleSaveJobPriceCalculation = () => {
-    // console.log("update");
+    //console.log(isUpdateMode);
     const hasChanged =
       prevJobState.freight_type !== refinedData.freight_type ||
       prevJobState.transport_type !== job.transport_type ||
@@ -1553,7 +1566,7 @@ function JobEdit() {
       );
     if (isUpdateMode) {
       if (hasChanged) {
-        setButtonText("Get A Quote");
+        setButtonText("Quote");
         sendFreightData("update");
       } else {
         // setIsSaving(true);
@@ -1568,7 +1581,7 @@ function JobEdit() {
       }
     } else {
       // console.log("add");
-      setButtonText("Get A Quote");
+      setButtonText("Quote");
       sendFreightData("new");
     }
   };
