@@ -352,7 +352,7 @@ function JobEdit() {
         transport_type: job.transport_type,
         transport_location: job.transport_location,
         timeslot_depots: job.timeslot_depots,
-        company_area: job.company_area,
+        // company_area: job.company_area,
         media: undefined,
       },
     },
@@ -1138,7 +1138,7 @@ function JobEdit() {
                           if (selectedRate) {
                             setJob({
                               ...job,
-                              company_area: selectedRate.area,
+                              //company_area: selectedRate.area,
                             });
 
                             setSelectedRegion({
