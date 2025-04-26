@@ -296,9 +296,7 @@ function JobEdit() {
       const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
-        // min_rate: _entity.min_rate, // Add these properties to the options
-        // adjust_type: _entity.adjust_type,
-        // adjust_sign: _entity.adjust_sign,
+
       }));
 
       setCompaniesOptions(newCompaniesOptions);
@@ -312,9 +310,6 @@ function JobEdit() {
       if (selectedCompany) {
         setRefinedData({
           ...refinedData,
-          // min_rate: selectedCompany.min_rate,
-          // adjust_type: selectedCompany.adjust_type,
-          // adjust_sign: selectedCompany.adjust_sign,
         });
         // console.log(selectedCompany.min_rate, "selected company min rate")
       }
@@ -326,9 +321,6 @@ function JobEdit() {
         if (companyWithId) {
           setRefinedData({
             ...refinedData,
-            // min_rate: companyWithId.min_rate,
-            // adjust_type: companyWithId.adjust_type,
-            // adjust_sign: companyWithId.adjust_sign,
           });
           // console.log(companyWithId,'companywithid min rate')
         }
@@ -906,7 +898,6 @@ function JobEdit() {
   };
 
   const sendFreightData = async () => {
-    // console.log(' quotedata',refinedData.adjust_sign,refinedData.min_rate,refinedData.adjust_type)
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
@@ -943,9 +934,6 @@ function JobEdit() {
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
-      // min_rate: refinedData.min_rate,
-      // adjust_type: refinedData.adjust_type,
-      // adjust_sign: refinedData.adjust_sign,
       company_rates: job.transport_location === "QLD"
         ? companyRates.map((rate) => ({
           company_id: rate.company_id,
@@ -1009,7 +997,7 @@ function JobEdit() {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("Response Data:", response.data);
+      // console.log("Response Data:", response.data);
       setQuoteCalculationRes(response?.data);
       setIsQuotePrice(true);
     } catch (error) {

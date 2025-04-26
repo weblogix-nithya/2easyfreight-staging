@@ -77,7 +77,7 @@ function VendorEdit() {
       const vendorWithDate = { ...data.vendor };
       setVendor(vendorWithDate); // Ensure updated_at is a Date object
       setOriginalVendor(vendorWithDate); // Set the original vendor data
-      console.log(data.vendor, 'ck');
+      // console.log(data.vendor, 'ck');
     },
     onError(error) {
       console.log("onError");
@@ -652,7 +652,7 @@ function VendorEdit() {
                             options={paymentTerms}
                             onChange={(selectedOption) => {
                               setVendor({ ...vendor, payment_term: selectedOption?.value });
-                              console.log("Selected:", selectedOption);
+                              // console.log("Selected:", selectedOption);
                             }}
                             size="lg"
                             className="select mb-0"

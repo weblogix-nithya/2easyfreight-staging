@@ -117,8 +117,8 @@ function CompanyEdit() {
       setLogoUrl(data?.company.logo_url);
     },
     onError(error) {
-      console.log("onError");
-      console.log(error);
+      // console.log("onError");
+      // console.log(error);
     },
   });
   const hasCompanyChanges = () => {
@@ -276,7 +276,7 @@ function CompanyEdit() {
     },
     onCompleted: async (data) => {
       try {
-        console.log(data, 'oncompletedata UPD CMP')
+        // console.log(data, 'oncompletedata UPD CMP')
         if (companyRatesData?.companyRate) {
           // Update existing rate
           await updateCompanyRate({
@@ -796,7 +796,7 @@ function CompanyEdit() {
                                 ...company,
                                 payment_term: selectedOption?.value,
                               });
-                              console.log("Selected:", selectedOption);
+                              // console.log("Selected:", selectedOption);
                             }}
                             size="lg"
                             className="select mb-0"
@@ -1389,80 +1389,7 @@ function CompanyEdit() {
                           Save Rates
                         </Button>
                       </Box>
-                      {/* <Flex alignItems="center" mb="30px" gap="16px"> */}
-                      {/* Adjustment Sign */}
-                      {/* <Flex flex="1" flexDirection="column">
-                            <FormLabel mb="4px" fontSize="sm" fontWeight="500" color={textColor}>
-                              Adjustment Sign
-                            </FormLabel>
-                            <Select
-                              name="adjust_sign"
-                              options={adjustSignOptions}
-                              variant="main"
-                              // fontSize="sm"
-                              value={adjustSignOptions.find(opt => opt.value === company.adjust_sign)}
-                              onChange={(selectedOption) =>
-                                setCompany({ ...company, adjust_sign: selectedOption?.value })
-                              }
-                            />
-                          </Flex>
-
-                          <Flex flex="1" flexDirection="column">
-                          <FormLabel mb="4px" fontSize="sm" fontWeight="500" color={textColor}>
-                            Adjustment Type
-                          </FormLabel>
-                          <Select
-                            name="adjust_type"
-                            options={adjustTypeOptions}
-                            variant="main"
-                            // fontSize="sm"
-                            value={adjustTypeOptions.find(opt => opt.value === company.adjust_type)}
-                            onChange={(selectedOption) => {
-                              const newType = selectedOption?.value;
-                              setCompany((prev) => ({
-                                ...prev,
-                                adjust_type: newType,
-                                min_rate: newType === "%" ? "0" : "0.00",
-                              }));
-                            }}
-                          />
-                        </Flex>
-
-                          */}
-                      {/* <Flex flex="1" flexDirection="column">
-                          <FormLabel
-                            mb="4px"
-                            fontSize="sm"
-                            fontWeight="500"
-                            color={textColor}
-                          >
-                            Min Rate
-                          </FormLabel>
-                          <Input
-                            type="number"
-                            name="min_rate"
-                            variant="main"
-                            fontSize="sm"
-                            value={
-                              company.min_rate === "0" ? "" : company.min_rate
-                            }
-                            step={company.adjust_type === "%" ? "1" : "0.01"}
-                            min="0"
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setCompany({
-                                ...company,
-                                min_rate:
-                                  value === "" ? "" : String(parseFloat(value)),
-                              });
-                            }}
-                            placeholder={
-                              company.adjust_type === "%" ? "10" : "10.00"
-                            }
-                          />
-                        </Flex> */}
-                      {/* </Flex> */}
-                      <Divider />
+                     <Divider />
 
                       <h3 className="mt-6 mb-4">Notifications</h3>
                       <Flex className="w-full" alignItems="center">
