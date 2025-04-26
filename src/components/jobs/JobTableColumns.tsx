@@ -26,22 +26,24 @@ import {
 } from "helpers/helper";
 import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
+// import { useDispatch } from "react-redux";
+// import { setIsShowRightSideBar,  } from "store/rightSideBarSlice";
 import { RootState } from "store/store";
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 
-export const getJobRowProps = (row: any) => {
-  return {
-    style: {
-      cursor: 'pointer',
-    },
-    bg: row.original.job_status?.id == 1 ? 'yellow.50' : 
-        [6, 7].includes(Number(row.original.job_status?.id)) ? 'green.50' : 
-        'white',
-    _hover: { bg: 'gray.100' }
-  };
-};
+// export const getJobRowProps = (row: any) => {
+//   return {
+//     style: {
+//       cursor: 'pointer',
+//     },
+//     bg: row.original.job_status?.id == 1 ? 'yellow.50' : 
+//         [6, 7].includes(Number(row.original.job_status?.id)) ? 'green.50' : 
+//         'white',
+//     // _hover: { bg: 'gray.100' }
+//   };
+// };
 
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
@@ -461,7 +463,7 @@ export const StatusCell = ({ row }: any) => {
 };
 
 export const CustomerReferenceCell = ({ row }: any) => {
-  return <Text>{row.original.reference_no || "-"}</Text>;
+  return <Text maxW="100px">{row.original.reference_no || "-"}</Text>;
 };
 
 export const AdminNotesCell = ({ row }: any) => {
@@ -564,11 +566,47 @@ export const AdminNotesCell = ({ row }: any) => {
     </Flex>
   );
 };
+
+// const DeliveryIdCell = ({ row, onMarkerClick }: any) => {
+//   const dispatch = useDispatch();
+  
+//   const handleClick = useCallback(() => {
+//     // Only dispatch essential data for initial render
+//     // const essentialData = {
+//     //   id: row.original.id,
+//     //   name: row.original.name,
+//     //   status: row.original.job_status,
+//     //   type: row.original.job_type
+//     // };
+//     debugger
+//     console.log(row.original, "row.original")
+//     console.log('first,',row)
+//     dispatch(setRightSideBarJob(row));
+//     dispatch(setIsShowRightSideBar(true));
+    
+//     // Delay full data fetch
+//     setTimeout(() => {
+//       onMarkerClick?.({ job_id: row.original.id });
+//     }, 0);
+//   }, [row.original, dispatch, onMarkerClick]);
+
+//   return (
+//     <Text
+//       cursor="pointer"
+//       color="primary.400"
+//       onClick={handleClick}
+//     >
+//       #{row.original.name}
+//     </Text>
+//   );
+// };
+
 export const tableColumn = [
   {
     id: "name",
     Header: "Delivery ID",
     accessor: "name" as const,
+    // Cell: DeliveryIdCell
     // width: "100px",
   },
   {
@@ -583,7 +621,7 @@ export const tableColumn = [
     Header: "Customer Reference",
     // accessor: "reference_no" as const,
     Cell: CustomerReferenceCell,
-    width: "50px",
+    width: "150px",
   },
   {
     id: "job_category.name",

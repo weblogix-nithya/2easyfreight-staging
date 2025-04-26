@@ -67,7 +67,7 @@ export default function JobIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("secondaryGray.900", "white");
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(100);
+  const [queryPageSize, setQueryPageSize] = useState(150);
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
   const [statusFilter, setStatusFilter] = useState("all");
@@ -434,7 +434,7 @@ export default function JobIndex() {
     variables: {
       query: searchQuery,
       page: queryPageIndex + 1,
-      first: 100,
+      first: queryPageSize,
       orderByRelationship: orderByRelationship,
       between_at:
         rangeDate && rangeDate[0]
