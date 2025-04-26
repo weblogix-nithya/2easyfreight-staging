@@ -121,19 +121,19 @@ function InvoiceEdit() {
     },
     skip: !invoice?.job_id,
     onCompleted: (data) => {
-      console.log(data, 'd')
-      // jobDestinations without is_pickup
+      // console.log(data,'d')
+           // jobDestinations without is_pickup
       let _jobDestinations = data.job.job_destinations;
 
       setJobDestinations(_jobDestinations);
-      console.log(jobDestinations, 'jd')
+      // console.log(jobDestinations,'jd')
 
       setPickUpDestination(
         data.job.pick_up_destination
           ? data.job.pick_up_destination
           : { ...defaultJobDestination },
       );
-      console.log(pickUpDestination, 'pjd')
+      // console.log(pickUpDestination, 'pjd')
     },
     onError(error) {
       // console.log("onError");

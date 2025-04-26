@@ -162,15 +162,29 @@ function JobEdit() {
   ]);
 
   const [depotOptions, setDepotOptions] = useState([
-    { value: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane", label: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane" },
-    { value: "(MEDLOG) 10 Peregrine Drive Port of Brisbane", label: "(MEDLOG) 10 Peregrine Drive Port of Brisbane" },
-    { value: "(Interport) 97 Freight Street Lytton", label: "(Interport) 97 Freight Street Lytton" },
-    { value: "(Buccini Transport) 28 Wyuna Court Hemmant", label: "(Buccini Transport) 28 Wyuna Court Hemmant" },
-    { value: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane", label: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane" },
+    {
+      value: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane",
+      label: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane",
+    },
+    {
+      value: "(MEDLOG) 10 Peregrine Drive Port of Brisbane",
+      label: "(MEDLOG) 10 Peregrine Drive Port of Brisbane",
+    },
+    {
+      value: "(Interport) 97 Freight Street Lytton",
+      label: "(Interport) 97 Freight Street Lytton",
+    },
+    {
+      value: "(Buccini Transport) 28 Wyuna Court Hemmant",
+      label: "(Buccini Transport) 28 Wyuna Court Hemmant",
+    },
+    {
+      value: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane",
+      label: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane",
+    },
   ]);
 
   const [selectedDepot, setSelectedDepot] = useState("");
-
 
   const [prevJobState, setPrevJobState] = useState({
     freight_type: refinedData.freight_type,
@@ -331,7 +345,7 @@ function JobEdit() {
           ...refinedData,
           freight_type: selectedCategoryName || null,
           state_code: data.job.transport_location,
-          state: selectedLocation?.label || null
+          state: selectedLocation?.label || null,
         });
         // console.log("refine", refinedData);
         getCustomersByCompanyId({
@@ -361,9 +375,10 @@ function JobEdit() {
         );
         // jobDestinations without is_pickup
         // let _jobDestinations = data.job.job_destinations || [];
-        let _jobDestinations = data.job.job_destinations.filter(
-          (destination: any) => !destination.is_pickup,
-        ) || [];
+        let _jobDestinations =
+          data.job.job_destinations.filter(
+            (destination: any) => !destination.is_pickup,
+          ) || [];
 
         setOriginalJobDestinations(_jobDestinations);
         setJobDestinations(_jobDestinations);
@@ -423,9 +438,6 @@ function JobEdit() {
         }
         setRefinedData({
           ...refinedData,
-          // min_rate: data?.company?.min_rate,
-          // adjust_type: data?.company?.adjust_type,
-          // adjust_sign: data?.company?.adjust_sign,
         });
       },
       onError(error) {
@@ -858,9 +870,6 @@ function JobEdit() {
       const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
-        // min_rate: _entity.min_rate, // Add these properties to the options
-        // adjust_type: _entity.adjust_type,
-        // adjust_sign: _entity.adjust_sign,
       }));
 
       setCompaniesOptions(newCompaniesOptions);
@@ -873,9 +882,6 @@ function JobEdit() {
       if (selectedCompany) {
         setRefinedData({
           ...refinedData,
-          // min_rate: selectedCompany?.min_rate,
-          // adjust_type: selectedCompany?.adjust_type,
-          // adjust_sign: selectedCompany?.adjust_sign,
         });
       }
     },
@@ -1432,15 +1438,16 @@ function JobEdit() {
       // area: refinedData.area,
       state: refinedData.state || selectedstate,
       state_code: refinedData.state_code || job.transport_location,
-      company_rates: job.transport_location === "QLD"
-        ? companyRates.map((rate) => ({
-          company_id: rate.company_id,
-          seafreight_id: rate.seafreight_id,
-          area: rate.area,
-          cbm_rate: rate.cbm_rate,
-          minimum_charge: rate.minimum_charge,
-        }))
-        : [],
+      company_rates:
+        job.transport_location === "QLD"
+          ? companyRates.map((rate) => ({
+            company_id: rate.company_id,
+            seafreight_id: rate.seafreight_id,
+            area: rate.area,
+            cbm_rate: rate.cbm_rate,
+            minimum_charge: rate.minimum_charge,
+          }))
+          : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
         suburb: pickUpDestination?.address_city,
@@ -1508,7 +1515,9 @@ function JobEdit() {
         time_slot: calculationData?.time_slot || 0, // Ensure time_slot is set
       });
       toast({ title: "Quote Calculation Success", status: "success" });
-      console.log(isUpdateMode);
+      // console.log(isUpdateMode);
+      // console.log(quoteCalculationRes);
+      // console.log("Quote Calculation Response:", response.data);
       if (isUpdateMode) {
         //console.log("Update mode");
         await handleUpdateJobPriceCalculationDetail(calculationData)
@@ -1710,131 +1719,6 @@ function JobEdit() {
                             });
                           }}
                         />
-
-                        {/* {!isCompany && (
-                          <>
-                            <CustomInputField
-                              isSelect={true}
-                              optionsArray={companiesOptions}
-                              label="Company:"
-                              onInputChange={(e) => {
-                                onChangeSearchQuery(e);
-                              }}
-                              value={companiesOptions.find(
-                                (entity) => entity.value == job.company_id,
-                              )}
-                              placeholder=""
-                              onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  company_id: e.value || null,
-                                  customer_id: null,
-                                });
-                                const selectedCompany = companiesOptions.find(
-                                  (entity) => entity.value === e.value,
-                                );
-
-                                if (selectedCompany) {
-                                  setRefinedData({
-                                    ...refinedData,
-                                    // min_rate: selectedCompany.min_rate,
-                                    // adjust_type: selectedCompany.adjust_type,
-                                    // adjust_sign: selectedCompany.adjust_sign,
-                                  });
-                                }
-                                getCustomersByCompanyId({
-                                  query: "",
-                                  page: 1,
-                                  first: 1000,
-                                  orderByColumn: "id",
-                                  orderByOrder: "ASC",
-                                  company_id: e.value,
-                                });
-                              }}
-                            />
-                            {!isCompany && (
-                              <>
-                                <CustomInputField
-                                  isSelect={true}
-                                  optionsArray={companyRates.map((rate) => ({
-                                    value: rate.area,
-                                    label: rate.area,
-                                  }))}
-                                  label="Area :"
-                                  value={
-                                    selectedRegion.area
-                                      ? {
-                                        value: selectedRegion.area,
-                                        label: selectedRegion.area,
-                                      }
-                                      : null
-                                  }
-                                  placeholder="Select area"
-                                  onChange={(e) => {
-                                    const selectedRate = companyRates.find(
-                                      (rate) => rate.area === e.value,
-                                    );
-                                    setJob({
-                                      ...job,
-                                      company_area: e.value || null,
-                                    })
-                                    if (selectedRate) {
-                                      setSelectedRegion({
-                                        area: selectedRate.area,
-                                        cbm_rate: selectedRate.cbm_rate,
-                                        minimum_charge:
-                                          selectedRate.minimum_charge,
-                                      });
-
-                                      setRefinedData((prev) => ({
-                                        ...prev,
-                                        area: selectedRate.area,
-                                        cbm_rate: selectedRate.cbm_rate,
-                                        minimum_charge:
-                                          selectedRate.minimum_charge,
-                                      }));
-                                    }
-                                  }}
-                                />
-
-                                <CustomInputFieldAdornment
-                                  label="Custom Rate"
-                                  placeholder=""
-                                  isDisabled={true}
-                                  name="minimum_charge"
-                                  value={selectedRegion?.minimum_charge || ""}
-                                  addonsEnd={
-                                    <Text mr="2" fontSize="sm">
-                                      $
-                                    </Text>
-                                  }
-                                  onChange={(e) => { }}
-                                //setJob({
-                                //  ...job,
-                                //  [e.target.name]: e.target.value,
-                                //})
-                                />
-                                <CustomInputFieldAdornment
-                                  label="CBM Rate"
-                                  placeholder=""
-                                  isDisabled={true}
-                                  name="cbm_rate"
-                                  value={selectedRegion?.cbm_rate || ""}
-                                  addonsEnd={
-                                    <Text mr="2" fontSize="sm">
-                                      $
-                                    </Text>
-                                  }
-                                  onChange={(e) => { }}
-                                //setJob({
-                                //  ...job,
-                                //  [e.target.name]: e.target.value,
-                                //})
-                                />
-                              </>
-                            )}
-                          </>
-                        )} */}
 
                         <CustomInputField
                           isSelect={true}
