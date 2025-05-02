@@ -85,8 +85,8 @@ import {
   formatDateTimeToDB,
   formatTime,
   formatTimeUTCtoInput,
-  getTimezone,
-  isAfterCutoff,
+  // getTimezone,
+  // isAfterCutoff,
   today,
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
@@ -101,6 +101,19 @@ import {
 } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
+
+interface CalculationData {
+  cbm_auto: number;
+  total_weight: number;
+  freight: number;
+  fuel: number;
+  hand_unload: number;
+  dangerous_goods: number;
+  time_slot: number;
+  tail_lift: number;
+  stackable: number;
+  total: number;
+}
 
 function JobEdit() {
   const toast = useToast();
@@ -155,7 +168,7 @@ function JobEdit() {
   );
   const [isSameDayJob, setIsSameDayJob] = useState(false);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
-  const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
+  // const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
   const [locationOptions, setLocationOptions] = useState([
     { value: "VIC", label: "Victoria" },
     { value: "QLD", label: "Queensland" },
@@ -320,31 +333,35 @@ function JobEdit() {
           media: data?.job.media,
           job_category_id: data?.job.job_category_id,
           transport_location: data?.job.transport_location,
-          // company_area: data?.job.company_area,
+          company_area: data?.job.company_area,
+          job_type_id: data?.job.job_type_id,
+          pick_up_state: data?.job.pick_up_state,
         });
-        // if (companyRates.length > 0) { //data?.job.company_area && 
-        //   const matchingRate = companyRates.find(rate => rate.area === data.job.company_area);
-        //   if (matchingRate) {
-        //     setSelectedRegion({
-        //       area: matchingRate.area,
-        //       cbm_rate: matchingRate.cbm_rate,
-        //       minimum_charge: matchingRate.minimum_charge
-        //     });
-        //   }
-        // }
-        getCompanyRates({ variables: { company_id: data.job.company_id } });  // Fetch company rates here
+        if (data?.job.company_area && companyRates.length > 0) {
+          const matchingRate = companyRates.find(
+            (rate) => rate.area === data.job.company_area,
+          );
+          if (matchingRate) {
+            setSelectedRegion({
+              area: matchingRate.area,
+              cbm_rate: matchingRate.cbm_rate,
+              minimum_charge: matchingRate.minimum_charge,
+            });
+          }
+        }
+        getCompanyRates({ variables: { company_id: data.job.company_id } }); // Fetch company rates here
 
         const selectedCategoryName = jobCategories.find(
           (job_category) => job_category.value == data?.job.job_category_id,
         )?.label;
         // console.log("sn", selectedCategoryName);
         const selectedLocation = locationOptions.find(
-          (location) => location.value == data.job.transport_location,
+          (location) => location.label == data.job.pick_up_state,
         );
         setRefinedData({
           ...refinedData,
           freight_type: selectedCategoryName || null,
-          state_code: data.job.transport_location,
+          state_code: selectedLocation?.value || null,
           state: selectedLocation?.label || null,
         });
         // console.log("refine", refinedData);
@@ -369,9 +386,9 @@ function JobEdit() {
         setIsSameDayJob(today === formatDate(data.job.ready_at));
         setIsTomorrowJob(
           new Date(formatDate(data.job.ready_at)).toDateString() ===
-          new Date(
-            new Date(today).setDate(new Date(today).getDate() + 1),
-          ).toDateString(),
+            new Date(
+              new Date(today).setDate(new Date(today).getDate() + 1),
+            ).toDateString(),
         );
         // jobDestinations without is_pickup
         // let _jobDestinations = data.job.job_destinations || [];
@@ -412,18 +429,20 @@ function JobEdit() {
     },
   });
 
-  // useEffect(() => {
-  //   if (job.company_area && companyRates.length > 0) {
-  //     const matchingRate = companyRates.find(rate => rate.area === job.company_area);
-  //     if (matchingRate) {
-  //       setSelectedRegion({
-  //         area: matchingRate.area,
-  //         cbm_rate: matchingRate.cbm_rate,
-  //         minimum_charge: matchingRate.minimum_charge
-  //       });
-  //     }
-  //   }
-  // }, [companyRates, job.company_area]);
+  useEffect(() => {
+    if (job.company_area && companyRates.length > 0) {
+      const matchingRate = companyRates.find(
+        (rate) => rate.area === job.company_area,
+      );
+      if (matchingRate) {
+        setSelectedRegion({
+          area: matchingRate.area,
+          cbm_rate: matchingRate.cbm_rate,
+          minimum_charge: matchingRate.minimum_charge,
+        });
+      }
+    }
+  }, [companyRates, job.company_area]);
 
   const { loading: companyLoading, data: companyData } = useQuery(
     GET_COMPANY_QUERY,
@@ -454,6 +473,7 @@ function JobEdit() {
         ...job,
         job_category_id: jobData.job.job_category_id,
         transport_location: jobData.job.transport_location,
+        job_type_id: jobData.job.job_type_id,
       });
 
       // Find the selected category name based on job_category_id
@@ -465,14 +485,20 @@ function JobEdit() {
         (location) => location.value === jobData.job.transport_location,
       );
 
+      const matchedJobType = jobTypeOptions.find(
+        (type) => type.id === jobData.job.job_type_id
+      );
+
       setRefinedData({
         ...refinedData,
         freight_type: selectedCategoryName,
         state_code: jobData.job.transport_location,
         state: selectedLocation?.label || null,
+        // job_type: matchedJobType?.name || null,
+        // job_type_color: matchedJobType?.color || null
       });
     }
-  }, [jobData, jobCategories]); // Use 'jobData' instead of 'data'
+  }, [jobData, jobCategories,jobTypeOptions]); // Use 'jobData' instead of 'data'
 
   const formatToSelect = (
     _entityArray: any[],
@@ -488,14 +514,14 @@ function JobEdit() {
     });
   };
 
-  const [handleUpdateJob, { }] = useMutation(UPDATE_JOB_MUTATION, {
+  const [handleUpdateJob, {}] = useMutation(UPDATE_JOB_MUTATION, {
     variables: {
       input: {
         id: job.id,
         name: job.name,
         reference_no: job.reference_no,
         booked_by: job.booked_by,
-        // company_area: job.company_area,
+        company_area: job.company_area,
         notes: job.notes,
         job_category_id: job.job_category_id,
         job_status_id: job.job_status_id,
@@ -666,7 +692,7 @@ function JobEdit() {
     },
   });
 
-  const [handleDeleteJob, { }] = useMutation(DELETE_JOB_MUTATION, {
+  const [handleDeleteJob, {}] = useMutation(DELETE_JOB_MUTATION, {
     variables: {
       id: id,
     },
@@ -811,16 +837,16 @@ function JobEdit() {
           time_slot: data.jobPriceCalculationDetail?.time_slot,
           tailgate: data.jobPriceCalculationDetail?.tailgate,
         });
-        setButtonText("Quote");
+        setButtonText("Update Quote");
 
         // console.log(data.jobPriceCalculationDetail, "imp");
       },
       onError: (error) => {
         // Handle the error and set data to empty
         console.error("Error fetching job price calculation detail:", error);
+        setIsUpdateMode(false); // No data found, so we need to create a new entry
         setRefinedData(defaultJobQuoteData);
         setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-        setIsUpdateMode(false); // No data found, so we need to create a new entry
 
         setButtonText("Get A Quote");
       },
@@ -989,7 +1015,7 @@ function JobEdit() {
     //check if any job destination is_saved_address and populate setSavedAddresses
   };
   //handleDeleteJobItem
-  const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
+  const [handleDeleteJobItem, {}] = useMutation(DELETE_JOB_ITEM_MUTATION, {
     onCompleted: (data) => {
       // console.log("Job Item Deleted", data);
     },
@@ -998,7 +1024,7 @@ function JobEdit() {
     },
   });
   //handleDelete
-  const [handleDeleteJobDestination, { }] = useMutation(
+  const [handleDeleteJobDestination, {}] = useMutation(
     DELETE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
@@ -1038,7 +1064,7 @@ function JobEdit() {
   };
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
   //handleUpdateJobItems
-  const [handleUpdateJobItem, { }] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
+  const [handleUpdateJobItem, {}] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
     onCompleted: (data) => {
       // console.log("Job item updated");
     },
@@ -1047,7 +1073,7 @@ function JobEdit() {
     },
   });
   //handleUpdateJobDestinations
-  const [handleUpdateJobDestination, { }] = useMutation(
+  const [handleUpdateJobDestination, {}] = useMutation(
     UPDATE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
@@ -1059,7 +1085,7 @@ function JobEdit() {
     },
   );
   //deleteMedia
-  const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
+  const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
     onCompleted: (data) => {
       toast({
         title: "Attachment deleted",
@@ -1149,20 +1175,20 @@ function JobEdit() {
     [jobCcEmailTags, jobCcEmails],
   );
 
-  const [handleDeleteJobCcEmail, { }] = useMutation(
+  const [handleDeleteJobCcEmail, {}] = useMutation(
     DELETE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
         id: deleteJobCcEmailId,
       },
-      onCompleted: (data) => { },
+      onCompleted: (data) => {},
       onError: (error) => {
         showGraphQLErrorToast(error);
       },
     },
   );
 
-  const [handleCreateJobCcEmail, { }] = useMutation(
+  const [handleCreateJobCcEmail, {}] = useMutation(
     CREATE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
@@ -1199,108 +1225,121 @@ function JobEdit() {
     }
   }, [job.customer_id, customerOptions]);
 
-  useEffect(() => {
-    // Function to calculate filtered job types based on cutoff logic
-    if (
-      new Date(job.created_at).setHours(0, 0, 0, 0) <
-      new Date(NEW_CUTOFF_RULES_START_DATE).setHours(0, 0, 0, 0)
-    ) {
-      return;
-    }
+  // useEffect(() => {
+  //   // Function to calculate filtered job types based on cutoff logic
+  //   if (
+  //     new Date(job.created_at).setHours(0, 0, 0, 0) <
+  //     new Date(NEW_CUTOFF_RULES_START_DATE).setHours(0, 0, 0, 0)
+  //   ) {
+  //     return;
+  //   }
 
-    const calculateFilteredOptions = async () => {
-      let filteredOptions = Array.isArray(jobTypeOptions)
-        ? [...jobTypeOptions]
-        : [];
+  //   const calculateFilteredOptions = async () => {
+  //     let filteredOptions = Array.isArray(jobTypeOptions)
+  //       ? [...jobTypeOptions]
+  //       : [];
 
-      if (
-        !job.job_category_id ||
-        pickUpDestination.lat === 0 ||
-        pickUpDestination.lng === 0
-      ) {
-        return setFilteredJobTypeOptions(filteredOptions);
-      }
+  //     if (
+  //       !job.job_category_id ||
+  //       pickUpDestination.lat === 0 ||
+  //       pickUpDestination.lng === 0
+  //     ) {
+  //       return setFilteredJobTypeOptions(filteredOptions);
+  //     }
 
-      try {
-        const timezone = await getTimezone(
-          pickUpDestination.lat,
-          pickUpDestination.lng,
-        );
-        if (job.job_category_id == 1) {
-          // LCL Bookings
-          if (isSameDayJob) {
-            filteredOptions = filteredOptions.filter(
-              (opt) => opt.label !== "Standard",
-            );
-            resetJobTypeAndShowToast();
-          } else if (isTomorrowJob) {
-            const isAfterLclCutoff = isAfterCutoff("16:00", timezone);
+  //     try {
+  //       const timezone = await getTimezone(
+  //         pickUpDestination.lat,
+  //         pickUpDestination.lng,
+  //       );
+  //       if (job.job_category_id == 1) {
+  //         // LCL Bookings
+  //         if (isSameDayJob) {
+  //           filteredOptions = filteredOptions.filter(
+  //             (opt) => opt.label !== "Standard",
+  //           );
+  //           resetJobTypeAndShowToast();
+  //         } else if (isTomorrowJob) {
+  //           const isAfterLclCutoff = isAfterCutoff("16:00", timezone);
 
-            if (isAfterLclCutoff) {
-              filteredOptions = filteredOptions.filter(
-                (opt) => opt.label !== "Standard",
-              );
-              resetJobTypeAndShowToast();
-            }
-          }
-        } else if (job.job_category_id == 2) {
-          // Airfreight Bookings
-          if (isSameDayJob) {
-            const isAfterAirfreightCutoff = isAfterCutoff("11:00", timezone);
+  //           if (isAfterLclCutoff) {
+  //             filteredOptions = filteredOptions.filter(
+  //               (opt) => opt.label !== "Standard",
+  //             );
+  //             resetJobTypeAndShowToast();
+  //           }
+  //         }
+  //       } else if (job.job_category_id == 2) {
+  //         // Airfreight Bookings
+  //         if (isSameDayJob) {
+  //           const isAfterAirfreightCutoff = isAfterCutoff("11:00", timezone);
 
-            if (isAfterAirfreightCutoff) {
-              filteredOptions = filteredOptions.filter(
-                (opt) => opt.label !== "Standard",
-              );
-              resetJobTypeAndShowToast();
-            }
-          }
-        }
-        if (job.job_type_id && !filteredOptions.some(opt => Number(opt.value) == Number(job.job_type_id))) {
-          setJob({
-            ...job,
-            job_type_id: null
-          });
-        }
+  //           if (isAfterAirfreightCutoff) {
+  //             filteredOptions = filteredOptions.filter(
+  //               (opt) => opt.label !== "Standard",
+  //             );
+  //             resetJobTypeAndShowToast();
+  //           }
+  //         }
+  //       }
+  //       if (
+  //         job.job_type_id &&
+  //         !filteredOptions.some(
+  //           (opt) => Number(opt.value) == Number(job.job_type_id),
+  //         )
+  //       ) {
+  //         // Instead of nullifying, preserve the job type
+  //         const existingJobType = jobTypeOptions.find(
+  //           (type) => Number(type.id) === Number(job.job_type_id)
+  //         );
 
-        setFilteredJobTypeOptions(filteredOptions);
-      } catch (error) {
-        console.error(
-          "Error fetching timezone or applying cutoff logic",
-          error,
-        );
-      }
-    };
+  //         if (existingJobType) {
+  //           // If the job type exists in all options, keep it
+  //           setJob({
+  //             ...job,
+  //             job_type_id: job.job_type_id
+  //           });
+  //         }
+  //       }
 
-    calculateFilteredOptions();
-  }, [
-    job.job_category_id,
-    jobDateAt,
-    pickUpDestination,
-    jobTypeOptions,
-    isSameDayJob,
-    isTomorrowJob,
-  ]);
+  //       setFilteredJobTypeOptions(filteredOptions);
+  //     } catch (error) {
+  //       console.error(
+  //         "Error fetching timezone or applying cutoff logic",
+  //         error,
+  //       );
+  //     }
+  //   };
+
+  //   calculateFilteredOptions();
+  // }, [
+  //   job.job_category_id,
+  //   jobDateAt,
+  //   pickUpDestination,
+  //   jobTypeOptions,
+  //   isSameDayJob,
+  //   isTomorrowJob,
+  // ]);
 
   // Define the reusable function
-  const resetJobTypeAndShowToast = () => {
-    if (job.job_type_id == 1) {
-      setJob({
-        ...job,
-        ready_at: formatDateTimeToDB(jobDateAt, readyAt),
-        drop_at: formatDateTimeToDB(jobDateAt, dropAt),
-        job_type_id: null,
-      });
-      toast({
-        title: "Job Type Required",
-        description:
-          "Standard service is no longer available for this time. Please select Express or Urgent.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
+  // const resetJobTypeAndShowToast = () => {
+  //   if (job.job_type_id == 1) {
+  //     setJob({
+  //       ...job,
+  //       ready_at: formatDateTimeToDB(jobDateAt, readyAt),
+  //       drop_at: formatDateTimeToDB(jobDateAt, dropAt),
+  //       job_type_id: null,
+  //     });
+  //     toast({
+  //       title: "Job Type Required",
+  //       description:
+  //         "Standard service is no longer available for this time. Please select Express or Urgent.",
+  //       status: "warning",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   }
+  // };
 
   const handleCreateJobPriceCalculationDetail = (
     jobPriceDetail: CreateJobPriceCalculationDetailInput,
@@ -1381,17 +1420,6 @@ function JobEdit() {
       });
       return false;
     }
-
-    if (!job.transport_type || !job.transport_location) {
-      toast({
-        title: "Transport type or transport location is missing.",
-        description:
-          "Please ensure the Transport type or transport location is properly set.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
     return true;
   };
 
@@ -1406,20 +1434,23 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-          state: jobDestinations[0]?.address_state,
-          suburb: jobDestinations[0]?.address_city,
-          postcode: jobDestinations[0]?.address_postal_code,
-          address: jobDestinations[0]?.address,
-        }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
         : null;
 
     const selectedCategoryName = jobCategories.find(
       (job_category) => job_category.value == job?.job_category_id,
     )?.label;
-    const selectedstate = locationOptions.find(
-      (item) => item.value == job.transport_location,
-    )?.label;
+    // const selectedstate = locationOptions.find(
+    //   (item) => item.label == job.pick_up_state,
+    // )?.label;
 
+    const selectedstate = locationOptions.find(
+      (location) => location.label?.toLowerCase() == job?.pick_up_state?.toLowerCase(),
+    );
     const selectedJobTypeName = jobTypeOptions.find(
       (job_type) => job_type.value == job.job_type_id,
     )?.label;
@@ -1436,17 +1467,17 @@ function JobEdit() {
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
-      state: refinedData.state || selectedstate,
-      state_code: refinedData.state_code || job.transport_location,
+      state: refinedData.state || selectedstate?.label,
+      state_code: refinedData.state_code || selectedstate?.value,
       company_rates:
-        job.transport_location === "QLD"
+        job.job_category_id == 1 && selectedstate?.value === "QLD"
           ? companyRates.map((rate) => ({
-            company_id: rate.company_id,
-            seafreight_id: rate.seafreight_id,
-            area: rate.area,
-            cbm_rate: rate.cbm_rate,
-            minimum_charge: rate.minimum_charge,
-          }))
+              company_id: rate.company_id,
+              seafreight_id: rate.seafreight_id,
+              area: rate.area,
+              cbm_rate: rate.cbm_rate,
+              minimum_charge: rate.minimum_charge,
+            }))
           : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
@@ -1457,11 +1488,11 @@ function JobEdit() {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+              state: jobDestinations[0]?.address_state,
+              suburb: jobDestinations[0]?.address_city,
+              postcode: jobDestinations[0]?.address_postal_code,
+              address: jobDestinations[0]?.address,
+            }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -1504,22 +1535,35 @@ function JobEdit() {
         headers: { "Content-Type": "application/json" },
       });
 
-      //console.log("Response Data:", response.data);
-      setQuoteCalculationRes({
-        ...response?.data,
-        time_slot: response?.data?.time_slot || 0, // Ensure time_slot is set
-      });
+      console.log("Response Data:", response.data);
+      // setQuoteCalculationRes({
+      //   ...response?.data,
+      //   time_slot: response?.data?.time_slot || 0, // Ensure time_slot is set
+      // });
       const calculationData = response?.data;
+      // setQuoteCalculationRes({
+      //   calculationData:response?.data
+      //   // time_slot: calculationData?.time_slot || 0, // Ensure time_slot is set
+      // });
       setQuoteCalculationRes({
-        ...calculationData,
-        time_slot: calculationData?.time_slot || 0, // Ensure time_slot is set
+        ...quoteCalculationRes,
+        time_slot: (calculationData as CalculationData)?.time_slot, // Ensure time_slot is set with type assertion
+        cbm_auto: (calculationData as CalculationData)?.cbm_auto,
+        total_weight: (calculationData as CalculationData)?.total_weight,
+        freight: (calculationData as CalculationData)?.freight,
+        fuel: (calculationData as CalculationData)?.fuel,
+        hand_unload: (calculationData as CalculationData)?.hand_unload,
+        dangerous_goods: (calculationData as CalculationData)?.dangerous_goods,
+        tail_lift: (calculationData as CalculationData)?.tail_lift,
+        stackable: (calculationData as CalculationData)?.stackable,
+        total: (calculationData as CalculationData)?.total,
       });
+      console.log(calculationData, "Update mode");
       toast({ title: "Quote Calculation Success", status: "success" });
       // console.log(isUpdateMode);
       // console.log(quoteCalculationRes);
       // console.log("Quote Calculation Response:", response.data);
       if (isUpdateMode) {
-        //console.log("Update mode");
         await handleUpdateJobPriceCalculationDetail(calculationData)
           .then((data) => {
             //console.log("Updated successfully:", data);
@@ -1535,6 +1579,19 @@ function JobEdit() {
           });
       } else {
         //console.log("Update mode");
+        const calculationData = response.data as {
+          cbm_auto: number;
+          total_weight: number;
+          freight: number;
+          fuel: number;
+          hand_unload: number;
+          dangerous_goods: number;
+          time_slot: number;
+          tail_lift: number;
+          stackable: number;
+          total: number;
+        };
+
         await handleCreateJobPriceCalculationDetail({
           job_id: Number(job.id),
           customer_id: Number(job.customer_id),
@@ -1748,6 +1805,38 @@ function JobEdit() {
                           }}
                         />
 
+                        {!isCompany && (
+                          <CustomInputField
+                            isSelect={true}
+                            optionsArray={companiesOptions}
+                            label="Company:"
+                            onInputChange={(e) => {
+                              onChangeSearchQuery(e);
+                            }}
+                            value={companiesOptions.find(
+                              (entity) => entity.value == job.company_id,
+                            )}
+                            placeholder=""
+                            isDisabled={true}
+
+                            // onChange={(e) => {
+                            //   setJob({
+                            //     ...job,
+                            //     company_id: e.value || null,
+                            //     customer_id: null,
+                            //   });
+                            //   getCustomersByCompanyId({
+                            //     query: "",
+                            //     page: 1,
+                            //     first: 100,
+                            //     orderByColumn: "id",
+                            //     orderByOrder: "ASC",
+                            //     company_id: e.value,
+                            //   });
+                            // }}
+                          />
+                        )}
+
                         <Flex alignItems="center" mb="16px">
                           <FormLabel
                             display="flex"
@@ -1788,7 +1877,7 @@ function JobEdit() {
                           name="operator_phone"
                           value={customerSelected.phone_no}
                           onChange={
-                            (e) => { }
+                            (e) => {}
                             //setJob({
                             //  ...job,
                             //  [e.target.name]: e.target.value,
@@ -1802,7 +1891,7 @@ function JobEdit() {
                           isDisabled={true}
                           value={customerSelected.email}
                           onChange={
-                            (e) => { }
+                            (e) => {}
                             //setJob({
                             //  ...job,
                             //  [e.target.name]: e.target.value,
@@ -1820,11 +1909,11 @@ function JobEdit() {
                             setIsSameDayJob(today === e.target.value);
                             setIsTomorrowJob(
                               new Date(e.target.value).toDateString() ===
-                              new Date(
-                                new Date(today).setDate(
-                                  new Date(today).getDate() + 1,
-                                ),
-                              ).toDateString(),
+                                new Date(
+                                  new Date(today).setDate(
+                                    new Date(today).getDate() + 1,
+                                  ),
+                                ).toDateString(),
                             );
                           }}
                         />
@@ -1900,39 +1989,44 @@ function JobEdit() {
 
                         <ColorSelect
                           label="Type:"
-                          optionsArray={filteredJobTypeOptions}
+                          optionsArray={jobTypeOptions}
                           selectedJobId={job.job_type_id}
-                          value={job.job_type_id ? filteredJobTypeOptions.find(
-                            (jobType) => jobType.value === job.job_type_id,
-                          ) : null}
+                          value={
+                            job.job_type_id
+                              ? jobTypeOptions.find(
+                                  (jobType) =>
+                                    jobType.value == job.job_type_id,
+                                )
+                              : null
+                          }
                           placeholder="Select type"
-                          onChange={(e) => {
+                          // onChange={(e) => {
+                          //   //console.log(e, "e");
+                          //   // setJob({
+                          //   //   ...job,
+                          //   //   job_type_id: e.value || null,
+                          //   // });
+                          //   const selectedCategory = e.value;
+                          //   const selectedCategoryName = selectedCategory
+                          //     ? jobTypeOptions.find(
+                          //         (job_category) =>
+                          //           job_category.value === selectedCategory,
+                          //       )?.label
+                          //     : null;
 
-                            //console.log(e, "e");
-                            // setJob({
-                            //   ...job,
-                            //   job_type_id: e.value || null,
-                            // });
-                            const selectedCategory = e.value;
-                            const selectedCategoryName = selectedCategory
-                              ? filteredJobTypeOptions.find(
-                                (job_category) =>
-                                  job_category.value === selectedCategory,
-                              )?.label : null;
+                          //   setJob({
+                          //     ...job,
+                          //     job_type_id: selectedCategory || null,
+                          //   });
 
-                            setJob({
-                              ...job,
-                              job_type_id: selectedCategory || null,
-                            });
+                          //   setRefinedData({
+                          //     ...refinedData,
+                          //     service_choice: selectedCategoryName || null,
+                          //   });
 
-                            setRefinedData({
-                              ...refinedData,
-                              service_choice: selectedCategoryName || null,
-                            });
-
-                            // console.log(refinedData, "n");
-                            // console.log(job, "job");
-                          }}
+                          //   // console.log(refinedData, "n");
+                          //   // console.log(job, "job");
+                          // }}
                         />
 
                         <CustomInputField
@@ -2003,13 +2097,13 @@ function JobEdit() {
                             { value: "export", label: "Export" },
                           ].find((_e) => _e.value === job.transport_type)}
                           placeholder=""
-                          onChange={(e) => {
-                            setJob({ ...job, transport_type: e.value });
-                            setRefinedData({
-                              ...refinedData,
-                              transport_type: e.value,
-                            });
-                          }}
+                          // onChange={(e) => {
+                          //   setJob({ ...job, transport_type: e.value });
+                          //   setRefinedData({
+                          //     ...refinedData,
+                          //     transport_type: e.value,
+                          //   });
+                          // }}
                         />
 
                         {/* Location Select */}
@@ -2027,15 +2121,15 @@ function JobEdit() {
                             { value: "QLD", label: "Queensland" },
                           ].find((_e) => _e.value === job.transport_location)}
                           placeholder=""
-                          onChange={(e) => {
-                            const newState = {
-                              ...refinedData,
-                              state_code: e.value,
-                              state: e.label,
-                            };
-                            setJob({ ...job, transport_location: e.value });
-                            setRefinedData(newState);
-                          }}
+                          // onChange={(e) => {
+                          //   const newState = {
+                          //     ...refinedData,
+                          //     state_code: e.value,
+                          //     state: e.label,
+                          //   };
+                          //   setJob({ ...job, transport_location: e.value });
+                          //   setRefinedData(newState);
+                          // }}
                         />
                         <Text
                           style={{
@@ -2534,31 +2628,34 @@ function JobEdit() {
                               </SimpleGrid>
                             </Flex>
 
-                            {job.job_category_id == 1 && job.is_inbound_connect == 1 && (
-                              <Box>
-                                <CustomInputField
-                                  isSelect={true}
-                                  optionsArray={depotOptions} // Use the state directly
-                                  label="Timeslot depots:"
-                                  value={
-                                    depotOptions.find((option) => option.value === job.timeslot_depots) || null
-                                  }
-                                  placeholder="Select a depot"
-                                  onChange={(e) => {
-
-                                    setSelectedDepot(e.value);
-                                    setRefinedData(prevData => ({
-                                      ...prevData,
-                                      timeslot_depots: e.value
-                                    })); // Update the selected depot directly
-                                    setJob({
-                                      ...job,
-                                      timeslot_depots: e.value, // Update job.timeslot_depots
-                                    });
-                                  }}
-                                />
-                              </Box>
-                            )}
+                            {job.job_category_id == 1 &&
+                              job.is_inbound_connect == 1 && (
+                                <Box>
+                                  <CustomInputField
+                                    isSelect={true}
+                                    optionsArray={depotOptions} // Use the state directly
+                                    label="Timeslot depots:"
+                                    value={
+                                      depotOptions.find(
+                                        (option) =>
+                                          option.value === job.timeslot_depots,
+                                      ) || null
+                                    }
+                                    placeholder="Select a depot"
+                                    onChange={(e) => {
+                                      setSelectedDepot(e.value);
+                                      setRefinedData((prevData) => ({
+                                        ...prevData,
+                                        timeslot_depots: e.value,
+                                      })); // Update the selected depot directly
+                                      setJob({
+                                        ...job,
+                                        timeslot_depots: e.value, // Update job.timeslot_depots
+                                      });
+                                    }}
+                                  />
+                                </Box>
+                              )}
 
                             <Flex alignItems="center" width="100%" pt={7}>
                               <SimpleGrid columns={{ sm: 1 }} width="100%">
@@ -2671,205 +2768,203 @@ function JobEdit() {
                           <Box>
                             {/* Right side content goes here */}
                             <GridItem pr={4}>
-                              {(job.job_category_id == 1 ||
+                              {/* {(job.job_category_id == 1 ||
                                 job.job_category_id == 2) &&
                                 (job.transport_location === "VIC" ||
-                                  job.transport_location === "QLD") && (
-                                  <Flex
-                                    height="100%"
-                                    justifyContent="center"
-                                    pt={7}
-                                    flexDirection="column"
+                                  job.transport_location === "QLD") && ( */}
+                              <Flex
+                                height="100%"
+                                justifyContent="center"
+                                pt={7}
+                                flexDirection="column"
+                              >
+                                {/* First Row: Button */}
+                                <Flex justify="center">
+                                  <Button
+                                    bg="#3b82f6" /* Match the blue color */
+                                    color="white"
+                                    _hover={{
+                                      bg: "#2563eb", // Slightly darker blue for hover
+                                    }}
+                                    _active={{
+                                      bg: "#2563eb", // Active state
+                                      transform: "scale(0.95)", // Slightly shrink button when activated
+                                    }}
+                                    borderRadius="8px" /* Rounded corners */
+                                    px={6}
+                                    py={3}
+                                    fontWeight="500"
+                                    fontSize="sm"
+                                    onClick={() => {
+                                      handleSaveJobPriceCalculation();
+                                    }}
                                   >
-                                    {/* First Row: Button */}
-                                    <Flex justify="center">
-                                      <Button
-                                        bg="#3b82f6" /* Match the blue color */
-                                        color="white"
-                                        _hover={{
-                                          bg: "#2563eb", // Slightly darker blue for hover
-                                        }}
-                                        _active={{
-                                          bg: "#2563eb", // Active state
-                                          transform: "scale(0.95)", // Slightly shrink button when activated
-                                        }}
-                                        borderRadius="8px" /* Rounded corners */
-                                        px={6}
-                                        py={3}
-                                        fontWeight="500"
-                                        fontSize="sm"
-                                        onClick={() => {
-                                          handleSaveJobPriceCalculation();
-                                        }}
+                                    {buttonText}
+                                  </Button>
+                                </Flex>
+
+                                {/* Second Row: Other Elements */}
+                                {quoteCalculationRes && (
+                                  <Box mt={4}>
+                                    <Stack spacing={3}>
+                                      {/* Freight */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
                                       >
-                                        {buttonText}
-                                      </Button>
-                                    </Flex>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Freight:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.freight}
+                                        </Text>
+                                      </Flex>
 
-                                    {/* Second Row: Other Elements */}
-                                    {quoteCalculationRes && (
-                                      <Box mt={4}>
-                                        <Stack spacing={3}>
-                                          {/* Freight */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Freight:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.freight}
-                                            </Text>
-                                          </Flex>
+                                      {/* Fuel */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Fuel:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.fuel}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Fuel */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Fuel:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.fuel}
-                                            </Text>
-                                          </Flex>
+                                      {/* Hand Unload */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Hand Unload:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.hand_unload}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Hand Unload */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Hand Unload:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.hand_unload}
-                                            </Text>
-                                          </Flex>
+                                      {/* Time Slot */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Time Slot:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.time_slot}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Time Slot */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Time Slot:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.time_slot}
-                                            </Text>
-                                          </Flex>
+                                      {/* Dangerous Goods */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Dangerous Goods:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.dangerous_goods}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Dangerous Goods */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Dangerous Goods:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {
-                                                quoteCalculationRes.dangerous_goods
-                                              }
-                                            </Text>
-                                          </Flex>
+                                      {/* Stackable */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Stackable:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.stackable}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Stackable */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Stackable:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.stackable}
-                                            </Text>
-                                          </Flex>
-
-                                          {/* Total */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Total:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.total}
-                                            </Text>
-                                          </Flex>
-                                        </Stack>
-                                      </Box>
-                                    )}
-                                  </Flex>
+                                      {/* Total */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Total:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.total}
+                                        </Text>
+                                      </Flex>
+                                    </Stack>
+                                  </Box>
                                 )}
+                              </Flex>
+                              {/* )} */}
                             </GridItem>
                           </Box>
                         </SimpleGrid>

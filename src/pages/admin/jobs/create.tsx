@@ -52,6 +52,7 @@ import {
   CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
   CreateJobPriceCalculationDetailInput,
   defaultJobPriceCalculationDetail,
+  JobPriceCalculationDetail,
 } from "graphql/JobPriceCalculationDetail";
 import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
 import { ADD_MEDIA_MUTATION } from "graphql/media";
@@ -101,6 +102,8 @@ function JobEdit() {
   const [refinedData, setRefinedData] = useState({
     ...defaultJobQuoteData,
     freight_type: "LCL",
+    pick_up_state: "",
+    pick_up_stateCode: "",
     depotOptions: [
       { value: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane", label: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane" },
       { value: "(MEDLOG) 10 Peregrine Drive Port of Brisbane", label: "(MEDLOG) 10 Peregrine Drive Port of Brisbane" },
@@ -159,6 +162,19 @@ function JobEdit() {
 
   let re =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+    const getStateCode = (stateName:string) => {
+      const normalizedStateName = stateName.toLowerCase().trim();
+      switch (normalizedStateName) {
+        case 'victoria':
+          return 'VIC';
+        case 'queensland':
+          return 'QLD';
+        // You can add more cases here for other states if needed
+        default:
+          return normalizedStateName; // Return the state name as is if it doesn't match any known state
+      }
+    };
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -393,8 +409,6 @@ function JobEdit() {
         stackable: Number(quoteCalculationRes.stackable),
         total: Number(quoteCalculationRes.total),
       });
-      // console.log("Job cre", job.customer_id);
-      // save job destinations
       const resultPickup = await handleCreateJobDestination({
         input: {
           ...pickUpDestination,
@@ -422,11 +436,11 @@ function JobEdit() {
         // handle success case for this media object
       }
 
-      // await handleSendConsignmentDocket({
-      //   variables: {
-      //     id: parseInt(data.createJob.id),
-      //   },
-      // });
+      await handleSendConsignmentDocket({
+        variables: {
+          id: parseInt(data.createJob.id),
+        },
+      });
 
       toast({
         title: "Job created",
@@ -928,13 +942,13 @@ function JobEdit() {
     const payload = {
       freight_type: refinedData.freight_type,
       transport_type: job.transport_type,
-      state: refinedData.state,
-      state_code: refinedData.state_code,
+      state: refinedData.state || job.pick_up_state|| pickUpDestination.address_state,
+      state_code: refinedData.state_code || refinedData.pick_up_stateCode,
       service_choice: refinedData.service_choice,
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
-      company_rates: job.transport_location === "QLD"
+      company_rates: refinedData.pick_up_stateCode === "QLD"
         ? companyRates.map((rate) => ({
           company_id: rate.company_id,
           seafreight_id: rate.seafreight_id,
@@ -991,14 +1005,14 @@ function JobEdit() {
         updated_at: refinedData.updated_at || today,
       })),
     };
-
+console.log(payload,'p')
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
       });
 
       // console.log("Response Data:", response.data);
-      setQuoteCalculationRes(response?.data);
+      setQuoteCalculationRes(response?.data as JobPriceCalculationDetail);
       setIsQuotePrice(true);
     } catch (error) {
       console.error("Error:", error);
@@ -1557,6 +1571,8 @@ function JobEdit() {
                           getCustomerAddresses();
                         }}
                         jobDestinationChanged={(jobDestination) => {
+                          const stateCode = getStateCode(jobDestination.address_state);
+                         
                           setPickUpDestination({
                             ...pickUpDestination,
                             ...jobDestination,
@@ -1571,8 +1587,17 @@ function JobEdit() {
                               pick_up_notes: jobDestination.notes,
                               pick_up_name: jobDestination.name,
                               pick_up_report: jobDestination.report,
+                              pick_up_state: jobDestination.state,
                             },
                           });
+
+                          setRefinedData({
+                           ...refinedData,
+                           ...{
+                            pick_up_state: jobDestination.state,
+                             pick_up_stateCode: stateCode,
+                           }
+                          })
                         }}
                       />
                     </Grid>
@@ -1976,8 +2001,8 @@ function JobEdit() {
                         >
                           {(job.job_category_id == 1 ||
                             job.job_category_id == 2) &&
-                            (job.transport_location === "VIC" ||
-                              job.transport_location === "QLD") &&
+                            (refinedData.pick_up_stateCode === "VIC" ||
+                              refinedData.pick_up_stateCode === "QLD") &&
                             quoteCalculationRes && (
                               <Flex
                                 height="100%"
