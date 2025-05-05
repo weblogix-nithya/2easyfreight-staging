@@ -68,6 +68,7 @@ export const GET_JOBS_QUERY = gql`
       data {
         id
         name
+        pick_up_state
         total_quantity
         total_weight
         total_volume
@@ -155,7 +156,7 @@ export const GET_JOBS_QUERY = gql`
           media {
             id
             name
-            # downloadable_url
+            downloadable_url
             collection_name
           }
           job_destination_status_id
@@ -190,7 +191,7 @@ export const GET_JOBS_QUERY = gql`
           media {
             id
             name
-            # downloadable_url
+            downloadable_url
             collection_name
           }
         }
@@ -229,7 +230,8 @@ export const GET_JOB_QUERY = gql`
       id
       name
       driver_id
-      
+      pick_up_state
+      company_area
       driver {
         full_name
         no_max_capacity
@@ -497,7 +499,7 @@ export const UPDATE_JOB_RIGHT_MUTATION = gql`
       job_category_id
       start_at
       admin_notes
-      
+      company_area
     }
   }
 `;
@@ -546,7 +548,7 @@ export const UPDATE_JOB_MUTATION = gql`
       transport_type
       transport_location
       timeslot_depots
-    
+      company_area
     }
   }
 `;
@@ -588,6 +590,7 @@ export interface UpdateJobInput {
   start_at?: Date;
   admin_notes?: string;
   booked_by?: string;
+  company_area: string;
   reference_no?: string;
   customer_id?: string;
   company_id?: number;
@@ -618,6 +621,7 @@ export interface CreateJobInput {
   job_type_id?: number;
   customer_id?: string;
   company_id?: number;
+  company_area: string;
   transport_type?: string; // Fixed from transportType
   transport_location?: string;
   timeslot_depots?: string;
@@ -647,6 +651,7 @@ type Job = {
   // job_category_name?: string;
   job_status_id: number;
   job_type_id: number;
+  company_area: string;
   //decline_reason_id: number;
   //driver_id: number;
   //region_id: number;
@@ -696,6 +701,7 @@ export const defaultJob: Job = {
   booked_by: "",
   //notes: "",
   job_category_id: 1,
+  company_area: "",
   // job_category_name: undefined,
   job_status_id: null,
   job_type_id: 1,
