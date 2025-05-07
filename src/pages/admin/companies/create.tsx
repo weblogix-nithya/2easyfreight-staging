@@ -1,5 +1,7 @@
-// Chakra imports
+// React and Next.js imports
+// Apollo GraphQL imports
 import { useMutation, useQuery } from "@apollo/client";
+// Chakra UI imports
 import {
   Box,
   Button,
@@ -13,27 +15,51 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
+// Third-party library imports
 import { Select } from "chakra-react-select";
+// Local components imports
 import AddressesModal from "components/addresses/AddressesModal";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
+// Local GraphQL imports
 import {
   CREATE_COMPANY_MUTATION,
   defaultCompany,
-  GET_LIST_OF_SEAFREIGHTS,
   paymentTerms,
 } from "graphql/company";
-import { CompanyRate, CREATE_COMPANY_RATE_MUTATION } from "graphql/CompanyRate";
+import {
+  CompanyRate,
+  CREATE_COMPANY_RATE_MUTATION,
+  GET_LIST_OF_SEAFREIGHTS,
+} from "graphql/CompanyRate";
+// Layout imports
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
+interface Seafreight {
+  value: number;
+  label: string;
+  cbm_rate: number;
+  min_charge: number;
+  state: string;
+}
+
+interface GroupedSeafreights {
+  [key: string]: Seafreight[];
+}
+
 function CompanyCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // const textColorSecondary = "gray.400";
   const [company, setCompany] = useState(defaultCompany);
   const router = useRouter();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [groupedSeafreights, setGroupedSeafreights] =
+    useState<GroupedSeafreights>({});
+  const [stateOptions, setStateOptions] = useState([]);
+  const [selectedState, setSelectedState] = useState("");
+  const [regionOption, setRegionOption] = useState([]);
   const [companyRates, setCompanyRates] = useState<CompanyRate[]>([
     {
       id: undefined,
@@ -42,6 +68,7 @@ function CompanyCreate() {
       area: "",
       cbm_rate: 0,
       minimum_charge: 0,
+      state: "",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -88,10 +115,11 @@ function CompanyCreate() {
         for (const rate of validRates) {
           await createCompanyRate({
             variables: {
-              company_id: Number(company.id),
+              company_id: Number(data.createCompany.id),
               seafreight_id: Number(rate.seafreight_id), // Ensure it's a string
               area: rate.area,
               cbm_rate: parseFloat(rate.cbm_rate.toString()),
+              state: rate.state,
               minimum_charge: parseFloat(rate.minimum_charge.toString()),
             },
           });
@@ -123,19 +151,34 @@ function CompanyCreate() {
     setCompanyRates(updatedRates);
   };
 
-  const [regionOption, setRegionOption] = useState([]);
-
   const {
     data: seafreightData,
     loading: seafreightLoading,
     error: seafreightError,
   } = useQuery(GET_LIST_OF_SEAFREIGHTS, {
     onCompleted(data) {
-      const options = data.allSeafreights.map((item: any) => ({
-        value: item.id,
-        label: item.location_name,
+      const grouped = data.allSeafreights.reduce(
+        (acc: { [x: string]: Seafreight[] }, item: any) => {
+          if (!acc[item.state]) {
+            acc[item.state] = [];
+          }
+          acc[item.state].push({
+            value: item.id,
+            label: item.location_name,
+            cbm_rate: item.cbm_rate,
+            min_charge: item.min_charge,
+            state: item.state,
+          });
+          return acc;
+        },
+        {},
+      );
+      setGroupedSeafreights(grouped);
+      const states = Object.keys(grouped).map((state) => ({
+        value: state,
+        label: state,
       }));
-      setRegionOption(options);
+      setStateOptions(states);
     },
     onError(error) {
       console.error("GraphQL Error:", error);
@@ -149,33 +192,88 @@ function CompanyCreate() {
     },
   });
 
-  const addNewRate = () => {
-    const lastRate = companyRates[companyRates.length - 1];
-    if (!lastRate.area || !lastRate.cbm_rate || !lastRate.minimum_charge) {
+  const handleSaveRow = (index: number) => {
+    // debugger
+    const currentRate = companyRates[index];
+
+    // Validate all required fields
+    if (!currentRate.state || !currentRate.area || !currentRate.seafreight_id || !currentRate.cbm_rate || !currentRate.minimum_charge) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all fields (Area, CBM Rate, and Minimum Charge) before adding a new rate",
+        description: "Please select State and Location, minimum charge and CBM rate before saving",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
       return;
     }
-    setCompanyRates([
-      ...companyRates,
+
+    // Only add a new row if all validations pass
+    setCompanyRates((prevCompanyRates) => [
+      ...prevCompanyRates,
       {
-        id: undefined,
-        company_id: "",
+        id: "",
+        company_id: "", // Replace with actual company ID if needed
         seafreight_id: null,
         area: "",
-        cbm_rate: 0,
-        minimum_charge: 0,
+        state: "",
+        cbm_rate: 0, // Changed to string to align with other fields
+        minimum_charge: 0, // Changed to string to align with other fields
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
     ]);
+
+    // Reset state selection for the new row
+    setSelectedState("");
+    setRegionOption([]);
+    console.log(selectedState, regionOption)
   };
-  // console.log("companyRates", companyRates);
+
+  const handleRegionChange = (selected: any) => {
+    const selectedSeafreight = (groupedSeafreights as Record<string, any[]>)[
+      selectedState
+    ]?.find((item: any) => item.value === selected.value);
+
+    if (selectedSeafreight) {
+      // Check if the combination already exists
+      if (isRegionAlreadyUsed(selectedState, selectedSeafreight.label)) {
+        toast({
+          title: "Duplicate Entry",
+          description: `A rate for ${selectedSeafreight.label} in ${selectedState} already exists`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Update only the current row with the selected values
+      const currentIndex = companyRates.length - 1;
+      const updatedRates = [...companyRates];
+      updatedRates[currentIndex] = {
+        ...updatedRates[currentIndex],
+        seafreight_id: selected.value,
+        area: selectedSeafreight.label,
+        state: selectedState,
+        cbm_rate: selectedSeafreight.cbm_rate || 0,
+        minimum_charge: selectedSeafreight.min_charge || 0,
+      };
+
+      setCompanyRates(updatedRates);
+    }
+  };
+  const handleStateChange = (selected: any) => {
+    setSelectedState(selected.value);
+  };
+
+  const isRegionAlreadyUsed = (state: string, region: string) => {
+    return companyRates.some(
+      (rate) => rate.state === state && rate.area === region,
+    );
+  };
+  
+
   return (
     <AdminLayout>
       <Box
@@ -587,83 +685,96 @@ function CompanyCreate() {
             <Divider />
 
             <Flex justifyContent="space-between" alignItems="center" mb={4}>
-              <h3 className="mt-6 mb-4">Company Rates </h3>
-              <Button
-                fontSize="sm"
-                variant="brand"
-                fontWeight="500"
-                onClick={addNewRate}
-              >
-                Add New Rate
-              </Button>
+              <h3 className="mt-6 mb-4">Custom rate </h3>
             </Flex>
+            <SimpleGrid columns={5} spacing={4} className="mb-4">
+              <Box>                <FormLabel>STATE</FormLabel>              </Box>
+              <Box>                <FormLabel>QUADRANT</FormLabel>              </Box>
+              <Box>                <FormLabel>CBM RATE</FormLabel>              </Box>
+              <Box>                <FormLabel>MIN CHARGE</FormLabel>              </Box>
+            </SimpleGrid>
+            {companyRates.slice(0, -1).map((rate, idx) => (
+              <SimpleGrid key={idx} columns={5} spacing={4} className="mb-4">
+                <Box>
+                  <Input value={rate.state} isReadOnly />
+                </Box>
+                <Box>
+                  <Input value={rate.area} isReadOnly />
+                </Box>
+                <Box>
+                  <Input value={rate.cbm_rate} isReadOnly />
+                </Box>
+                <Box>
+                  <Input value={rate.minimum_charge} isReadOnly />
+                </Box>
+              </SimpleGrid>
+            ))}
 
-            {companyRates.map((rate, index) => (
-              <SimpleGrid key={index} columns={3} spacing={4} mb={4}>
+            {/* Input row for new rate */}
+            <SimpleGrid columns={5} spacing={4} className="mb-4">
+              <Box>
+                {/* <FormLabel>STATE</FormLabel> */}
                 <Select
-                  name="region"
-                  options={regionOption}
-                  value={
-                    regionOption.find(
-                      (option) => option.value === String(rate.seafreight_id),
-                    ) || null
-                  }
-                  onChange={(selectedOption) => {
-                    // Only check for duplicate area names
-                    const areaExists = companyRates.some(
-                      (existingRate, i) =>
-                        i !== index &&
-                        existingRate.area === selectedOption?.label,
-                    );
-
-                    if (areaExists) {
-                      toast({
-                        title: "Validation Error",
-                        description: `Area "${selectedOption?.label}" already exists`,
-                        status: "error",
-                        duration: 3000,
-                        isClosable: true,
-                      });
-                      return;
-                    }
-
-                    const updatedRates = [...companyRates];
-                    updatedRates[index] = {
-                      ...updatedRates[index],
-                      seafreight_id: Number(selectedOption?.value),
-                      area: selectedOption?.label,
-                    };
-                    setCompanyRates(updatedRates);
-                  }}
-                  className="basic-single"
-                  classNamePrefix="select"
+                  placeholder="Select State"
+                  options={stateOptions}
+                  onChange={handleStateChange}
+                  value={stateOptions.find(
+                    (option) => option.value === selectedState,
+                  )}
                 />
+              </Box>
+              <Box>
+                {/* <FormLabel>QUADRANT</FormLabel> */}
+                <Select
+                  placeholder="Select Quadrant"
+                  options={
+                    selectedState ? groupedSeafreights[selectedState] : []
+                  }
+                  onChange={handleRegionChange}
+                  isDisabled={!selectedState}
+                />
+              </Box>
+              <Box>
+                {/* <FormLabel>CBM RATE</FormLabel> */}
                 <Input
                   type="number"
-                  placeholder="CBM Rate"
-                  value={rate.cbm_rate}
+                  value={companyRates[companyRates.length - 1]?.cbm_rate || 0}
                   onChange={(e) =>
                     handleRateChange(
-                      index,
+                      companyRates.length - 1,
                       "cbm_rate",
                       parseFloat(e.target.value),
                     )
                   }
                 />
+              </Box>
+              <Box>
+                {/* <FormLabel>MIN CHARGE</FormLabel> */}
                 <Input
                   type="number"
-                  placeholder="Minimum Charge"
-                  value={rate.minimum_charge}
+                  value={
+                    companyRates[companyRates.length - 1]?.minimum_charge || 0
+                  }
                   onChange={(e) =>
                     handleRateChange(
-                      index,
+                      companyRates.length - 1,
                       "minimum_charge",
                       parseFloat(e.target.value),
                     )
                   }
                 />
-              </SimpleGrid>
-            ))}
+              </Box>
+              <Box>
+                <Button
+                  onClick={() => handleSaveRow(companyRates.length - 1)}
+                  colorScheme="blue"
+                  width="full"
+                >
+                  +
+                </Button>
+              </Box>
+            </SimpleGrid>
+
             <Divider />
             <h3 className="mt-6 mb-4">Rates </h3>
             <Flex alignItems="center" mb="16px">

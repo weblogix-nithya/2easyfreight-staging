@@ -1623,7 +1623,7 @@ function CompanyEdit() {
                             STATE
                           </Text>
                           <Text fontSize="sm" fontWeight="500">
-                            REGION
+                            QUADRANT
                           </Text>
                           <Text fontSize="sm" fontWeight="500">
                             CBM RATE
@@ -1732,7 +1732,10 @@ function CompanyEdit() {
                                 aria-label="Delete rate"
                                 icon={<FontAwesomeIcon icon={faTimes} />}
                                 size="sm"
-                                sx={{backgroundColor: "lightpink", marginTop:'3px'}}
+                                sx={{
+                                  backgroundColor: "lightpink",
+                                  marginTop: "3px",
+                                }}
                                 colorScheme="red"
                                 variant="ghost"
                                 onClick={() =>
@@ -1749,7 +1752,7 @@ function CompanyEdit() {
                             <Text fontSize="md" fontWeight="500" mb={4}>
                               Add New Rate
                             </Text>
-                            <SimpleGrid columns={4} spacing={4}>
+                            <SimpleGrid columns={5} spacing={4}>
                               <Select
                                 value={stateOptions.find(
                                   (option) => option.value === selectedState,
