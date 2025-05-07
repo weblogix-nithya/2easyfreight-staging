@@ -49,10 +49,9 @@ import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
 import defaultJobQuoteData, {
   defaultJob,
   DELETE_JOB_MUTATION,
+  GET_ALL_TIMESLOT_DEPOTS,
   GET_JOB_QUERY,
-  UPDATE_JOB_MUTATION,
-  GET_ALL_TIMESLOT_DEPOTS
-} from "graphql/job";
+  UPDATE_JOB_MUTATION} from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import {
   CREATE_JOB_CC_EMAIL_MUTATION,
