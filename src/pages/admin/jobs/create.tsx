@@ -38,6 +38,7 @@ import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
 import {
   CREATE_JOB_MUTATION,
   defaultJob,
+  GET_ALL_TIMESLOT_DEPOTS,
   SEND_CONSIGNMENT_DOCKET,
 } from "graphql/job";
 import defaultJobQuoteData from "graphql/job";
@@ -99,6 +100,7 @@ function JobEdit() {
   //   freight_type: "LCL",
   // });
 
+  const [depotOptions, setDepotOptions] = useState([ ]);
   const [refinedData, setRefinedData] = useState({
     ...defaultJobQuoteData,
     freight_type: "LCL",
@@ -252,12 +254,43 @@ function JobEdit() {
         if (data?.getRatesByCompany) {
           const rates = [...data.getRatesByCompany];
           setCompanyRates(rates);
+          setRefinedData((prevData) => ({
+            ...prevData,
+            company_rates: rates,
+          }));
         }
       },
     },
   );
 
-
+  const { data: depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+    onCompleted: (data) => {
+      if (data?.allTimeslotDepots) {
+        const depots = data.allTimeslotDepots
+          .filter((depot: any) => depot.is_active)
+          .map((depot: any) => ({
+            value: depot.depot_name,
+            label: depot.depot_name,
+            price: depot.depot_price,
+            state_code: depot.state_code,
+            pincode: depot.pincode
+          }));
+        setDepotOptions(depots);
+        console.log("depots", data.allTimeslotDepots)
+        console.log("depots", depots)
+      }
+    },
+    onError: (error) => {
+      console.error("Error fetching depots:", error);
+      toast({
+        title: "Error fetching depots",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  });
 
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: defaultVariables,
@@ -948,7 +981,7 @@ function JobEdit() {
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
-      company_rates: refinedData.pick_up_stateCode === "QLD"
+      company_rates: refinedData.pick_up_stateCode === "QLD" || refinedData.pick_up_stateCode === "VIC"
         ? companyRates.map((rate) => ({
           company_id: rate.company_id,
           seafreight_id: rate.seafreight_id,
@@ -982,7 +1015,7 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        timeslot_depots: refinedData.timeslot_depots || null,
+        timeslot_depots:  job.is_inbound_connect ? refinedData.timeslot_depots : null,
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1869,15 +1902,13 @@ console.log(payload,'p')
                             <Box>
                               <CustomInputField
                                 isSelect={true}
-                                optionsArray={refinedData.depotOptions || []} // Dynamically updated options
+                                optionsArray={depotOptions} // Dynamically updated options
                                 label="Timeslot depots:"
                                 value={
-                                  refinedData.timeslot_depots
-                                    ? {
-                                      value: refinedData.timeslot_depots,
-                                      label: refinedData.timeslot_depots, // Use the same value for label
-                                    }
-                                    : null
+                                  depotOptions.find(
+                                    (option) =>
+                                      option.value === job.timeslot_depots,
+                                  ) || null
                                 }
                                 placeholder="Select a depot"
                                 onChange={(e) => {

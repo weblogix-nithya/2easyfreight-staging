@@ -51,6 +51,7 @@ import defaultJobQuoteData, {
   DELETE_JOB_MUTATION,
   GET_JOB_QUERY,
   UPDATE_JOB_MUTATION,
+  GET_ALL_TIMESLOT_DEPOTS
 } from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import {
@@ -117,15 +118,15 @@ interface CalculationData {
 
 function JobEdit() {
   const toast = useToast();
-  const textColor = useColorModeValue("navy.700", "white");
+  // const textColor = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = useState(defaultJob);
   const [refinedData, setRefinedData] = useState(defaultJobQuoteData);
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
-  const [changedFields, setChangedFields] =
-    useState<typeof defaultJob>(defaultJob);
+  // const [changedFields, setChangedFields] =
+  //   useState<typeof defaultJob>(defaultJob);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
@@ -311,6 +312,34 @@ function JobEdit() {
     }, 300);
   }, []);
 
+  const { data: depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+    onCompleted: (data) => {
+      if (data?.allTimeslotDepots) {
+        const depots = data.allTimeslotDepots
+          .filter((depot: any) => depot.is_active)
+          .map((depot: any) => ({
+            value: depot.depot_name,
+            label: depot.depot_name,
+            price: depot.depot_price,
+            state_code: depot.state_code,
+            pincode: depot.pincode
+          }));
+        setDepotOptions(depots);
+        console.log("depots", depots)
+      }
+    },
+    onError: (error) => {
+      console.error("Error fetching depots:", error);
+      toast({
+        title: "Error fetching depots",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  });
+
   const {
     loading: jobLoading,
     data: jobData, // Renamed 'data' to 'jobData'
@@ -486,7 +515,7 @@ function JobEdit() {
       );
 
       const matchedJobType = jobTypeOptions.find(
-        (type) => type.id === jobData.job.job_type_id
+        (type) => type.id === jobData.job.job_type_id,
       );
 
       setRefinedData({
@@ -498,7 +527,7 @@ function JobEdit() {
         // job_type_color: matchedJobType?.color || null
       });
     }
-  }, [jobData, jobCategories,jobTypeOptions]); // Use 'jobData' instead of 'data'
+  }, [jobData, jobCategories, jobTypeOptions]); // Use 'jobData' instead of 'data'
 
   const formatToSelect = (
     _entityArray: any[],
@@ -923,6 +952,10 @@ function JobEdit() {
         if (data?.getRatesByCompany) {
           const rates = [...data.getRatesByCompany];
           setCompanyRates(rates);
+          setRefinedData((prevData) => ({
+            ...prevData,
+            company_rates: rates,
+          }));
         }
       },
     },
@@ -1449,8 +1482,10 @@ function JobEdit() {
     // )?.label;
 
     const selectedstate = locationOptions.find(
-      (location) => location.label?.toLowerCase() == job?.pick_up_state?.toLowerCase(),
+      (location) =>
+        location.label?.toLowerCase() == job?.pick_up_state?.toLowerCase(),
     );
+    console.log(selectedstate, "selectedstate");
     const selectedJobTypeName = jobTypeOptions.find(
       (job_type) => job_type.value == job.job_type_id,
     )?.label;
@@ -1470,12 +1505,14 @@ function JobEdit() {
       state: refinedData.state || selectedstate?.label,
       state_code: refinedData.state_code || selectedstate?.value,
       company_rates:
-        job.job_category_id == 1 && selectedstate?.value === "QLD"
+        (job.job_category_id == 1 && selectedstate?.value === "QLD") ||
+        selectedstate?.value === "VIC"
           ? companyRates.map((rate) => ({
               company_id: rate.company_id,
               seafreight_id: rate.seafreight_id,
               area: rate.area,
               cbm_rate: rate.cbm_rate,
+              state: rate.state,
               minimum_charge: rate.minimum_charge,
             }))
           : [],
@@ -1504,7 +1541,7 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        timeslot_depots: job.timeslot_depots || selectedDepot, // Pass selectedDepot here
+        timeslot_depots: job.is_inbound_connect? job.timeslot_depots || selectedDepot : '', // Pass selectedDepot here
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1994,8 +2031,7 @@ function JobEdit() {
                           value={
                             job.job_type_id
                               ? jobTypeOptions.find(
-                                  (jobType) =>
-                                    jobType.value == job.job_type_id,
+                                  (jobType) => jobType.value == job.job_type_id,
                                 )
                               : null
                           }
@@ -2629,7 +2665,7 @@ function JobEdit() {
                             </Flex>
 
                             {job.job_category_id == 1 &&
-                              job.is_inbound_connect == 1 && (
+                              job.is_inbound_connect == true && (
                                 <Box>
                                   <CustomInputField
                                     isSelect={true}
@@ -2648,6 +2684,7 @@ function JobEdit() {
                                         ...prevData,
                                         timeslot_depots: e.value,
                                       })); // Update the selected depot directly
+                                     console.log("Selected depot: ", e.value)
                                       setJob({
                                         ...job,
                                         timeslot_depots: e.value, // Update job.timeslot_depots
