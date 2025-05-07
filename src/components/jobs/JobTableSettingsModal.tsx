@@ -11,6 +11,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Spinner,
   Switch,
   Text,
   UseDisclosureProps,
@@ -39,6 +40,8 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
   const [dynamicTableUsers, setDynamicTableUsers] = useState<
     DynamicTableUser[]
   >([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const getIndex = (id: UniqueIdentifier) =>
     dynamicTableUsers?.findIndex(
@@ -64,14 +67,29 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         orderByOrder: "ASC",
         user_id: userId,
       },
+          skip: !isOpen, // Skip initial query when modal is closed
       notifyOnNetworkStatusChange: true,
+      fetchPolicy:  "network-only",
       onCompleted: (data) => {
         setDynamicTableUsers(
-          data.dynamicTableUsers.data.map((item: DynamicTableUser) => item),
-        );
+          data.dynamicTableUsers.data.map((item: DynamicTableUser) => item));
+        setIsLoading(false);
       },
     },
   );
+
+    // Prefetch data when component mounts
+    useEffect(() => {
+      getDynamicTableUsers();
+    }, []);
+  
+    // Refresh data when modal opens if needed
+    useEffect(() => {
+      if (isOpen) {
+        setIsLoading(true);
+        getDynamicTableUsers();
+      }
+    }, [isOpen]);
 
   const sortedDynamicTableUsers = dynamicTableUsers.map((item, index) => {
     return {
@@ -109,6 +127,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
       isOpen={isOpen}
       onClose={onClose}
       size="lg"
+      motionPreset="none" 
     >
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
       <ModalContent>
@@ -116,6 +135,10 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         <ModalCloseButton />
         <ModalBody>
           <VStack w="full" align="start" spacing={3}>
+          {isLoading ? (
+              <Spinner size="xl" />
+            ) : (
+              <>
             <Divider mb="2" />
             <DndContext
               onDragStart={({ active }) => {
@@ -206,7 +229,10 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
                   </div>
                   <Divider mt="1" />
                 </Box>
-              ))}
+              ))
+            }
+             </>
+            )} 
           </VStack>
         </ModalBody>
         <ModalFooter justifyContent={"center"}>

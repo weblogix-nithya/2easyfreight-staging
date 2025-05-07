@@ -68,6 +68,7 @@ export const GET_JOBS_QUERY = gql`
       data {
         id
         name
+        pick_up_state
         total_quantity
         total_weight
         total_volume
@@ -155,7 +156,7 @@ export const GET_JOBS_QUERY = gql`
           media {
             id
             name
-            # downloadable_url
+            downloadable_url
             collection_name
           }
           job_destination_status_id
@@ -190,7 +191,7 @@ export const GET_JOBS_QUERY = gql`
           media {
             id
             name
-            # downloadable_url
+            downloadable_url
             collection_name
           }
         }
@@ -229,6 +230,7 @@ export const GET_JOB_QUERY = gql`
       id
       name
       driver_id
+      pick_up_state
       company_area
       driver {
         full_name
@@ -578,6 +580,19 @@ export const SEND_CONSIGNMENT_DOCKET = gql`
   }
 `;
 
+export const GET_ALL_TIMESLOT_DEPOTS = gql`
+  query {
+    allTimeslotDepots {
+      id
+      depot_name
+      pincode
+      state_code
+      depot_price
+      is_active
+    }
+  }
+`;
+
 export interface UpdateJobInput {
   id: number;
   name?: string;
@@ -796,6 +811,7 @@ export type JobQuoteData = {
   cbm_rate: number;
   minimum_charge: number;
   area: string;
+  company_rates: any[];
 };
 
 const defaultJobQuoteData: JobQuoteData = {
@@ -810,6 +826,7 @@ const defaultJobQuoteData: JobQuoteData = {
   cbm_rate: 0,
   minimum_charge: 0,
   area: "",
+  company_rates:[],
   job_pickup_address: {
     state: "",
     suburb: "",
