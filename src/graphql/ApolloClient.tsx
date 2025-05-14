@@ -1,30 +1,69 @@
 import {
   ApolloClient,
+  ApolloLink,
+  from,
   HttpOptions,
   InMemoryCache,
-  NormalizedCacheObject,
-} from "@apollo/client";
+  NormalizedCacheObject} from "@apollo/client";
 import { createUploadLink } from "apollo-upload-client";
-import { parseCookies } from "nookies";
+import { destroyCookie, parseCookies } from "nookies";
 import { useMemo } from "react";
 
-let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
+export let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
 
 const createLink = (opts: HttpOptions = {}) => {
   return createUploadLink({
     uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
-    ...opts,
+    credentials: 'include',
+    fetchOptions: {
+      credentials: 'include'
+    },
+    ...opts
   });
 };
 
 function createApolloClient() {
+  const uploadLink = createLink();
+
+const errorLink = new ApolloLink((operation, forward) => {
+  return forward(operation).map((response) => {
+    const { errors, data } = response;
+    const networkError = (response as any).networkError;
+    const graphQLErrors = errors;
+
+    if (networkError?.message?.includes('401') ||
+        graphQLErrors?.some((error: { message: string }) => error.message.includes('Unauthenticated'))) {
+      // Clear all user-related cookies
+      destroyCookie(null, "access_token", { path: "*" });
+      destroyCookie(null, "user_name", { path: "*" });
+      destroyCookie(null, "user_email", { path: "*" });
+      destroyCookie(null, "customer_id", { path: "*" });
+      destroyCookie(null, "driver_id", { path: "*" });
+      destroyCookie(null, "company_id", { path: "*" });
+      destroyCookie(null, "is_admin", { path: "*" });
+      destroyCookie(null, "is_company_admin", { path: "*" });
+      destroyCookie(null, "user_id", { path: "*" });
+      destroyCookie(null, "state", { path: "*" });
+      
+      // Clear Apollo cache
+      apolloClient?.clearStore().then(() => {
+        window.location.href = '/auth/login';
+      });
+    }
+
+    return response;
+  });
+});
+  
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
-    // link: new HttpLink({
-    //   uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
-    // }),
-    link: createLink(),
+    link: from([errorLink, uploadLink]),
     cache: new InMemoryCache({ addTypename: false }),
+    defaultOptions: {
+      watchQuery: {
+        errorPolicy: 'all'
+      }
+    }
   });
 }
 

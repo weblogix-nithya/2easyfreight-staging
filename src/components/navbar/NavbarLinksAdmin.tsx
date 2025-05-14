@@ -31,6 +31,9 @@ import routes from "routes";
 import { RootState } from "store/store";
 import { logoutUser } from "store/userSlice";
 
+// Change to:
+import { apolloClient } from "../../graphql/ApolloClient";
+
 export default function HeaderLinks(props: { secondary: boolean }) {
   const { secondary } = props;
   const { colorMode, toggleColorMode } = useColorMode();
@@ -59,7 +62,8 @@ export default function HeaderLinks(props: { secondary: boolean }) {
     setUserName(cookies.user_name ? cookies.user_name : "-");
   }, [cookies.user_name]);
 
-  function onLogout() {
+  async function onLogout() {
+    // Clear all existing cookies
     destroyCookie(null, "access_token", { path: "*" });
     destroyCookie(null, "user_name", { path: "*" });
     destroyCookie(null, "user_email", { path: "*" });
@@ -67,9 +71,20 @@ export default function HeaderLinks(props: { secondary: boolean }) {
     destroyCookie(null, "driver_id", { path: "*" });
     destroyCookie(null, "company_id", { path: "*" });
     destroyCookie(null, "is_admin", { path: "*" });
+    destroyCookie(null, "is_company_admin", { path: "*" });
+    destroyCookie(null, "user_id", { path: "*" });
+    destroyCookie(null, "state", { path: "*" });
+    
+    // Clear Apollo Client cache
+    try {
+        await apolloClient?.clearStore();
+    } catch (error) {
+        console.error('Error clearing Apollo cache:', error);
+    }
+    
     dispatch(logoutUser());
     router.push("/auth/login");
-  }
+}
 
   return (
     <Flex
