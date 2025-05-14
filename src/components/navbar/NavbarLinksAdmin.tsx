@@ -62,18 +62,33 @@ export default function HeaderLinks(props: { secondary: boolean }) {
     setUserName(cookies.user_name ? cookies.user_name : "-");
   }, [cookies.user_name]);
 
+  // Add this function at the top level of the file, after the imports
+  const clearAllCookies = () => {
+    const cookieNames = [
+      "access_token",
+      "user_name",
+      "user_email",
+      "customer_id",
+      "driver_id",
+      "company_id",
+      "is_admin",
+      "is_company_admin",
+      "user_id",
+      "state"
+    ];
+  
+    const paths = ["/", "/admin", "/admin/jobs", "*"];
+  
+    cookieNames.forEach(name => {
+      paths.forEach(path => {
+        destroyCookie(null, name, { path });
+      });
+    });
+  };
+
   async function onLogout() {
-    // Clear all existing cookies
-    destroyCookie(null, "access_token", { path: "*" });
-    destroyCookie(null, "user_name", { path: "*" });
-    destroyCookie(null, "user_email", { path: "*" });
-    destroyCookie(null, "customer_id", { path: "*" });
-    destroyCookie(null, "driver_id", { path: "*" });
-    destroyCookie(null, "company_id", { path: "*" });
-    destroyCookie(null, "is_admin", { path: "*" });
-    destroyCookie(null, "is_company_admin", { path: "*" });
-    destroyCookie(null, "user_id", { path: "*" });
-    destroyCookie(null, "state", { path: "*" });
+    // Clear all cookies using the new function
+    clearAllCookies();
     
     // Clear Apollo Client cache
     try {
