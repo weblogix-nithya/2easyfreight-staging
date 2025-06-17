@@ -87,7 +87,7 @@ export default function CustomerAddressesTab(props: any) {
 
   const {
     loading,
-    error,
+    // error,
     data: customerAddresses,
     refetch: getCustomerAddresses,
   } = useQuery(GET_CUSTOMER_ADDRESSES_QUERY, {
@@ -108,6 +108,7 @@ export default function CustomerAddressesTab(props: any) {
     if (googleAddress) {
       updateCustomerAddress(googleAddress.value.place_id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleAddress]);
 
   const [handleCreateCustomerAddress, {}] = useMutation(
@@ -131,7 +132,7 @@ export default function CustomerAddressesTab(props: any) {
           pick_up_notes: customerAddress.pick_up_notes,
         },
       },
-      onCompleted: (data) => {
+      onCompleted: () => {
         toast({
           title: "CustomerAddress created",
           status: "success",

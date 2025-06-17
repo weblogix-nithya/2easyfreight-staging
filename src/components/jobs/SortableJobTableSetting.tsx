@@ -1,5 +1,6 @@
 import { Box, Divider, Icon, Switch, Text } from "@chakra-ui/react";
-import { useSortable } from "@dnd-kit/sortable";
+// import { useSortable } from "@dnd-kit/sortable";
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from "@dnd-kit/utilities";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
 import React from "react";
@@ -14,7 +15,7 @@ interface SortableJobTableSettingProps {
 export default function SortableJobTableSetting({
   dynamicTableUser,
   onActiveToggle,
-  onReload,
+  // onReload,
 }: SortableJobTableSettingProps) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: dynamicTableUser.id });
@@ -40,7 +41,7 @@ export default function SortableJobTableSetting({
           mt="auto"
           mb="auto"
           isChecked={dynamicTableUser.is_active}
-          onChange={(e) => {
+          onChange={(_e) => {
             onActiveToggle();
           }}
         />

@@ -1,6 +1,6 @@
 // Chakra imports
 import { Box, Flex, Image, Portal, useDisclosure } from "@chakra-ui/react";
-import { faBars } from "@fortawesome/pro-solid-svg-icons";
+import { faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Status, Wrapper } from "@googlemaps/react-wrapper";
 import { defaultSelectedFilter } from "components/jobs/Filters";
@@ -62,16 +62,18 @@ export default function AdminLayout(props: DashboardLayoutProps) {
   const [toggleSidebar, setToggleSidebar] = useState(false);
   const [toggleFullSidebar, setToggleFullSidebar] = useState(true);
   // functions for changing the states from components
-  const { onOpen } = useDisclosure();
-
-  const isShowRightSideBar = useSelector(
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  const _isShowRightSideBar = useSelector(
     (state: RootState) => state.rightSideBar.isShow,
   );
 
   const dispatch = useDispatch();
 
   const cookies = parseCookies();
-  const [isCompanyAuth, setIsCompanyAuth] = useState(false);
 
   const handleMenuToggle = () => {
     setToggleFullSidebar(!toggleFullSidebar);
@@ -194,7 +196,12 @@ export default function AdminLayout(props: DashboardLayoutProps) {
         );
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuth, cookies.access_token, router]);
+
+  const { onOpen } = useDisclosure();
+
+  if (!isClient) return null;
 
   return (
     <Wrapper

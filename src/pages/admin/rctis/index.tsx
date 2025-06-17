@@ -26,14 +26,14 @@ export default function InvoiceIndex() {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
-  const [invoiceStatuses, setInvoiceStatuses] = useState([]);
-  const [tabs, setTabs] = useState([
+  // const [invoiceStatuses, setInvoiceStatuses] = useState([]);
+  const [tabs, _setTabs] = useState([
     { id: 1, name: "Pending", tabName: "Pending", hash: "pending" },
     { id: 6, name: "Processed", tabName: "Processed", hash: "processed" },
   ]);
-  const { companyId, customerId, isAdmin, isCompanyAdmin, isCustomer } =
+  const { isAdmin } =
     useSelector((state: RootState) => state.user);
-  const [date, setDate] = useState("");
+  // const [date, setDate] = useState("");
   const [rangeDate, setRangeDate] = useState([null, null]);
   const [tabId, setActiveTab] = useState(isAdmin == true ? 1 : 2);
 
@@ -45,6 +45,7 @@ export default function InvoiceIndex() {
     )?.isPrivate || false;
   useEffect(() => {
     if (isPrivateRoute && isAdmin) onOpen();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrivateRoute]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -84,9 +85,9 @@ export default function InvoiceIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: invoices,
-    refetch: getInvoices,
+    // refetch: getInvoices,
   } = useQuery(GET_INVOICES_QUERY, {
     variables: {
       query: searchQuery,
@@ -115,6 +116,7 @@ export default function InvoiceIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

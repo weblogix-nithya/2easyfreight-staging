@@ -33,6 +33,7 @@ export default function VendorIndex() {
     )?.isPrivate || false;
   useEffect(() => {
     if (isPrivateRoute && isAdmin) onOpen();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrivateRoute]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -58,9 +59,9 @@ export default function VendorIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: vendors,
-    refetch: getVendors,
+    // refetch: getVendors,
   } = useQuery(GET_VENDORS_QUERY, {
     variables: {
       query: searchQuery,
@@ -73,6 +74,7 @@ export default function VendorIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (
@@ -117,7 +119,7 @@ export default function VendorIndex() {
           )}
         </SimpleGrid>
       </Box>
-      <PrivateAccessModal isOpen={isOpen} onClose={onClose} />
+      <PrivateAccessModal isOpen={isOpen} onClose={onClose}  />
     </AdminLayout>
   );
 }

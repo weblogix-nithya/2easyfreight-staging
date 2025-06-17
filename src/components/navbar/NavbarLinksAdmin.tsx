@@ -8,7 +8,7 @@ import {
   MenuItem,
   MenuList,
   Text,
-  useColorMode,
+  // useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { faChevronDown } from "@fortawesome/pro-light-svg-icons";
@@ -36,7 +36,7 @@ import { apolloClient } from "../../graphql/ApolloClient";
 
 export default function HeaderLinks(props: { secondary: boolean }) {
   const { secondary } = props;
-  const { colorMode, toggleColorMode } = useColorMode();
+  // const { colorMode, toggleColorMode } = useColorMode();
   const dispatch = useDispatch();
 
   // Chakra Color Mode
@@ -52,7 +52,7 @@ export default function HeaderLinks(props: { secondary: boolean }) {
     "14px 17px 40px 4px rgba(112, 144, 176, 0.18)",
     "14px 17px 40px 4px rgba(112, 144, 176, 0.06)",
   );
-  const borderButton = useColorModeValue("secondaryGray.500", "whiteAlpha.200");
+  // const borderButton = useColorModeValue("secondaryGray.500", "whiteAlpha.200");
   const router = useRouter();
   const cookies = parseCookies();
   const [userName, setUserName] = useState("-");
@@ -60,6 +60,7 @@ export default function HeaderLinks(props: { secondary: boolean }) {
 
   useEffect(() => {
     setUserName(cookies.user_name ? cookies.user_name : "-");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies.user_name]);
 
   // Add this function at the top level of the file, after the imports

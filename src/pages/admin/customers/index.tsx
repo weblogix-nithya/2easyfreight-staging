@@ -36,6 +36,7 @@ export default function CustomerIndex() {
     )?.isPrivate || false;
   useEffect(() => {
     if (isPrivateRoute && isAdmin) onOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrivateRoute]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -69,9 +70,9 @@ export default function CustomerIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: customers,
-    refetch: getCustomers,
+    // refetch: getCustomers,
   } = useQuery(GET_CUSTOMERS_QUERY, {
     variables: {
       query: searchQuery,
@@ -85,9 +86,9 @@ export default function CustomerIndex() {
 
   const {
     loading: companyCustomerLoading,
-    error: companyCustomerError,
+    // error: companyCustomerError,
     data: companyCustomers,
-    refetch: getCompanyCustomers,
+    // refetch: getCompanyCustomers,
   } = useQuery(GET_CUSTOMERS_QUERY, {
     variables: {
       query: searchQuery,
@@ -102,6 +103,7 @@ export default function CustomerIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (
@@ -170,7 +172,7 @@ export default function CustomerIndex() {
             )}
         </SimpleGrid>
       </Box>
-      <PrivateAccessModal isOpen={isOpen} onClose={onClose} />
+      <PrivateAccessModal isOpen={isOpen} onClose={onClose}  />
     </AdminLayout>
   );
 }

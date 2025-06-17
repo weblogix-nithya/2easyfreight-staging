@@ -22,7 +22,7 @@ export default function DriverIndex() {
   const [queryPageSize, setQueryPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [driverStatusId, setDriverStatusId] = useState(1); // 1 = pending, 2 = active, 4 = inactive
-  const [tabId, setActiveTab] = useState(1); // 1 = pending, 2 = active, 4 = inactive
+  const [_tabId, setActiveTab] = useState(1); // 1 = pending, 2 = active, 4 = inactive
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -95,9 +95,9 @@ export default function DriverIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: drivers,
-    refetch: getDrivers,
+    // refetch: getDrivers,
   } = useQuery(GET_DRIVERS_QUERY, {
     variables: {
       query: searchQuery,
@@ -111,6 +111,7 @@ export default function DriverIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

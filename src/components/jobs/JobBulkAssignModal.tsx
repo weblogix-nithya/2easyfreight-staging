@@ -86,7 +86,7 @@ export default function JobBulkAssignModal({
     variables: {
       input: sortedBulkAssignJobs,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Jobs assigned",
         status: "success",
@@ -105,6 +105,7 @@ export default function JobBulkAssignModal({
   });
   useEffect(() => {
     setSelectedDriver(defaultDriver);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
   return (
     <Modal id="bulk-assign-modal" isCentered isOpen={isOpen} onClose={onClose}>

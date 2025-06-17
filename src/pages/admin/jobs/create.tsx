@@ -120,11 +120,11 @@ function JobEdit() {
   // });
   const [companyRates, setCompanyRates] = useState([]);
 
-  const [selectedRegion, setSelectedRegion] = useState({
-    area: "",
-    cbm_rate: 0,
-    minimum_charge: 0,
-  });
+  // const [selectedRegion, setSelectedRegion] = useState({
+  //   area: "",
+  //   cbm_rate: 0,
+  //   minimum_charge: 0,
+  // });
   // console.log(refinedData, "refined to wp");
 
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
@@ -151,7 +151,7 @@ function JobEdit() {
   const [jobDateAt, setJobDateAt] = useState(today);
   const [readyAt, setReadyAt] = useState("06:00");
   const [dropAt, setDropAt] = useState("17:00");
-  const [jobCcEmails, setJobCcEmails] = useState([]);
+  // const [jobCcEmails, setJobCcEmails] = useState([]);
   const [jobCcEmailTags, setJobCcEmailTags] = useState([]);
   const [isSameDayJob, setIsSameDayJob] = useState(true);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
@@ -239,7 +239,7 @@ function JobEdit() {
     [],
   );
 
-  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
+  const { data: _companyRatesData, refetch: getCompanyRates } = useQuery(
     GET_COMPANY_RATE_QUERY,
     {
       variables: { company_id: job?.company_id || "" },
@@ -258,7 +258,7 @@ function JobEdit() {
     },
   );
 
-  const { data: depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     onCompleted: (data) => {
       if (data?.allTimeslotDepots) {
         const depots = data.allTimeslotDepots
@@ -376,9 +376,10 @@ function JobEdit() {
       setJob((job) => ({ ...job, ...{ company_id: companyId } }));
       getCustomersByCompanyId({ ...defaultVariables, company_id: companyId });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
 
-  const [handleCreateJob, { loading }] = useMutation(CREATE_JOB_MUTATION, {
+  const [handleCreateJob, {  }] = useMutation(CREATE_JOB_MUTATION, {
     variables: {
       input: {
         ...job,
@@ -436,7 +437,7 @@ function JobEdit() {
         stackable: Number(quoteCalculationRes.stackable),
         total: Number(quoteCalculationRes.total),
       });
-      const resultPickup = await handleCreateJobDestination({
+       await handleCreateJobDestination({
         input: {
           ...pickUpDestination,
           is_pickup: true,
@@ -451,7 +452,7 @@ function JobEdit() {
         jobDestination.id = undefined;
         jobDestination.job_id = parseInt(data.createJob.id);
         // small delay to prevent the error of the jobDestination not being created.
-        const result = await handleCreateJobDestination({
+        await handleCreateJobDestination({
           input: {
             ...jobDestination,
             is_pickup: false,
@@ -507,7 +508,7 @@ function JobEdit() {
 
   //handleCreateMedia
   const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       /*toast({
         title: "Media updated",
         status: "success",
@@ -682,6 +683,7 @@ function JobEdit() {
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.customer_id, customerOptions]);
   const handleRemoveFromJobItems = (index: number) => {
     let _jobItems = [...jobItems];
@@ -738,6 +740,7 @@ function JobEdit() {
     };
 
     calculateTotals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobItems]);
 
   const addToJobItems = () => {
@@ -749,6 +752,7 @@ function JobEdit() {
   };
   useEffect(() => {
     dateChanged();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobDateAt, readyAt, dropAt]);
   const dateChanged = () => {
     try {
@@ -761,18 +765,7 @@ function JobEdit() {
       //console.log(e);
     }
   };
-  // Change className of select based on job.job_type_id
-  const jobTypeClassName = (jobTypeId: number) => {
-    let selectClassName = "";
-    if (jobTypeId === 1) {
-      selectClassName = "bg-[var(--chakra-colors-purple-400)]";
-    } else if (jobTypeId === 2) {
-      selectClassName = "bg-[var(--chakra-colors-orange-500)]";
-    } else if (jobTypeId === 3) {
-      selectClassName = "bg-[var(--chakra-colors-red-500)]";
-    }
-    return selectClassName;
-  };
+
   const handleRemoveFromTemporaryMedia = (id: number) => {
     let _temporaryMedia = [...temporaryMedia];
     _temporaryMedia = _temporaryMedia.filter((e) => e.id !== id);
@@ -820,6 +813,7 @@ function JobEdit() {
         }),
       );
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -885,6 +879,7 @@ function JobEdit() {
     };
 
     calculateFilteredOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     job.job_category_id,
     jobDateAt,
@@ -1271,13 +1266,13 @@ function JobEdit() {
                     isDisabled={true}
                     name="operator_phone"
                     value={customerSelected.phone_no}
-                    onChange={
-                      (e) => {}
+                    // onChange={
+                      // (e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
                       //})
-                    }
+                    // }
                   />
 
                   <CustomInputField
@@ -1286,13 +1281,13 @@ function JobEdit() {
                     name="operator_email"
                     isDisabled={true}
                     value={customerSelected.email}
-                    onChange={
-                      (e) => {}
+                    // onChange={
+                      // (e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
                       //})
-                    }
+                    // }
                   />
 
                   <Flex alignItems="center" mb="16px">
@@ -1619,7 +1614,7 @@ function JobEdit() {
                         savedAddressesSelect={savedAddressesSelect}
                         defaultJobDestination={pickUpDestination}
                         entityModel={job}
-                        onAddressSaved={(hasChanged) => {
+                        onAddressSaved={(_hasChanged) => {
                           getCustomerAddresses();
                         }}
                         jobDestinationChanged={(jobDestination) => {
@@ -1688,7 +1683,7 @@ function JobEdit() {
                             </GridItem>
                             <JobAddressesSection
                               entityModel={job}
-                              onAddressSaved={(hasChanged) => {
+                              onAddressSaved={() => {
                                 getCustomerAddresses();
                               }}
                               savedAddressesSelect={savedAddressesSelect}

@@ -44,9 +44,9 @@ export default function RouteIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: routes,
-    refetch: getRoutes,
+    // refetch: getRoutes,
   } = useQuery(GET_ROUTES_QUERY, {
     variables: {
       query: searchQuery,
@@ -59,6 +59,7 @@ export default function RouteIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

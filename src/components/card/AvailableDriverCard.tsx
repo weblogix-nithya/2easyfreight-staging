@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-import { faClock } from "@fortawesome/pro-solid-svg-icons";
+import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Driver } from "graphql/driver";
 import Image from "next/image";

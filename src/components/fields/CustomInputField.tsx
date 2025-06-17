@@ -72,7 +72,7 @@ export default function Default(props: {
   const textColorPrimary = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   // RandomId
-  const [randomIdSection, setRandomIdSection] = useState(
+  const [randomIdSection, _setRandomIdSection] = useState(
     (id ? id : name) + Math.random().toString(36).substring(7),
   );
 

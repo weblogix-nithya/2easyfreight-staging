@@ -44,9 +44,9 @@ export default function CustomerAddressIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: customerAddresses,
-    refetch: getCustomerAddresses,
+    // refetch: getCustomerAddresses,
   } = useQuery(GET_CUSTOMER_ADDRESSES_QUERY, {
     variables: {
       query: searchQuery,
@@ -59,6 +59,7 @@ export default function CustomerAddressIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

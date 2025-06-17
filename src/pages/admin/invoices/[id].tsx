@@ -41,7 +41,7 @@ import {
   UPDATE_INVOICE_LINE_ITEM_MUTATION,
 } from "graphql/invoiceLineItem";
 import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
-import { defaultJob, GET_JOB_QUERY } from "graphql/job";
+import { GET_JOB_QUERY } from "graphql/job";
 import { defaultJobDestination } from "graphql/jobDestination";
 import { formatCurrency, formatFloat } from "helpers/helper";
 import AdminLayout from "layouts/admin";
@@ -55,7 +55,7 @@ function InvoiceEdit() {
   let menuBg = useColorModeValue("white", "navy.800");
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [invoice, setInvoice] = useState(defaultInvoice);
   const [invoiceStatuses, setInvoiceStatuses] = useState([]);
   const [invoiceLineItems, setInvoiceLineItems] = useState([]);
@@ -64,14 +64,14 @@ function InvoiceEdit() {
     isHandleUpdateInvoiceLineItemsLoading,
     setIsHandleUpdateInvoiceLineItemsLoading,
   ] = useState(false);
-  const [job, setJob] = useState(defaultJob);
+  // const [job, setJob] = useState(defaultJob);
   const [jobDestinations, setJobDestinations] = useState([]);
   const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
   );
   const [isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const isCompany = useSelector((state: RootState) => state.user.isCompany);
+  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const customerId = useSelector((state: RootState) => state.user.customerId);
   const companyId = useSelector((state: RootState) => state.user.companyId);
@@ -80,10 +80,10 @@ function InvoiceEdit() {
   const { id } = router.query;
 
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(50);
+  const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [paymentTerm, setPaymentTerm] = useState(null);
+  // const [paymentTerm, setPaymentTerm] = useState(null);
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -94,8 +94,8 @@ function InvoiceEdit() {
 
   const {
     loading,
-    error,
-    data: invoiceLineItemsData,
+    // error,
+    // data: invoiceLineItemsData,
     refetch: getInvoiceLineItems,
   } = useQuery(GET_INVOICE_LINE_ITEMS_QUERY, {
     variables: {
@@ -112,9 +112,9 @@ function InvoiceEdit() {
   });
 
   const {
-    loading: jobLoading,
-    data: jobData, // Renamed 'data' to 'jobData'
-    refetch: getJob,
+    // loading: jobLoading,
+    // data: jobData, // Renamed 'data' to 'jobData'
+    // refetch: getJob,
   } = useQuery(GET_JOB_QUERY, {
     variables: {
       id: invoice.job_id,
@@ -135,7 +135,7 @@ function InvoiceEdit() {
       );
       // console.log(pickUpDestination, 'pjd')
     },
-    onError(error) {
+    onError(_error) {
       // console.log("onError");
       // console.log(error);
     },
@@ -162,7 +162,7 @@ function InvoiceEdit() {
 
   const {
     loading: invoiceLoading,
-    data: invoiceData,
+    // data: invoiceData,
     refetch: getInvoice,
   } = useQuery(GET_INVOICE_QUERY, {
     variables: {
@@ -230,7 +230,7 @@ function InvoiceEdit() {
           invoice_status_id: 6,
         },
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Invoice Approved",
           status: "success",
@@ -260,7 +260,7 @@ function InvoiceEdit() {
           total: invoice.total,
         },
       },
-      onCompleted: async (data) => {
+      onCompleted: async (_data) => {
         toast({
           title: "Invoice updated",
           status: "success",
@@ -319,11 +319,11 @@ function InvoiceEdit() {
       },
     });
 
-  const [handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [_handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Invoice deleted",
         status: "success",
@@ -341,7 +341,7 @@ function InvoiceEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Invoice sent",
         status: "success",
@@ -360,7 +360,7 @@ function InvoiceEdit() {
       variables: {
         id: id,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Invoice generating. Please wait 1min to update",
           status: "success",
@@ -394,7 +394,7 @@ function InvoiceEdit() {
       variables: {
         id: deleteInvoiceLineItemId,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Line Item deleted",
           status: "success",
@@ -422,6 +422,7 @@ function InvoiceEdit() {
       sub_total: invoiceTotal,
       total: invoiceTotal * 1.1,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoiceLineItems]);
 
   useEffect(() => {
@@ -435,6 +436,7 @@ function InvoiceEdit() {
     ) {
       router.push("/admin/invoices");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoice]);
 
   return (

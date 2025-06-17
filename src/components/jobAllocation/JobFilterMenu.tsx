@@ -10,7 +10,7 @@ import {
   Portal,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { faCaretDown } from "@fortawesome/pro-solid-svg-icons";
+import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { australianStates } from "helpers/helper";
@@ -22,12 +22,12 @@ export function JobFilterMenu({
   customerName,
   pickupAddress,
   deliveryAddress,
-  australianState,
+  _australianState,
   setCustomerName,
   setPickupAddress,
   setDeliveryAddress,
   setAustralianState,
-  ...props
+  ..._props
 }: {
   customerName: any;
   pickupAddress: any;
@@ -37,6 +37,7 @@ export function JobFilterMenu({
   setPickupAddress: any;
   setDeliveryAddress: any;
   setAustralianState: any;
+  [key: string]: any; 
 }) {
   const textColor = useColorModeValue("navy.700", "white");
   const dispatch = useDispatch();

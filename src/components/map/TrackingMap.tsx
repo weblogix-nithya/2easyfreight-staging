@@ -65,6 +65,7 @@ export function TrackingMap({
     } else {
       console.error("Google Maps API is not loaded.");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export function TrackingMap({
     driversRef.current.forEach((driver) => driver.setMap(null));
     driversRef.current = [];
 
-    drivers?.forEach((driver, index) => {
+    drivers?.forEach((driver) => {
       if (driver.lng && driver.lat) {
         let driverMarker = new window.google.maps.Marker({
           position: { lat: driver.lat, lng: driver.lng },
@@ -98,6 +99,7 @@ export function TrackingMap({
         driversRef.current.push(driverMarker);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers]);
 
   useEffect(() => {
@@ -184,6 +186,7 @@ export function TrackingMap({
         },
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markers]);
 
   // useEffect(() => {

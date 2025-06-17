@@ -20,7 +20,7 @@ export function Map({
   onDriverClick,
   onCenterChanged,
   onZoomChanged,
-  isRouted,
+  // isRouted,
 }: {
   center: google.maps.LatLng;
   zoom: number;
@@ -59,7 +59,7 @@ export function Map({
       suppressInfoWindows: true,
     });
 
-    var bounds = new google.maps.LatLngBounds();
+    // var bounds = new google.maps.LatLngBounds();
 
     map.addListener("zoom_changed", () => {
       onZoomChanged(map.getZoom());
@@ -107,7 +107,7 @@ export function Map({
       });
     });
 
-    drivers?.forEach((driver, index) => {
+    drivers?.forEach((driver) => {
       if (driver.lng && driver.lat) {
         let driverMarker = new window.google.maps.Marker({
           position: { lat: driver.lat, lng: driver.lng },

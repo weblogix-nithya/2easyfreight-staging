@@ -1,3 +1,4 @@
+// Third-party library imports
 import {
   Accordion,
   AccordionButton,
@@ -11,16 +12,16 @@ import {
   Tooltip,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { useColorMode } from "@chakra-ui/system";
 import {
   faEye,
-  faForklift,
-  faHandHoldingBox,
+  faHandHolding,
   faInfinity,
   faMap,
+  faTruck,
   faWarning,
-} from "@fortawesome/pro-solid-svg-icons";
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// Internal imports
 import RsbJobIndicatorCircle from "components/sidebar/components/RsbJobIndicatorCircle";
 import { formatFromNow, formatTime } from "helpers/helper";
 
@@ -29,14 +30,14 @@ export function JobAccordion({
   selectedJobIdRouting,
   onJobClick,
   onMarkerClick,
-  ...props
+  // ...props
 }: {
   job: any;
   selectedJobIdRouting: any;
   onJobClick: any;
   onMarkerClick: any;
 }) {
-  const { colorMode } = useColorMode();
+  // const { colorMode } = useColorMode();
   const textColor = useColorModeValue("secondaryGray.900", "white");
 
   return (
@@ -141,7 +142,7 @@ export function JobAccordion({
               {job.is_hand_unloading && (
                 <Tooltip label="Handling">
                   <FontAwesomeIcon
-                    icon={faHandHoldingBox}
+                    icon={faHandHolding}
                     className="!text-[var(--chakra-colors-red-400)] p-1"
                     size="sm"
                   />
@@ -159,7 +160,7 @@ export function JobAccordion({
               {job.is_tailgate_required && (
                 <Tooltip label="Tail lift">
                   <FontAwesomeIcon
-                    icon={faForklift}
+                    icon={faTruck}
                     className="!text-[var(--chakra-colors-red-400)] p-1"
                     size="sm"
                   />

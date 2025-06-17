@@ -1,3 +1,4 @@
+'use client'
 import { useQuery } from "@apollo/client";
 import {
   Box,
@@ -33,6 +34,7 @@ export default function CompanyIndex() {
     )?.isPrivate || false;
   useEffect(() => {
     if (isPrivateRoute && isAdmin) onOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrivateRoute]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -58,9 +60,9 @@ export default function CompanyIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: companys,
-    refetch: getCompanys,
+    // refetch: getCompanys,
   } = useQuery(GET_COMPANYS_QUERY, {
     variables: {
       query: searchQuery,
@@ -73,6 +75,7 @@ export default function CompanyIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (
@@ -117,7 +120,7 @@ export default function CompanyIndex() {
           )}
         </SimpleGrid>
       </Box>
-      <PrivateAccessModal isOpen={isOpen} onClose={onClose} />
+      <PrivateAccessModal isOpen={isOpen} onClose={onClose}  />
     </AdminLayout>
   );
 }

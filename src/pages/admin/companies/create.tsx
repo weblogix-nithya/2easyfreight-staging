@@ -51,7 +51,7 @@ interface GroupedSeafreights {
 function CompanyCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  // const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [company, setCompany] = useState(defaultCompany);
   const router = useRouter();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -152,9 +152,9 @@ function CompanyCreate() {
   };
 
   const {
-    data: seafreightData,
-    loading: seafreightLoading,
-    error: seafreightError,
+    // data: seafreightData,
+    // loading: seafreightLoading,
+    // error: seafreightError,
   } = useQuery(GET_LIST_OF_SEAFREIGHTS, {
     onCompleted(data) {
       const grouped = data.allSeafreights.reduce(

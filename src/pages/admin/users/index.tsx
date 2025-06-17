@@ -50,7 +50,7 @@ export default function UserIndex() {
     loading,
     error,
     data: users,
-    refetch: getUsers,
+    // refetch: getUsers,
   } = useQuery(GET_USERS_QUERY, {
     variables: {
       query: searchQuery,
@@ -63,6 +63,7 @@ export default function UserIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

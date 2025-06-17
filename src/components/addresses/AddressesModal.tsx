@@ -82,6 +82,7 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
     if (googleAddress) {
       updateEntityAddress(googleAddress.value.place_id, googleAddress);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleAddress]);
 
   const handleSaveAddress = async () => {

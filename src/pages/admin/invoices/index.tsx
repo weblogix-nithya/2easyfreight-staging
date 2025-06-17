@@ -34,7 +34,7 @@ export default function InvoiceIndex() {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
-  const [invoiceStatuses, setInvoiceStatuses] = useState([]);
+  const [_invoiceStatuses, setInvoiceStatuses] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [jobCategoryFilter, setJobCategoryFilter] = useState(null);
   const [stateFilter, setStateFilter] = useState(null);
@@ -65,7 +65,7 @@ export default function InvoiceIndex() {
   //   (state: RootState) => state.user.isCompanyAdmin,
   // );
   // const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
-  const [date, setDate] = useState("");
+  // const [date, setDate] = useState("");
   const [rangeDate, setRangeDate] = useState([null, null]);
   const [tabId, setActiveTab] = useState(isAdmin == true ? 1 : 2);
 
@@ -77,6 +77,7 @@ export default function InvoiceIndex() {
     )?.isPrivate || false;
   useEffect(() => {
     if (isPrivateRoute && isAdmin) onOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrivateRoute]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -244,7 +245,7 @@ export default function InvoiceIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: invoices,
     refetch: getInvoices,
   } = useQuery(GET_INVOICES_QUERY, {
@@ -312,7 +313,7 @@ export default function InvoiceIndex() {
 
   const {
     loading: companyInvoiceLoading,
-    error: companyInvoiceError,
+    // error: companyInvoiceError,
     data: companyInvoices,
     refetch: getCompanyInvoices,
   } = useQuery(GET_INVOICES_QUERY, {
@@ -346,7 +347,7 @@ export default function InvoiceIndex() {
 
   const {
     loading: customerInvoiceLoading,
-    error: customerInvoiceError,
+    // error: customerInvoiceError,
     data: customerInvoices,
     refetch: getCustomerInvoices,
   } = useQuery(GET_INVOICES_QUERY, {
@@ -382,6 +383,7 @@ export default function InvoiceIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   useEffect(() => {
@@ -391,6 +393,7 @@ export default function InvoiceIndex() {
     } else if (isCompanyAdmin) getCompanyInvoices();
     else if (!isCustomer || isCompanyAdmin) getCustomerInvoices();
     else return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobCategoryFilter]);
 
   useEffect(() => {
@@ -400,6 +403,7 @@ export default function InvoiceIndex() {
     } else if (isCompanyAdmin) getCompanyInvoices();
     else if (!isCustomer || isCompanyAdmin) getCustomerInvoices();
     else return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateFilter]);
 
   return (
@@ -614,7 +618,7 @@ export default function InvoiceIndex() {
             )}
         </SimpleGrid>
       </Box>
-      <PrivateAccessModal isOpen={isOpen} onClose={onClose} />
+      <PrivateAccessModal isOpen={isOpen} onClose={onClose}  />
 
       <StatementGenerateModal
         isOpen={isStatementModalOpen}

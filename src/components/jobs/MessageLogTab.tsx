@@ -1,10 +1,10 @@
-import { Box, Flex, Text, useColorModeValue, useToast } from "@chakra-ui/react";
+import { Box, Flex, Text, useColorModeValue } from "@chakra-ui/react";
 import { formatDate } from "helpers/helper";
 import React, { useEffect, useState } from "react";
 
 export default function MessageLogTab(props: { jobObject: any }) {
   const { jobObject } = props;
-  const toast = useToast();
+  // const toast = useToast();
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [chatMessages, setChatMessages] = useState([]);
 
@@ -48,6 +48,7 @@ export default function MessageLogTab(props: { jobObject: any }) {
       return new Date(a.created_at) < new Date(b.created_at) ? 1 : -1;
     });
     setChatMessages(_messages);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobObject]);
   return (
     <Box mt={10}>

@@ -51,7 +51,7 @@ function createApolloClient() {
 
   const errorLink = new ApolloLink((operation, forward) => {
     return forward(operation).map((response) => {
-      const { errors, data } = response;
+      const { errors } = response;
       const networkError = (response as any).networkError;
       const graphQLErrors = errors;
 

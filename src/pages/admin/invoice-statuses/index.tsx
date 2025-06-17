@@ -44,9 +44,9 @@ export default function InvoiceStatusIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: invoiceStatuses,
-    refetch: getInvoiceStatuses,
+    // refetch: getInvoiceStatuses,
   } = useQuery(GET_INVOICE_STATUSES_QUERY, {
     variables: {
       query: searchQuery,
@@ -59,6 +59,7 @@ export default function InvoiceStatusIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

@@ -26,9 +26,9 @@ config.autoAddCss = false;
 
 // Set up FA6 Pro icon access
 // import { library } from "@fortawesome/fontawesome-svg-core";
+import { fas } from "@fortawesome/free-solid-svg-icons";
 import { fal } from "@fortawesome/pro-light-svg-icons";
 import { far } from "@fortawesome/pro-regular-svg-icons";
-import { fas } from "@fortawesome/pro-solid-svg-icons";
 library.add(fas, far, fal);
 
 function MyApp({ Component, pageProps }: AppProps) {

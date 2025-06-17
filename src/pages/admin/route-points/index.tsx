@@ -44,9 +44,9 @@ export default function RoutePointIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: routePoints,
-    refetch: getRoutePoints,
+    // refetch: getRoutePoints,
   } = useQuery(GET_ROUTE_POINTS_QUERY, {
     variables: {
       query: searchQuery,
@@ -59,6 +59,7 @@ export default function RoutePointIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

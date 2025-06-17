@@ -44,9 +44,9 @@ export default function InvoiceLineItemIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: invoiceLineItems,
-    refetch: getInvoiceLineItems,
+    // refetch: getInvoiceLineItems,
   } = useQuery(GET_INVOICE_LINE_ITEMS_QUERY, {
     variables: {
       query: searchQuery,
@@ -59,6 +59,7 @@ export default function InvoiceLineItemIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

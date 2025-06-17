@@ -13,7 +13,6 @@ import {
   Thead,
   Tooltip,
   Tr,
-  useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
 import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
@@ -80,7 +79,7 @@ const PaginationTable = <T extends object>({
   isServerSide = false,
   options,
   plugins = [],
-  showDelete = false,
+  _showDelete = false,
   setQueryPageIndex,
   setQueryPageSize,
   onDelete,
@@ -94,10 +93,10 @@ const PaginationTable = <T extends object>({
   onSortingChange,
   restyleTable = false,
 }: PaginationTableProps<T>) => {
-  const textColor = useColorModeValue("secondaryGray.900", "white");
-  const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
-  const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
-  const iconColor = useColorModeValue("brand.500", "white");
+  // const textColor = useColorModeValue("secondaryGray.900", "white");
+  // //  const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
+  // const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
+  // const iconColor = useColorModeValue("brand.500", "white");
   const router = useRouter();
   const [pageRows, setPageRows] = useState([]);
 
@@ -126,7 +125,7 @@ const PaginationTable = <T extends object>({
     gotoPage,
     pageCount,
     toggleAllRowsSelected,
-    toggleSortBy,
+    _toggleSortBy,
   } = useTable<T>(
     {
       ...options,
@@ -144,6 +143,7 @@ const PaginationTable = <T extends object>({
       setQueryPageIndex(pageIndex);
       setQueryPageSize(pageSize);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isServerSide, pageIndex, pageSize, setQueryPageIndex, setQueryPageSize]);
 
   useEffect(() => {
@@ -156,6 +156,7 @@ const PaginationTable = <T extends object>({
     } else {
       setPageRows(page.filter((row) => row.isSelected == true));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     page,
     isFilterRowSelected,
@@ -179,10 +180,12 @@ const PaginationTable = <T extends object>({
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
 
   useEffect(() => {
     if (!isChecked) toggleAllRowsSelected(isChecked);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecked]);
 
   return (

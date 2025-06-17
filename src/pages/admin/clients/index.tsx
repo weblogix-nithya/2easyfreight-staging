@@ -1,3 +1,4 @@
+'use client'
 import { useQuery } from "@apollo/client";
 import {
   Box,
@@ -53,9 +54,9 @@ export default function ClientIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: clients,
-    refetch: getClients,
+    // refetch: getClients,
   } = useQuery(GET_CLIENTS_QUERY, {
     variables: {
       query: searchQuery,
@@ -68,6 +69,7 @@ export default function ClientIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

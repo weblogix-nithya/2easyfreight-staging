@@ -27,7 +27,7 @@ export default function VehicleHireIndex() {
   const [vehicleHires, setVehicleHires] = useState(null);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   const customerId = useSelector((state: RootState) => state.user.customerId);
-  const companyId = useSelector((state: RootState) => state.user.companyId);
+  // const companyId = useSelector((state: RootState) => state.user.companyId);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const [isCompleted, setIsCompleted] = useState(false); // 1 = pending, 2 = active, 4 = inactive
@@ -57,6 +57,7 @@ export default function VehicleHireIndex() {
     if (isCompany) {
       getCompanyVehicleHires();
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryPageIndex, queryPageSize, searchQuery, isCompleted]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -110,8 +111,8 @@ export default function VehicleHireIndex() {
 
   const {
     loading,
-    error,
-    data: vehicle_hire_data,
+    // error,
+    // data: vehicle_hire_data,
     refetch: getVehicleHires,
   } = useQuery(GET_VEHICLE_HIRES_QUERY, {
     variables: {
@@ -145,8 +146,8 @@ export default function VehicleHireIndex() {
 
   const {
     loading: companyVehicleHiresLoading,
-    error: companyVehicleHiresError,
-    data: cvehicleHires,
+    // error: companyVehicleHiresError,
+    // data: cvehicleHires,
     refetch: getCompanyVehicleHires,
   } = useQuery(GET_VEHICLE_HIRES_QUERY, {
     variables: {
@@ -171,6 +172,7 @@ export default function VehicleHireIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

@@ -22,7 +22,7 @@ import React, { useEffect, useMemo, useState } from "react";
 export default function QuoteIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
   const [categoryTabs, setCategoryTabs] = useState([]);
-  const [tabIndex, setTabIndex] = useState(1);
+  const [_tabIndex, setTabIndex] = useState(1);
 
   useQuery(GET_QUOTE_CATEGORIES_QUERY, {
     onCompleted: (data) => {
@@ -52,6 +52,7 @@ export default function QuoteIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

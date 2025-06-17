@@ -31,11 +31,28 @@ import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import Select from "react-select";
 
+const customStyles = {
+  control: (provided) => ({
+    ...provided,
+    height: '40px', // Set the height
+    minHeight: '40px', // Set the minimum height
+    width: '200px', // Set the width
+    fontSize: '16px', // Set the font size
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    fontSize: '16px', // Set the font size for the selected value
+  }),
+  option: (provided) => ({
+    ...provided,
+    fontSize: '16px', // Set the font size for the options
+  }),
+};
 
 function VendorCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  // const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [vendor, setVendor] = useState(defaultVendor);
   const router = useRouter();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -306,7 +323,7 @@ function VendorCreate() {
                     setVendor({ ...vendor, payment_term: selectedOption?.value });
                     // console.log("Selected:", selectedOption);
                   }}
-                  size="lg"
+                  styles={customStyles}
                   className="select mb-0"
                   classNamePrefix="two-easy-select"
                 />
@@ -345,7 +362,7 @@ function VendorCreate() {
                     });
                     // console.log("Selected:", selectedOption);
                   }}
-                  size="lg"
+                  styles={customStyles}
                   className="select mb-0"
                   classNamePrefix="two-easy-select"
                 />

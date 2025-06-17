@@ -47,13 +47,14 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
     dynamicTableUsers?.findIndex(
       (dynamicTableUser: DynamicTableUser) => dynamicTableUser.id == id,
     );
-  const getPosition = (id: UniqueIdentifier) => getIndex(id) + 1;
+  // const getPosition = (id: UniqueIdentifier) => getIndex(id) + 1;
   const activeIndex = activeId ? getIndex(activeId) : -1;
 
   useEffect(() => {
     if (isOpen == true) {
       getDynamicTableUsers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const { refetch: getDynamicTableUsers } = useQuery(
@@ -81,6 +82,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
     // Prefetch data when component mounts
     useEffect(() => {
       getDynamicTableUsers();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
   
     // Refresh data when modal opens if needed
@@ -89,6 +91,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         setIsLoading(true);
         getDynamicTableUsers();
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
   const sortedDynamicTableUsers = dynamicTableUsers.map((item, index) => {
@@ -105,7 +108,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
       variables: {
         input: sortedDynamicTableUsers,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "User table settings updated",
           status: "success",

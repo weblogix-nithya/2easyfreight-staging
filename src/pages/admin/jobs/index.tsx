@@ -1,3 +1,4 @@
+'use client'
 import { useQuery } from "@apollo/client";
 import { SettingsIcon } from "@chakra-ui/icons";
 import {
@@ -47,7 +48,7 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
-import { destroyCookie, parseCookies, setCookie } from "nookies";
+import { destroyCookie, setCookie } from "nookies";
 import React, { useEffect, useMemo, useState } from "react";
 import { downloadExcel } from "react-export-table-to-excel";
 import { FaFileExcel } from "react-icons/fa";
@@ -62,7 +63,7 @@ import { RootState } from "store/store";
 
 export default function JobIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
-  const textColor = useColorModeValue("secondaryGray.900", "white");
+  // const textColor = useColorModeValue("secondaryGray.900", "white");
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +74,7 @@ export default function JobIndex() {
   );
   const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
-  const cookies = parseCookies();
+  // const cookies = parseCookies();
   const dispatch = useDispatch();
 
   const [jobStatuses, setJobStatuses] = useState([]);
@@ -82,7 +83,7 @@ export default function JobIndex() {
   const [isPending, setIsPending] = useState(true); // First access is Pending
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [drivers, setDrivers] = useState([]);
-  const [selectedDriver, setSelectedDriver] = useState(null);
+  // const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOptions, setDriverOptions] = useState([]);
   const [dynamicTableUsers, setDynamicTableUsers] = useState<
     DynamicTableUser[]
@@ -114,16 +115,17 @@ export default function JobIndex() {
     dynamicTableUsers,
   );
 
-  const defaultTableColumns = columns.reduce(
-    (prev, column) => [...prev, column.id],
-    [],
-  );
+  // const defaultTableColumns = columns.reduce(
+  //   (prev, column) => [...prev, column.id],
+  //   [],
+  // );
 
   useEffect(() => {
     setIsChecked(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecked]);
-  const [tableColumns, setTableColumn] =
-    useState<string[]>(defaultTableColumns);
+  // const [tableColumns, setTableColumn] =
+  //   useState<string[]>(defaultTableColumns);
   useEffect(() => {
     if (is_filter_ticked == "1") {
       let _jobFilter = jobFilter;
@@ -143,6 +145,7 @@ export default function JobIndex() {
       if (displayName) setMainFilterDisplayNames(displayName);
       updateTags(updatedValues, _jobFilter);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [is_filter_ticked]);
 
   const handleResetAll = () => {
@@ -194,6 +197,7 @@ export default function JobIndex() {
   useEffect(() => {
     getJobStatuses();
     getJobCategories();
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const {
@@ -250,6 +254,7 @@ export default function JobIndex() {
   useEffect(() => {
     if (isAdmin) getJobs();
     if (isCompany) getCompanyJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     queryPageIndex,
     queryPageSize,
@@ -315,7 +320,7 @@ export default function JobIndex() {
     let column = sorting?.id ?? "id";
     let order = sorting?.direction ? "DESC" : "ASC";
     let table_name = "jobs";
-    let scope = undefined;
+    // let scope = undefined;
     if (column.includes("driver")) {
       join = {
         name: "drivers",
@@ -340,7 +345,7 @@ export default function JobIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: jobs,
     refetch: getJobs,
   } = useQuery(GET_JOBS_QUERY, {
@@ -357,7 +362,7 @@ export default function JobIndex() {
 
   const {
     loading: companyJobsLoading,
-    error: companyJobsError,
+    // error: companyJobsError,
     data: companyJobs,
     refetch: getCompanyJobs,
   } = useQuery(GET_JOBS_QUERY, {
@@ -403,6 +408,7 @@ export default function JobIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   const { refetch: getDynamicTableUsers } = useQuery(
@@ -452,7 +458,7 @@ export default function JobIndex() {
       });
     } else {
       const [sort] = sortBy;
-      const newDirection = sort.desc ? "DESC" : "ASC";
+      // const newDirection = sort.desc ? "DESC" : "ASC";
       const newSorting = {
         id: sort.id,
         direction: sort.desc,

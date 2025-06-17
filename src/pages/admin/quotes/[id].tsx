@@ -25,7 +25,7 @@ import {
   Th,
   Thead,
   Tr,
-  useColorModeValue,
+  // useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
 import { faTrashCan } from "@fortawesome/pro-regular-svg-icons";
@@ -95,7 +95,7 @@ export default function QuoteEdit() {
     [],
   );
 
-  let menuBg = useColorModeValue("white", "navy.800");
+  // let menuBg = useColorModeValue("white", "navy.800");
   const { isAdmin, isCustomer, isCompany } = useSelector(
     (state: RootState) => state.user,
   );
@@ -107,18 +107,18 @@ export default function QuoteEdit() {
   const [quoteItems, setQuoteItems] = useState([defaultQuoteItem]);
   const [quoteLineItems, setQuoteLineItems] = useState([]);
   const [originalQuoteItems, setOriginalQuoteItems] = useState([]);
-  const [subTotal, setSubTotal] = useState(0);
-  const [gst, setGst] = useState(0);
-  const [total, setTotal] = useState(0);
+  // const [subTotal, setSubTotal] = useState(0);
+  // const [gst, setGst] = useState(0);
+  // const [total, setTotal] = useState(0);
   const [requiredDateAt, setRequiredDateAt] = useState(today);
   const [readyAt, setReadyAt] = useState("06:00");
   const [dropAt, setDropAt] = useState("17:00");
   const [itemTypes, setItemTypes] = useState([]);
   const [deleteQuoteLineItemId, setDeleteQuoteLineItemId] = useState(null);
   const [isEnableEdit, setIsEnableEdit] = useState(true);
-  const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(50);
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [queryPageIndex, setQueryPageIndex] = useState(0);
+  // const [queryPageSize, setQueryPageSize] = useState(50);
+  // const [searchQuery, setSearchQuery] = useState("");
   const [rateCardUrl, setRateCardUrl] = useState("");
   // const onChangeSearchQuery = useMemo(() => {
   //   return debounce((e) => {
@@ -139,7 +139,7 @@ export default function QuoteEdit() {
 
   const {
     loading: quoteLoading,
-    data: quoteData,
+    // data: quoteData,
     refetch: getQuote,
   } = useQuery(GET_QUOTE_QUERY, {
     variables: {
@@ -280,7 +280,7 @@ export default function QuoteEdit() {
         isDownload: true,
       },
     ],
-    [],
+    [isAdmin],
   );
 
   useQuery(GET_QUOTE_CATEGORIES_QUERY, {
@@ -415,7 +415,7 @@ export default function QuoteEdit() {
   const [handleUpdateQuoteDestination, {}] = useMutation(
     UPDATE_QUOTE_DESTINATION_MUTATION,
     {
-      onCompleted: (data) => {
+      onCompleted: () => {
         console.log("Quote destination updated");
       },
       onError: (error) => {
@@ -663,7 +663,7 @@ export default function QuoteEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Quote deleted",
         status: "success",
@@ -748,7 +748,7 @@ export default function QuoteEdit() {
   const [handleSendConsignmentDocket] = useMutation(SEND_CONSIGNMENT_DOCKET);
   //deleteMedia
   const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Attachment deleted",
         status: "success",
@@ -808,7 +808,7 @@ export default function QuoteEdit() {
     setQuoteItems(_items);
   };
   const [handleCreateQuoteItem, {}] = useMutation(CREATE_QUOTE_ITEM_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: () => {
       console.log("Quote item created");
     },
     onError: (error) => {
@@ -816,7 +816,7 @@ export default function QuoteEdit() {
     },
   });
   const [handleUpdateQuoteItem, {}] = useMutation(UPDATE_QUOTE_ITEM_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: () => {
       console.log("Quote item updated");
     },
     onError: (error) => {
@@ -838,7 +838,7 @@ export default function QuoteEdit() {
       variables: {
         id: deleteQuoteLineItemId,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Line Item deleted",
           status: "success",
@@ -858,6 +858,7 @@ export default function QuoteEdit() {
   );
   useEffect(() => {
     getCustomerAddresses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.customer_id]);
   useEffect(() => {
     let quoteTotal = quoteLineItems.reduce((acc, quoteLineItem) => {
@@ -869,10 +870,12 @@ export default function QuoteEdit() {
       sub_total: quoteTotal,
       total: quoteTotal * 1.1,
     });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quoteLineItems]);
 
   useEffect(() => {
     dateChanged();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requiredDateAt, dropAt, readyAt]);
   const dateChanged = () => {
     try {
@@ -1331,7 +1334,7 @@ export default function QuoteEdit() {
                           entityModel={quote}
                           savedAddressesSelect={savedAddressesSelect}
                           defaultQuoteDestination={pickUpDestination}
-                          onAddressSaved={(hasChanged) => {
+                          onAddressSaved={() => {
                             getCustomerAddresses();
                           }}
                           quoteDestinationChanged={(quoteDestination) => {
@@ -1398,7 +1401,7 @@ export default function QuoteEdit() {
                                     index,
                                   );
                                 }}
-                                onAddressSaved={(hasChanged) => {
+                                onAddressSaved={() => {
                                   getCustomerAddresses();
                                 }}
                               />
@@ -1471,7 +1474,7 @@ export default function QuoteEdit() {
                         <FileInput
                           entity="Quote"
                           entityId={quote.id}
-                          onUpload={(url) => {
+                          onUpload={() => {
                             getQuote();
                             setIsUpdatingMedia(true);
                           }}
