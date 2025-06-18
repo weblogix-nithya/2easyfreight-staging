@@ -20,7 +20,7 @@ import Invoices from "pages/admin/invoices/index";
 import JobAllocationIndex from "pages/admin/job-allocations/index";
 import Jobs from "pages/admin/jobs/index";
 // import Profile from "pages/admin/profile";
-import Quote from "pages/admin/quotes/index";
+import Quote from "pages/admin/quotes/quotes";
 import Rctis from "pages/admin/rctis/index";
 import Users from "pages/admin/users/index";
 import VehicleHire from "pages/admin/vehicle-hires";
