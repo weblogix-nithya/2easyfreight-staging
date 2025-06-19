@@ -1,5 +1,5 @@
-import { useToast } from "@chakra-ui/react";
-import { useEffect, useRef } from "react";
+ import { useToast } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
@@ -10,7 +10,6 @@ export interface Marker {
   data?: any;
 }
 
-// add in drivers locations, pick up locations, drop off locations etc
 export function Map({
   center,
   zoom,
@@ -20,144 +19,157 @@ export function Map({
   onDriverClick,
   onCenterChanged,
   onZoomChanged,
-  // isRouted,
+  isRouted,
 }: {
   center: google.maps.LatLng;
   zoom: number;
   markers?: Marker[];
   drivers?: Marker[];
-  onMarkerClick: any;
-  onDriverClick: any;
-  onCenterChanged: any;
-  onZoomChanged: any;
+  onMarkerClick: (data: any) => void;
+  onDriverClick: (data: any) => void;
+  onCenterChanged: (pos: { lat: number; lng: number }) => void;
+  onZoomChanged: (zoom: number) => void;
   isRouted?: boolean;
 }) {
   const toast = useToast();
-  const ref = useRef();
+  const ref = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  const rightSideBarJob = useSelector(
-    (state: RootState) => state.rightSideBar.job,
-  );
-  const rightSideBarRoute = useSelector(
-    (state: RootState) => state.rightSideBar.route,
-  );
+  const rightSideBarJob = useSelector((state: RootState) => state.rightSideBar.job);
+  const rightSideBarRoute = useSelector((state: RootState) => state.rightSideBar.route);
 
+  // Step 1: Load map when ready
   useEffect(() => {
-    const map = new window.google.maps.Map(ref.current, {
-      center: center,
-      zoom: zoom,
-    });
+    const interval = setInterval(() => {
+      const isReady =
+        window.google &&
+        window.google.maps &&
+        window.google.maps.marker &&
+        window.google.maps.marker.AdvancedMarkerElement;
 
-    var driverMarkers: google.maps.Marker[] = [];
-    var googleMarkers: google.maps.Marker[] = [];
+      if (!isReady || !ref.current) return;
+
+      clearInterval(interval);
+
+      const newMap = new google.maps.Map(ref.current, {
+        center,
+        zoom,
+        mapId: "YOUR_VALID_MAP_ID_HERE", // <-- Replace with real Map ID
+        gestureHandling: "greedy",
+      });
+
+      google.maps.event.trigger(newMap, "resize");
+      setMap(newMap);
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Step 2: Render map once it's ready
+  useEffect(() => {
+    if (!map || !ref.current) return;
+
+    const { AdvancedMarkerElement } = window.google.maps.marker;
+    const markerDataMap = new WeakMap<google.maps.marker.AdvancedMarkerElement, any>();
+    const driverDataMap = new WeakMap<google.maps.marker.AdvancedMarkerElement, any>();
+    const googleMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+    const driverMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
     const waypoints: google.maps.DirectionsWaypoint[] = [];
 
     const directionsService = new google.maps.DirectionsService();
     const directionsDisplay = new google.maps.DirectionsRenderer({
-      map: map,
+      map,
       suppressMarkers: true,
       suppressInfoWindows: true,
     });
 
-    // var bounds = new google.maps.LatLngBounds();
-
     map.addListener("zoom_changed", () => {
-      onZoomChanged(map.getZoom());
+      onZoomChanged(map.getZoom() ?? zoom);
+      setTimeout(() => google.maps.event.trigger(map, "resize"), 50);
     });
 
     map.addListener("center_changed", () => {
-      onCenterChanged({
-        lat: map.getCenter().lat(),
-        lng: map.getCenter().lng(),
-      });
+      const pos = map.getCenter();
+      if (pos) {
+        onCenterChanged({ lat: pos.lat(), lng: pos.lng() });
+        setTimeout(() => google.maps.event.trigger(map, "resize"), 50);
+      }
     });
 
     markers?.forEach((marker, index) => {
-      let googleMarker = new window.google.maps.Marker({
-        position: { lat: marker.lat, lng: marker.lng },
+      const element = document.createElement("div");
+      element.style.width = "50px";
+      element.style.height = "50px";
+      element.style.backgroundImage = `url(${marker.icon})`;
+      element.style.backgroundSize = "contain";
+      element.style.backgroundRepeat = "no-repeat";
+
+      const advMarker = new AdvancedMarkerElement({
         map,
-        icon: {
-          url: marker.icon,
-          size: new google.maps.Size(71, 71),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(27, 44),
-          scaledSize: new google.maps.Size(50, 50),
-        },
-        // @ts-ignore
-        data: marker.data || null,
+        position: { lat: marker.lat, lng: marker.lng },
+        content: element,
         zIndex: 1000,
       });
 
-      googleMarkers.push(googleMarker);
+      markerDataMap.set(advMarker, marker.data);
+      googleMarkers.push(advMarker);
+
       if (index > 0 && index < markers.length - 1) {
         waypoints.push({
-          location: {
-            lng: googleMarker.getPosition().lng(),
-            lat: googleMarker.getPosition().lat(),
-          },
+          location: { lng: marker.lng, lat: marker.lat },
           stopover: true,
         });
       }
 
-      // bounds.extend(googleMarker.getPosition());
-
-      googleMarker.addListener("click", () => {
-        // @ts-ignore
-        onMarkerClick(googleMarker.data);
+      advMarker.addListener("gmp-click", () => {
+        const data = markerDataMap.get(advMarker);
+        onMarkerClick(data);
       });
     });
 
     drivers?.forEach((driver) => {
       if (driver.lng && driver.lat) {
-        let driverMarker = new window.google.maps.Marker({
-          position: { lat: driver.lat, lng: driver.lng },
+        const element = document.createElement("div");
+        element.style.width = "25px";
+        element.style.height = "25px";
+        element.style.backgroundImage = `url(${driver.icon})`;
+        element.style.backgroundSize = "contain";
+        element.style.backgroundRepeat = "no-repeat";
+
+        const advDriver = new AdvancedMarkerElement({
           map,
-          icon: {
-            url: driver.icon,
-            size: new google.maps.Size(71, 71),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(17, 34),
-            scaledSize: new google.maps.Size(25, 25),
-          },
-          // @ts-ignore
-          data: driver.data || null,
+          position: { lat: driver.lat, lng: driver.lng },
+          content: element,
           zIndex: 1000,
         });
 
-        driverMarkers.push(driverMarker);
-        // bounds.extend(driverMarker.getPosition());
+        driverDataMap.set(advDriver, driver.data);
+        driverMarkers.push(advDriver);
 
-        driverMarker.addListener("click", () => {
-          // @ts-ignore
-          onDriverClick(driverMarker.data);
+        advDriver.addListener("gmp-click", () => {
+          const data = driverDataMap.get(advDriver);
+          onDriverClick(data);
         });
       }
     });
 
-    // 23 waypoints max
     if (
       waypoints.length < 23 &&
       googleMarkers.length > 1 &&
-      (rightSideBarJob != null || rightSideBarRoute != null)
+      (rightSideBarJob || rightSideBarRoute)
     ) {
       directionsService.route(
         {
-          origin: {
-            lat: googleMarkers[0].getPosition().lat(),
-            lng: googleMarkers[0].getPosition().lng(),
-          },
-          destination: {
-            lat: googleMarkers[googleMarkers.length - 1].getPosition().lat(),
-            lng: googleMarkers[googleMarkers.length - 1].getPosition().lng(),
-          },
+          origin: googleMarkers[0].position!,
+          destination: googleMarkers[googleMarkers.length - 1].position!,
           avoidTolls: true,
           avoidHighways: false,
-          waypoints: waypoints,
+          waypoints,
           optimizeWaypoints: true,
           travelMode: google.maps.TravelMode.DRIVING,
         },
-        function (response, status) {
-          if (status == google.maps.DirectionsStatus.OK) {
+        (response, status) => {
+          if (status === google.maps.DirectionsStatus.OK) {
             directionsDisplay.setDirections(response);
           } else {
             toast({
@@ -167,10 +179,43 @@ export function Map({
               isClosable: true,
             });
           }
-        },
+        }
       );
     }
-  });
 
-  return <div ref={ref} id="map" style={{ height: "100%" }} />;
+    // Step 3: Observe size changes for resize fallback
+    const resizeObserver = new ResizeObserver(() => {
+      google.maps.event.trigger(map, "resize");
+    });
+    resizeObserver.observe(ref.current);
+
+    const mutationObserver = new MutationObserver(() => {
+      google.maps.event.trigger(map, "resize");
+    });
+    mutationObserver.observe(document.body, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [map, center, zoom, markers, drivers]);
+
+  return (
+    <div style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
+      <div
+        ref={ref}
+        id="map"
+        style={{
+          height: "100%",
+          width: "100%",
+          position: "relative",
+          contentVisibility: "visible",
+        }}
+      />
+    </div>
+  );
 }
