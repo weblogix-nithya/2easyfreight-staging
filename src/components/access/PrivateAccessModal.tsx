@@ -72,6 +72,11 @@ export default function PrivateAccessModal({ isOpen, onClose }: PrivateAccessMod
                   setError(false);
                   setPassword(e.target.value);
                 }}
+                  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      handleAccess();
+    }
+  }}
                 name="password"
                 className="max-w-md"
                 fontSize="sm"
