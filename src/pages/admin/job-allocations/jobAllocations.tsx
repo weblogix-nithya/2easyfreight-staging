@@ -1,4 +1,3 @@
-'use client'
 import { useLazyQuery, useQuery } from "@apollo/client";
 import {
   Accordion,
@@ -19,20 +18,20 @@ import {
   Text,
   Tooltip,
   useColorModeValue,
-  // useToast,
+  useToast,
 } from "@chakra-ui/react";
-import { faBoltLightning } from "@fortawesome/free-solid-svg-icons";
 import { faChevronRight } from "@fortawesome/pro-regular-svg-icons";
 import { faChevronLeft } from "@fortawesome/pro-regular-svg-icons";
+import { faBoltLightning } from "@fortawesome/free-solid-svg-icons";
 import { faTimes } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import AvailableDriverCard from "components/card/AvailableDriverCard";
-import { JobAccordion } from "components/jobAllocation/JobAccordion";
 import { JobFilterMenu } from "components/jobAllocation/JobFilterMenu";
+import { JobAccordion } from "components/jobAllocation/JobAccordion";
 import { Map } from "components/map/Map";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
-// import RightSideBar from "components/sidebar/RightSideBar";
+import RightSideBar from "components/sidebar/RightSideBar";
 import { GET_AVAILABLE_DRIVERS_QUERY } from "graphql/driver";
 import { GET_JOB_QUERY, GET_JOBS_QUERY } from "graphql/job";
 import { GET_DRIVER_CURRENT_ROUTE_QUERY, GET_ROUTE_QUERY } from "graphql/route";
@@ -41,7 +40,6 @@ import { australianStates, getMapIcon, jobTypes, today } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import moment from "moment";
-import dynamic from "next/dynamic";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -53,9 +51,6 @@ import {
   setRightSideBarRoute,
 } from "store/rightSideBarSlice";
 import { RootState } from "store/store";
-const RightSideBar = dynamic(() => import("components/sidebar/RightSideBar"), {
-  ssr: false,
-});
 
 export default function JobAllocationIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
@@ -65,20 +60,20 @@ export default function JobAllocationIndex() {
   );
   const [date, setDate] = useState(today);
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, _setQueryPageSize] = useState(100);
+  const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [vehicleClasses, setVehicleClasses] = useState([]);
   const [customerName, setCustomerName] = useState("");
   const [australianState, setAustralianState] = useState(state);
-  const [_selectedVehicleClasses, setSelectedVehicleClasses] = useState([]);
+  const [selectedVehicleClasses, setSelectedVehicleClasses] = useState([]);
   const [selectedVehicleClassIds, setSelectedVehicleClassIds] = useState([]);
   const [driverOptions, setDriverOptions] = useState([]);
   const [selectedDrivers, setSelectedDrivers] = useState([]);
-  const [_selectedJob, setSelectedJob] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
-  const [selectedRouteId, _setSelectedRouteId] = useState(null);
+  const [selectedRouteId, setSelectedRouteId] = useState(null);
   const [selectedDriverId, setSelectedDriverId] = useState(null);
   const [drivers, setDrivers] = useState([]);
   const [selectedJobIdRouting, setSelectedJobIdRouting] = useState(null);
@@ -86,8 +81,8 @@ export default function JobAllocationIndex() {
   const [pollingSpeed, setPollingSpeed] = useState(60000);
   const [isInitLoad, setIsInitLoad] = useState(true);
 
-  // const toast = useToast();
-  // const textColor = useColorModeValue("secondaryGray.900", "white");
+  const toast = useToast();
+  const textColor = useColorModeValue("secondaryGray.900", "white");
   const dispatch = useDispatch();
 
   useQuery(GET_VEHICLE_CLASSES_QUERY, {
@@ -196,18 +191,15 @@ export default function JobAllocationIndex() {
   const [center, setCenter] = useState(null);
   const [markers, setMarkers] = useState([]);
 
-  const centerChangeHandler = useCallback((data: any) => {
+  const centerChangeHandler = (data: any) => {
     setCenter(data);
-  }, []);
-
+  };
   const debouncedCenterChangeHandler = useCallback(
-    (e: google.maps.MapMouseEvent) => {
-      debounce(() => centerChangeHandler(e), 300)();
-    },
-    [centerChangeHandler]
+    debounce(centerChangeHandler, 300),
+    [],
   );
 
-  const [_getRoute, { }] = useLazyQuery(GET_ROUTE_QUERY, {
+  const [getRoute, { }] = useLazyQuery(GET_ROUTE_QUERY, {
     variables: {
       id: selectedRouteId,
     },
@@ -315,8 +307,8 @@ export default function JobAllocationIndex() {
   }
 
   const {
-    // loading,
-    // error,
+    loading,
+    error,
     data: jobs,
     refetch: getJobs,
   } = useQuery(GET_JOBS_QUERY, {
@@ -332,7 +324,7 @@ export default function JobAllocationIndex() {
       pick_up_state: australianState,
       // driver_id: null,
     },
-    onCompleted: (_data) => {
+    onCompleted: (data) => {
       // Removed auto route on load for now
       // if (data.jobs.data[0]) {
       //   data.jobs.data.every((job: any) => {
@@ -356,7 +348,6 @@ export default function JobAllocationIndex() {
     });
     // }
     getJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onChangeSearchQuery, state, rightSideBarJob, australianState]);
 
   return (

@@ -41,7 +41,7 @@ import { TabsComponent } from "components/tabs/TabsComponet";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
-import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
+import { GET_COMPANY_RATE_QUERY } from "graphql/companyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_DRIVERS_QUERY } from "graphql/driver";
@@ -51,7 +51,8 @@ import defaultJobQuoteData, {
   DELETE_JOB_MUTATION,
   GET_ALL_TIMESLOT_DEPOTS,
   GET_JOB_QUERY,
-  UPDATE_JOB_MUTATION} from "graphql/job";
+  UPDATE_JOB_MUTATION,
+} from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import {
   CREATE_JOB_CC_EMAIL_MUTATION,
@@ -127,7 +128,7 @@ function JobEdit() {
   // const [changedFields, setChangedFields] =
   //   useState<typeof defaultJob>(defaultJob);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
-  const [_pricecalculationid, setPricecalculationid] = useState(null);
+  const [pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
   const { id } = router.query;
@@ -152,27 +153,24 @@ function JobEdit() {
   const [jobDestinations, setJobDestinations] = useState([]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [debouncedSearchDriver, setDebouncedSearchDriver] = useState("");
-
-  const re = useMemo(() => {
-    return /^(([^<>()$$\\.,;:\s@"]+(\.[^<>()$$\\.,;:\s@"]+)*)|(".+"))@(($[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  }, []);
-
+  let re =
+    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   const [deleteJobCcEmailId, setDeleteJobCcEmailId] = useState(null);
   const [createdCcEmail, setCreatedCcEmail] = useState(null);
   const [jobCcEmails, setJobCcEmails] = useState([]);
   const [jobCcEmailTags, setJobCcEmailTags] = useState([]);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  // const customerId = useSelector((state: RootState) => state.user.customerId);
-  // const companyId = useSelector((state: RootState) => state.user.companyId);
+  const customerId = useSelector((state: RootState) => state.user.customerId);
+  const companyId = useSelector((state: RootState) => state.user.companyId);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
   );
-  const [_isSameDayJob, setIsSameDayJob] = useState(false);
-  const [_isTomorrowJob, setIsTomorrowJob] = useState(false);
+  const [isSameDayJob, setIsSameDayJob] = useState(false);
+  const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   // const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
-  const [locationOptions, _setLocationOptions] = useState([
+  const [locationOptions, setLocationOptions] = useState([
     { value: "VIC", label: "Victoria" },
     { value: "QLD", label: "Queensland" },
   ]);
@@ -180,8 +178,7 @@ function JobEdit() {
   const [depotOptions, setDepotOptions] = useState([]);
   const [filtereddepotOptions, setFilteredDepotOptions] = useState([]);
 
-
-  const [_selectedDepot, setSelectedDepot] = useState("");
+  const [selectedDepot, setSelectedDepot] = useState("");
 
   const [prevJobState, setPrevJobState] = useState({
     freight_type: refinedData.freight_type,
@@ -192,7 +189,7 @@ function JobEdit() {
 
   const [companyRates, setCompanyRates] = useState([]);
 
-  const [_selectedRegion, setSelectedRegion] = useState({
+  const [selectedRegion, setSelectedRegion] = useState({
     area: "",
     cbm_rate: 0,
     minimum_charge: 0,
@@ -231,7 +228,7 @@ function JobEdit() {
     },
   ];
 
-  // const NEW_CUTOFF_RULES_START_DATE = "2024-10-24";
+  const NEW_CUTOFF_RULES_START_DATE = "2024-10-24";
 
   const itemsTableColumns = useMemo(
     () => [
@@ -280,7 +277,7 @@ function JobEdit() {
         isDownload: true,
       },
     ],
-    [isAdmin],
+    [],
   );
 
   const onChangeSearchQuery = useMemo(() => {
@@ -295,7 +292,7 @@ function JobEdit() {
     }, 300);
   }, []);
 
-  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+  const { data: depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     onCompleted: (data) => {
       if (data?.allTimeslotDepots) {
         const depots = data.allTimeslotDepots
@@ -305,11 +302,10 @@ function JobEdit() {
             label: depot.depot_name,
             price: depot.depot_price,
             state_code: depot.state_code,
-            pincode: depot.pincode
+            pincode: depot.pincode,
           }));
         setDepotOptions(depots);
-        console.log("depots", depots)
-
+        // console.log("depots", depots)
       }
     },
     onError: (error) => {
@@ -321,7 +317,7 @@ function JobEdit() {
         duration: 5000,
         isClosable: true,
       });
-    }
+    },
   });
 
   const {
@@ -349,6 +345,7 @@ function JobEdit() {
           company_area: data?.job.company_area,
           job_type_id: data?.job.job_type_id,
           pick_up_state: data?.job.pick_up_state,
+          timeslot_depots: data?.job.timeslot_depots,
         });
         if (data?.job.company_area && companyRates.length > 0) {
           const matchingRate = companyRates.find(
@@ -367,8 +364,12 @@ function JobEdit() {
         const selectedCategoryName = jobCategories.find(
           (job_category) => job_category.value == data?.job.job_category_id,
         )?.label;
-        const selectedStateCode = data.job.pick_up_state == 'Victoria' ? 'VIC' : 
-        data.job.pick_up_state == 'Queensland' ? 'QLD' : '';        
+        const selectedStateCode =
+          data.job.pick_up_state == "Victoria"
+            ? "VIC"
+            : data.job.pick_up_state == "Queensland"
+              ? "QLD"
+              : "";
         const selectedLocation = locationOptions.find(
           (location) => location.label == data.job.pick_up_state,
         );
@@ -378,15 +379,14 @@ function JobEdit() {
           state_code: selectedLocation?.value || null,
           state: selectedLocation?.label || null,
         });
-        const filtereddepotOption =
-        depotOptions.filter(
-          (option) => option.state_code ==  selectedStateCode
+        const filtereddepotOption = depotOptions.filter(
+          (option) => option.state_code == selectedStateCode,
         );
-      console.log(
-        filtereddepotOption, selectedStateCode,
-        "filtereddepotOption",
-      );
-      setFilteredDepotOptions(filtereddepotOption);
+        // console.log(
+        //   filtereddepotOption, selectedStateCode,
+        //   "filtereddepotOption",
+        // );
+        setFilteredDepotOptions(filtereddepotOption);
         getCustomersByCompanyId({
           query: "",
           page: 1,
@@ -408,9 +408,9 @@ function JobEdit() {
         setIsSameDayJob(today === formatDate(data.job.ready_at));
         setIsTomorrowJob(
           new Date(formatDate(data.job.ready_at)).toDateString() ===
-            new Date(
-              new Date(today).setDate(new Date(today).getDate() + 1),
-            ).toDateString(),
+          new Date(
+            new Date(today).setDate(new Date(today).getDate() + 1),
+          ).toDateString(),
         );
         // jobDestinations without is_pickup
         // let _jobDestinations = data.job.job_destinations || [];
@@ -419,12 +419,12 @@ function JobEdit() {
             (destination: any) => !destination.is_pickup,
           ) || [];
 
-          let currentDestinations =
+        let currentDestinations =
           data.job.job_destinations.filter(
             (destination: any) => !destination.is_pickup,
           ) || [];
-          console.log("currentDestinations", currentDestinations.address_state);
-          // console.log("jobDestinations", jobDestinations);
+        // console.log("currentDestinations", currentDestinations.address_state);
+        // console.log("jobDestinations", jobDestinations);
         setOriginalJobDestinations(_jobDestinations);
         setJobDestinations(_jobDestinations);
 
@@ -445,16 +445,29 @@ function JobEdit() {
             (job_cc_email: { id: number; email: string }) => job_cc_email.email,
           ),
         );
+        const totalWeight = data.job.job_items.reduce(
+          (sum: any, item: { weight: any }) => sum + item.weight,
+          0,
+        );
+        const totalCbm = data.job.job_items.reduce(
+          (sum: any, item: { volume: any }) => sum + item.volume,
+          0,
+        );
+        setQuoteCalculationRes({
+          ...quoteCalculationRes,
+          total_weight: totalWeight,
+          cbm_auto: totalCbm,
+        });
       } else {
         setJob({ ...job, media: data?.job.media });
         setJobCcEmails(data.job.job_cc_emails);
         setUpdatingMedia(false);
       }
     },
-    // onError(error) {
+    onError(error) {
       // console.log("onError");
       // console.log(error);
-    // },
+    },
   });
 
   useEffect(() => {
@@ -470,10 +483,9 @@ function JobEdit() {
         });
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyRates, job.company_area]);
 
-  const { loading: _companyLoading, data: _companyData } = useQuery(
+  const { loading: companyLoading, data: companyData } = useQuery(
     GET_COMPANY_QUERY,
     {
       variables: {
@@ -488,10 +500,10 @@ function JobEdit() {
           ...refinedData,
         });
       },
-      // onError(error) {
+      onError(error) {
         // console.log("onError");
         // console.log(error);
-      // },
+      },
     },
   );
 
@@ -514,7 +526,7 @@ function JobEdit() {
         (location) => location.value === jobData.job.transport_location,
       );
 
-      const _matchedJobType = jobTypeOptions.find(
+      const matchedJobType = jobTypeOptions.find(
         (type) => type.id === jobData.job.job_type_id,
       );
 
@@ -527,7 +539,6 @@ function JobEdit() {
         // job_type_color: matchedJobType?.color || null
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobData, jobCategories, jobTypeOptions, companyRates]); // Use 'jobData' instead of 'data'
 
   const formatToSelect = (
@@ -544,7 +555,7 @@ function JobEdit() {
     });
   };
 
-  const [handleUpdateJob, {}] = useMutation(UPDATE_JOB_MUTATION, {
+  const [handleUpdateJob, { }] = useMutation(UPDATE_JOB_MUTATION, {
     variables: {
       input: {
         id: job.id,
@@ -644,7 +655,7 @@ function JobEdit() {
       let _jobDestinations = [...jobDestinations];
       for (let jobDestination of _jobDestinations) {
         if (jobDestination.is_new) {
-           await handleCreateJobDestination({
+          const resultPickup = await handleCreateJobDestination({
             input: {
               ...jobDestination,
               job_id: parseInt(data.updateJob.id),
@@ -722,11 +733,11 @@ function JobEdit() {
     },
   });
 
-  const [handleDeleteJob, {}] = useMutation(DELETE_JOB_MUTATION, {
+  const [handleDeleteJob, { }] = useMutation(DELETE_JOB_MUTATION, {
     variables: {
       id: id,
     },
-    onCompleted: () => {
+    onCompleted: (data) => {
       toast({
         title: "Job deleted",
         status: "success",
@@ -826,7 +837,7 @@ function JobEdit() {
     },
   });
   // Use the useQuery hook to fetch the data
-  const { data } = useQuery(
+  const { loading, error, data } = useQuery(
     GET_JOB_PRICE_CALCULATION_DETAIL_QUERY,
     {
       variables: {
@@ -834,7 +845,7 @@ function JobEdit() {
       },
       // skip: !job.id,
       skip: !job.id || !Boolean(job.id), // To ensure no falsy value interferes
-      onCompleted: (data) => {
+      onCompleted: async (data) => {
         // Process the data as needed
         // console.log(data, "d");
         setIsUpdateMode(true); // Data exists, so it's an update
@@ -850,14 +861,22 @@ function JobEdit() {
           tailgate: data.jobPriceCalculationDetail?.tailgate,
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail?.stackable,
-          total_price: data.jobPriceCalculationDetail?.total_price,
+          total_price: data.jobPriceCalculationDetail?.total,
           total_weight: data.jobPriceCalculationDetail?.total_weight,
         });
-        setQuoteCalculationRes({
-          ...data.jobPriceCalculationDetail,
-          total_price: data.jobPriceCalculationDetail?.total_price,
-          total_weight: data.jobPriceCalculationDetail?.total_weight,
-          cbm_auto: data.jobPriceCalculationDetail?.cbm_auto,
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
+          total_price: data.jobPriceCalculationDetail?.total,
+          total: data.jobPriceCalculationDetail?.total,
+
+          total_weight:
+            data.jobPriceCalculationDetail.total_weight !== undefined
+              ? data.jobPriceCalculationDetail.total_weight
+              : prev.total_weight,
+          cbm_auto:
+            data.jobPriceCalculationDetail.cbm_auto !== undefined
+              ? data.jobPriceCalculationDetail.cbm_auto
+              : prev.cbm_auto,
           customer_id: data.jobPriceCalculationDetail?.customer_id,
           dangerous_goods: data.jobPriceCalculationDetail?.dangerous_goods,
           freight: data.jobPriceCalculationDetail?.freight,
@@ -866,10 +885,20 @@ function JobEdit() {
           stackable: data.jobPriceCalculationDetail.stackable,
           time_slot: data.jobPriceCalculationDetail?.time_slot,
           tailgate: data.jobPriceCalculationDetail?.tailgate,
-        });
+        }));
         setButtonText("Update Quote");
-
-        // console.log(data.jobPriceCalculationDetail, "imp");
+        //  setQuoteCalculationRes(defaultJobPriceCalculationDetail);
+        const totalWeight = jobItems.reduce(
+          (sum, item) => sum + item.weight,
+          0,
+        );
+        const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
+          total_weight: totalWeight,
+          cbm_auto: totalCbm,
+        }));
+        getJob();
       },
       onError: (error) => {
         // Handle the error and set data to empty
@@ -877,7 +906,16 @@ function JobEdit() {
         setIsUpdateMode(false); // No data found, so we need to create a new entry
         setRefinedData(defaultJobQuoteData);
         setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-
+        const totalWeight = jobItems.reduce(
+          (sum, item) => sum + item.weight,
+          0,
+        );
+        const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
+          total_weight: totalWeight,
+          cbm_auto: totalCbm,
+        }));
         setButtonText("Get A Quote");
       },
     },
@@ -943,13 +981,13 @@ function JobEdit() {
     },
   });
 
-  const { data: _companyRatesData, refetch: getCompanyRates } = useQuery(
+  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
     GET_COMPANY_RATE_QUERY,
     {
       variables: { company_id: job?.company_id || "" },
       skip: !job?.company_id,
       fetchPolicy: "network-only",
-      onCompleted: (_data) => {
+      onCompleted: (data) => {
         if (data?.getRatesByCompany) {
           const rates = [...data.getRatesByCompany];
           setCompanyRates(rates);
@@ -961,6 +999,17 @@ function JobEdit() {
       },
     },
   );
+  useEffect(() => {
+    const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
+    const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+
+    setQuoteCalculationRes((prev) => ({
+      ...prev,
+      total_weight: totalWeight,
+      cbm_auto: totalCbm,
+    }));
+  }, [jobItems]);
+
   const handleRemoveFromJobItems = (index: number) => {
     let _jobItems = [...jobItems];
     _jobItems.splice(index, 1);
@@ -1015,7 +1064,6 @@ function JobEdit() {
 
   useEffect(() => {
     dateChanged();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobDateAt, readyAt, dropAt]);
   const dateChanged = () => {
     try {
@@ -1050,8 +1098,8 @@ function JobEdit() {
     //check if any job destination is_saved_address and populate setSavedAddresses
   };
   //handleDeleteJobItem
-  const [handleDeleteJobItem, {}] = useMutation(DELETE_JOB_ITEM_MUTATION, {
-    onCompleted: () => {
+  const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
+    onCompleted: (data) => {
       // console.log("Job Item Deleted", data);
     },
     onError: (error) => {
@@ -1059,10 +1107,10 @@ function JobEdit() {
     },
   });
   //handleDelete
-  const [handleDeleteJobDestination, {}] = useMutation(
+  const [handleDeleteJobDestination, { }] = useMutation(
     DELETE_JOB_DESTINATION_MUTATION,
     {
-      onCompleted: (_data) => {
+      onCompleted: (data) => {
         // console.log("Job destination Deleted", data);
       },
       onError: (error) => {
@@ -1099,8 +1147,8 @@ function JobEdit() {
   };
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
   //handleUpdateJobItems
-  const [handleUpdateJobItem, {}] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
-    onCompleted: (_data) => {
+  const [handleUpdateJobItem, { }] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
+    onCompleted: (data) => {
       // console.log("Job item updated");
     },
     onError: (error) => {
@@ -1108,10 +1156,10 @@ function JobEdit() {
     },
   });
   //handleUpdateJobDestinations
-  const [handleUpdateJobDestination, {}] = useMutation(
+  const [handleUpdateJobDestination, { }] = useMutation(
     UPDATE_JOB_DESTINATION_MUTATION,
     {
-      onCompleted: (_data) => {
+      onCompleted: (data) => {
         // console.log("Job destination updated");
       },
       onError: (error) => {
@@ -1120,8 +1168,8 @@ function JobEdit() {
     },
   );
   //deleteMedia
-  const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
-    onCompleted: (_data) => {
+  const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
+    onCompleted: (data) => {
       toast({
         title: "Attachment deleted",
         status: "success",
@@ -1135,7 +1183,16 @@ function JobEdit() {
     },
   });
 
-  const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {
+  const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {    
+    variables: {
+    query: "",
+    page: 1,
+    first: 100,
+    orderByColumn: "id",
+    orderByOrder: "ASC",
+    company_id: job.company_id, // Ensure this is provided if needed
+  },
+    skip: !job.company_id,
     onCompleted: (data) => {
       setCustomerOptions([]);
       setCustomerOptions(
@@ -1175,7 +1232,7 @@ function JobEdit() {
         }),
       );
     },
-    [re],
+    [],
   );
   const handleJobCcEmailAdd = useCallback(
     (event: SyntheticEvent, email: string) => {
@@ -1194,8 +1251,7 @@ function JobEdit() {
         });
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [re],
+    [],
   );
 
   const handleJobCcEmailRemove = useCallback(
@@ -1208,24 +1264,23 @@ function JobEdit() {
         handleDeleteJobCcEmail();
       }, 500);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [jobCcEmailTags, jobCcEmails],
   );
 
-  const [handleDeleteJobCcEmail, {}] = useMutation(
+  const [handleDeleteJobCcEmail, { }] = useMutation(
     DELETE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
         id: deleteJobCcEmailId,
       },
-      onCompleted: (_data) => {},
+      onCompleted: (data) => { },
       onError: (error) => {
         showGraphQLErrorToast(error);
       },
     },
   );
 
-  const [handleCreateJobCcEmail, {}] = useMutation(
+  const [handleCreateJobCcEmail, { }] = useMutation(
     CREATE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
@@ -1234,7 +1289,7 @@ function JobEdit() {
           email: createdCcEmail,
         },
       },
-      onCompleted: (_data) => {
+      onCompleted: (data) => {
         toast({
           title: "Additional email notification created",
           status: "success",
@@ -1260,124 +1315,7 @@ function JobEdit() {
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.customer_id, customerOptions]);
-
-  // useEffect(() => {
-  //   // Function to calculate filtered job types based on cutoff logic
-  //   if (
-  //     new Date(job.created_at).setHours(0, 0, 0, 0) <
-  //     new Date(NEW_CUTOFF_RULES_START_DATE).setHours(0, 0, 0, 0)
-  //   ) {
-  //     return;
-  //   }
-
-  //   const calculateFilteredOptions = async () => {
-  //     let filteredOptions = Array.isArray(jobTypeOptions)
-  //       ? [...jobTypeOptions]
-  //       : [];
-
-  //     if (
-  //       !job.job_category_id ||
-  //       pickUpDestination.lat === 0 ||
-  //       pickUpDestination.lng === 0
-  //     ) {
-  //       return setFilteredJobTypeOptions(filteredOptions);
-  //     }
-
-  //     try {
-  //       const timezone = await getTimezone(
-  //         pickUpDestination.lat,
-  //         pickUpDestination.lng,
-  //       );
-  //       if (job.job_category_id == 1) {
-  //         // LCL Bookings
-  //         if (isSameDayJob) {
-  //           filteredOptions = filteredOptions.filter(
-  //             (opt) => opt.label !== "Standard",
-  //           );
-  //           resetJobTypeAndShowToast();
-  //         } else if (isTomorrowJob) {
-  //           const isAfterLclCutoff = isAfterCutoff("16:00", timezone);
-
-  //           if (isAfterLclCutoff) {
-  //             filteredOptions = filteredOptions.filter(
-  //               (opt) => opt.label !== "Standard",
-  //             );
-  //             resetJobTypeAndShowToast();
-  //           }
-  //         }
-  //       } else if (job.job_category_id == 2) {
-  //         // Airfreight Bookings
-  //         if (isSameDayJob) {
-  //           const isAfterAirfreightCutoff = isAfterCutoff("11:00", timezone);
-
-  //           if (isAfterAirfreightCutoff) {
-  //             filteredOptions = filteredOptions.filter(
-  //               (opt) => opt.label !== "Standard",
-  //             );
-  //             resetJobTypeAndShowToast();
-  //           }
-  //         }
-  //       }
-  //       if (
-  //         job.job_type_id &&
-  //         !filteredOptions.some(
-  //           (opt) => Number(opt.value) == Number(job.job_type_id),
-  //         )
-  //       ) {
-  //         // Instead of nullifying, preserve the job type
-  //         const existingJobType = jobTypeOptions.find(
-  //           (type) => Number(type.id) === Number(job.job_type_id)
-  //         );
-
-  //         if (existingJobType) {
-  //           // If the job type exists in all options, keep it
-  //           setJob({
-  //             ...job,
-  //             job_type_id: job.job_type_id
-  //           });
-  //         }
-  //       }
-
-  //       setFilteredJobTypeOptions(filteredOptions);
-  //     } catch (error) {
-  //       console.error(
-  //         "Error fetching timezone or applying cutoff logic",
-  //         error,
-  //       );
-  //     }
-  //   };
-
-  //   calculateFilteredOptions();
-  // }, [
-  //   job.job_category_id,
-  //   jobDateAt,
-  //   pickUpDestination,
-  //   jobTypeOptions,
-  //   isSameDayJob,
-  //   isTomorrowJob,
-  // ]);
-
-  // Define the reusable function
-  // const resetJobTypeAndShowToast = () => {
-  //   if (job.job_type_id == 1) {
-  //     setJob({
-  //       ...job,
-  //       ready_at: formatDateTimeToDB(jobDateAt, readyAt),
-  //       drop_at: formatDateTimeToDB(jobDateAt, dropAt),
-  //       job_type_id: null,
-  //     });
-  //     toast({
-  //       title: "Job Type Required",
-  //       description:
-  //         "Standard service is no longer available for this time. Please select Express or Urgent.",
-  //       status: "warning",
-  //       duration: 3000,
-  //       isClosable: true,
-  //     });
-  //   }
-  // };
 
   const handleCreateJobPriceCalculationDetail = (
     jobPriceDetail: CreateJobPriceCalculationDetailInput,
@@ -1472,11 +1410,11 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const selectedCategoryName = jobCategories.find(
@@ -1490,7 +1428,7 @@ function JobEdit() {
       (location) =>
         location.label?.toLowerCase() == job?.pick_up_state?.toLowerCase(),
     );
-    console.log(selectedstate, "selectedstate");
+    // console.log(selectedstate, "selectedstate");
     const selectedJobTypeName = jobTypeOptions.find(
       (job_type) => job_type.value == job.job_type_id,
     )?.label;
@@ -1498,9 +1436,9 @@ function JobEdit() {
     const selectedDepot = depotOptions.find(
       (depot) => depot.value === job.timeslot_depots,
     )?.label;
-// debugger
-    const filteredCompanyRates = companyRates?.filter(rate => 
-      rate.state === jobDestination1?.state
+    // debugger
+    const filteredCompanyRates = companyRates?.filter(
+      (rate) => rate.state === jobDestination1?.state,
     );
     // console.log(filteredCompanyRates, "filteredCompanyRates")
 
@@ -1516,15 +1454,15 @@ function JobEdit() {
       state_code: refinedData.state_code || selectedstate?.value,
       company_rates:
         (job.job_category_id == 1 && selectedstate?.value === "QLD") ||
-        selectedstate?.value === "VIC"
+          selectedstate?.value === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              state: rate.state,
-              minimum_charge: rate.minimum_charge,
-            }))
+            company_id: rate.company_id,
+            seafreight_id: rate.seafreight_id,
+            area: rate.area,
+            cbm_rate: rate.cbm_rate,
+            state: rate.state,
+            minimum_charge: rate.minimum_charge,
+          }))
           : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
@@ -1535,11 +1473,11 @@ function JobEdit() {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -1551,8 +1489,10 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        timeslot_depots: job.is_inbound_connect? job.timeslot_depots || selectedDepot : '', // Pass selectedDepot here
-        tail_lift: job.is_tailgate_required || null,
+        timeslot_depots: job.is_inbound_connect
+          ? job.timeslot_depots || selectedDepot
+          : "", // Pass selectedDepot here
+        tail_lift: job.is_tailgate_required || false,
         stackable: false, // If applicable, update this
       },
       job_items: jobItems.map((item) => ({
@@ -1575,22 +1515,14 @@ function JobEdit() {
       })),
     };
 
-    console.log(payload);
-
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
       });
-
-      console.log("Response Data:", response.data);
-      // setQuoteCalculationRes({
-      //   ...response?.data,
-      //   time_slot: response?.data?.time_slot || 0, // Ensure time_slot is set
-      // });
       const calculationData = response?.data;
       setQuoteCalculationRes({
         ...quoteCalculationRes,
-        time_slot: (calculationData as CalculationData)?.time_slot, // Ensure time_slot is set with type assertion
+        time_slot: (calculationData as CalculationData)?.time_slot, 
         cbm_auto: (calculationData as CalculationData)?.cbm_auto,
         total_weight: (calculationData as CalculationData)?.total_weight,
         freight: (calculationData as CalculationData)?.freight,
@@ -1601,15 +1533,12 @@ function JobEdit() {
         stackable: (calculationData as CalculationData)?.stackable,
         total: (calculationData as CalculationData)?.total,
       });
-      console.log(calculationData, "Update mode");
       toast({ title: "Quote Calculation Success", status: "success" });
-      // console.log(isUpdateMode);
-      // console.log(quoteCalculationRes);
-      // console.log("Quote Calculation Response:", response.data);
       if (isUpdateMode) {
         await handleUpdateJobPriceCalculationDetail(calculationData)
-          .then((_data) => {
-            //console.log("Updated successfully:", data);
+          .then((data) => {
+            console.log("Updated successfully:", data);
+            handleUpdateJob()
             toast({
               title: "Quote price updated",
               status: "success",
@@ -1648,15 +1577,50 @@ function JobEdit() {
           tail_lift: Number(calculationData.tail_lift),
           stackable: Number(calculationData.stackable),
           total: Number(calculationData.total),
-        });
+        })
+         .then((data) => {
+            console.log("created successfully:", data);
+            handleUpdateJob()
+            toast({
+              title: "Quote price created",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+          })
+          .catch((error) => {
+            console.error("Error creating job price:", error);
+          });
       }
     } catch (error) {
       console.error("Error:", error);
     }
   };
 
+
+  // Add this validation function near the other validation helpers
+  const validateTimeslotDepot = () => {
+    // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
+    if (
+      job.is_inbound_connect &&
+      job.job_category_id == 1 &&
+      (!job.timeslot_depots || job.timeslot_depots == null || job.timeslot_depots === "")
+    ) {
+      toast({
+        title: "Timeslot depot required",
+        description: "Please select a timeslot depot when Inbound Connect is required.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+    return true;
+  };
+
+  // Update handleSaveJobPriceCalculation to use the validation
   const handleSaveJobPriceCalculation = () => {
-    //console.log(isUpdateMode);
+    if (!validateTimeslotDepot()) return;
     const hasChanged =
       prevJobState.freight_type !== refinedData.freight_type ||
       prevJobState.transport_type !== job.transport_type ||
@@ -1693,6 +1657,15 @@ function JobEdit() {
       setButtonText("Quote");
       sendFreightData();
     }
+  };
+
+  // Update handleUpdateJob to use the validation
+  const handleUpdateJobWithValidation = () => {
+    if (!validateTimeslotDepot()) {
+      setIsSaving(false);
+      return;
+    }
+    handleUpdateJob();
   };
 
   return (
@@ -1739,7 +1712,7 @@ function JobEdit() {
                       isDisabled={isSaving}
                       onClick={() => {
                         setIsSaving(true);
-                        handleUpdateJob();
+                        handleUpdateJobWithValidation();
                       }}
                     >
                       {isSaving ? "Saving Changes..." : "Save Changes"}
@@ -1820,6 +1793,70 @@ function JobEdit() {
                           }}
                         />
 
+                        {(job.job_category_id == 1 || job.job_category_id == 2) && (
+                          <>
+                            {/* Transport Type Select */}
+                            <CustomInputField
+                              key="transport_typeKey"
+                              isSelect={true}
+                              optionsArray={[
+                                { value: "import", label: "Import" },
+                                { value: "export", label: "Export" },
+                              ]}
+                              label="Transport Type"
+                              name="transport_type"
+                              value={[
+                                { value: "import", label: "Import" },
+                                { value: "export", label: "Export" },
+                              ].find((_e) => _e.value === job.transport_type)}
+                              placeholder=""
+                              onChange={(e) => {
+                                setJob({ ...job, transport_type: e.value });
+                                setRefinedData({
+                                  ...refinedData,
+                                  transport_type: e.value,
+                                });
+                              }}
+                            />
+
+                            {/* Location Select */}
+                            <CustomInputField
+                              key="locationKey"
+                              isSelect={true}
+                              optionsArray={[
+                                { value: "VIC", label: "Victoria" },
+                                { value: "QLD", label: "Queensland" },
+                              ]}
+                              label="Location"
+                              name="transport_location"
+                              value={[
+                                { value: "VIC", label: "Victoria" },
+                                { value: "QLD", label: "Queensland" },
+                              ].find((_e) => _e.value === job.transport_location)}
+                              placeholder=""
+                            // onChange={(e) => {
+                            //   const newState = {
+                            //     ...refinedData,
+                            //     state_code: e.value,
+                            //     state: e.label,
+                            //   };
+                            //   setJob({ ...job, transport_location: e.value });
+                            //   setRefinedData(newState);
+                            // }}
+                            />
+                            <Text
+                              style={{
+                                color: "red",
+                                paddingLeft: "11.4rem",
+                                paddingBottom: "1rem",
+                                fontSize: "14px",
+                              }}
+                            >
+                              Note: For LCL and Airfreight Only
+                            </Text>
+                          </>
+                        )}
+
                         <CustomInputField
                           isSelect={true}
                           optionsArray={customerOptions}
@@ -1862,21 +1899,21 @@ function JobEdit() {
                             placeholder=""
                             isDisabled={true}
 
-                            // onChange={(e) => {
-                            //   setJob({
-                            //     ...job,
-                            //     company_id: e.value || null,
-                            //     customer_id: null,
-                            //   });
-                            //   getCustomersByCompanyId({
-                            //     query: "",
-                            //     page: 1,
-                            //     first: 100,
-                            //     orderByColumn: "id",
-                            //     orderByOrder: "ASC",
-                            //     company_id: e.value,
-                            //   });
-                            // }}
+                          // onChange={(e) => {
+                          //   setJob({
+                          //     ...job,
+                          //     company_id: e.value || null,
+                          //     customer_id: null,
+                          //   });
+                          //   getCustomersByCompanyId({
+                          //     query: "",
+                          //     page: 1,
+                          //     first: 100,
+                          //     orderByColumn: "id",
+                          //     orderByOrder: "ASC",
+                          //     company_id: e.value,
+                          //   });
+                          // }}
                           />
                         )}
 
@@ -1919,13 +1956,13 @@ function JobEdit() {
                           isDisabled={true}
                           name="operator_phone"
                           value={customerSelected.phone_no}
-                          // onChange={
-                            // () => {}
+                          onChange={
+                            (e) => { }
                             //setJob({
                             //  ...job,
                             //  [e.target.name]: e.target.value,
                             //})
-                          // }
+                          }
                         />
                         <CustomInputField
                           label="Operator email:"
@@ -1933,13 +1970,13 @@ function JobEdit() {
                           name="operator_email"
                           isDisabled={true}
                           value={customerSelected.email}
-                          // onChange={
-                            // (e) => {}
+                          onChange={
+                            (e) => { }
                             //setJob({
                             //  ...job,
                             //  [e.target.name]: e.target.value,
                             //})
-                          // }
+                          }
                         />
                         <CustomInputField
                           label="Date:"
@@ -1952,11 +1989,11 @@ function JobEdit() {
                             setIsSameDayJob(today === e.target.value);
                             setIsTomorrowJob(
                               new Date(e.target.value).toDateString() ===
-                                new Date(
-                                  new Date(today).setDate(
-                                    new Date(today).getDate() + 1,
-                                  ),
-                                ).toDateString(),
+                              new Date(
+                                new Date(today).setDate(
+                                  new Date(today).getDate() + 1,
+                                ),
+                              ).toDateString(),
                             );
                           }}
                         />
@@ -2037,38 +2074,27 @@ function JobEdit() {
                           value={
                             job.job_type_id
                               ? jobTypeOptions.find(
-                                  (jobType) => jobType.value == job.job_type_id,
-                                )
+                                (jobType) => jobType.value == job.job_type_id,
+                              )
                               : null
                           }
                           placeholder="Select type"
-                          // onChange={(e) => {
-                          //   //console.log(e, "e");
-                          //   // setJob({
-                          //   //   ...job,
-                          //   //   job_type_id: e.value || null,
-                          //   // });
-                          //   const selectedCategory = e.value;
-                          //   const selectedCategoryName = selectedCategory
-                          //     ? jobTypeOptions.find(
-                          //         (job_category) =>
-                          //           job_category.value === selectedCategory,
-                          //       )?.label
-                          //     : null;
+                          onChange={(e) => {
+                            const selectedType = e.value;
+                            const selectedTypeName = jobTypeOptions.find(
+                              (jobType) => jobType.value === selectedType,
+                            )?.label;
 
-                          //   setJob({
-                          //     ...job,
-                          //     job_type_id: selectedCategory || null,
-                          //   });
+                            setJob({
+                              ...job,
+                              job_type_id: selectedType || null,
+                            });
 
-                          //   setRefinedData({
-                          //     ...refinedData,
-                          //     service_choice: selectedCategoryName || null,
-                          //   });
-
-                          //   // console.log(refinedData, "n");
-                          //   // console.log(job, "job");
-                          // }}
+                            setRefinedData({
+                              ...refinedData,
+                              service_choice: selectedTypeName || null,
+                            });
+                          }}
                         />
 
                         <CustomInputField
@@ -2124,64 +2150,7 @@ function JobEdit() {
                             })
                           }
                         />
-                        {/* Transport Type Select */}
-                        <CustomInputField
-                          key="transport_typeKey"
-                          isSelect={true}
-                          optionsArray={[
-                            { value: "import", label: "Import" },
-                            { value: "export", label: "Export" },
-                          ]}
-                          label="Transport Type"
-                          name="transport_type"
-                          value={[
-                            { value: "import", label: "Import" },
-                            { value: "export", label: "Export" },
-                          ].find((_e) => _e.value === job.transport_type)}
-                          placeholder=""
-                          // onChange={(e) => {
-                          //   setJob({ ...job, transport_type: e.value });
-                          //   setRefinedData({
-                          //     ...refinedData,
-                          //     transport_type: e.value,
-                          //   });
-                          // }}
-                        />
 
-                        {/* Location Select */}
-                        <CustomInputField
-                          key="locationKey"
-                          isSelect={true}
-                          optionsArray={[
-                            { value: "VIC", label: "Victoria" },
-                            { value: "QLD", label: "Queensland" },
-                          ]}
-                          label="Location"
-                          name="transport_location"
-                          value={[
-                            { value: "VIC", label: "Victoria" },
-                            { value: "QLD", label: "Queensland" },
-                          ].find((_e) => _e.value === job.transport_location)}
-                          placeholder=""
-                          // onChange={(e) => {
-                          //   const newState = {
-                          //     ...refinedData,
-                          //     state_code: e.value,
-                          //     state: e.label,
-                          //   };
-                          //   setJob({ ...job, transport_location: e.value });
-                          //   setRefinedData(newState);
-                          // }}
-                        />
-                        <Text
-                          style={{
-                            color: "red",
-                            paddingLeft: "11.4rem",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Note: For LCL and Airfreight Only
-                        </Text>
                       </Box>
                     ) : (
                       <Box mb="16px">
@@ -2286,7 +2255,7 @@ function JobEdit() {
                               entityModel={job}
                               savedAddressesSelect={savedAddressesSelect}
                               defaultJobDestination={pickUpDestination}
-                              onAddressSaved={() => {
+                              onAddressSaved={(hasChanged) => {
                                 getCustomerAddresses();
                               }}
                               jobDestinationChanged={(jobDestination) => {
@@ -2355,7 +2324,7 @@ function JobEdit() {
                                         index,
                                       );
                                     }}
-                                    onAddressSaved={() => {
+                                    onAddressSaved={(hasChanged) => {
                                       getCustomerAddresses();
                                     }}
                                   />
@@ -2660,17 +2629,25 @@ function JobEdit() {
                                         is_inbound_connect:
                                           e === "1" ? true : false,
                                       });
-                                      const selectedStateCode = job.pick_up_state == 'Victoria' ? 'VIC' : 
-                         job.pick_up_state == 'Queensland' ? 'QLD' : '';
+                                      const selectedStateCode =
+                                        job.pick_up_state == "Victoria"
+                                          ? "VIC"
+                                          : job.pick_up_state == "Queensland"
+                                            ? "QLD"
+                                            : "";
                                       const filtereddepotOption =
-                                      depotOptions.filter(
-                                        (option) => option.state_code == selectedStateCode
+                                        depotOptions.filter(
+                                          (option) =>
+                                            option.state_code ==
+                                            selectedStateCode,
+                                        );
+                                      // console.log(
+                                      //   filtereddepotOption,job.pick_up_state,
+                                      //   "filtereddepotOption",
+                                      // );
+                                      setFilteredDepotOptions(
+                                        filtereddepotOption,
                                       );
-                                    console.log(
-                                      filtereddepotOption,job.pick_up_state,
-                                      "filtereddepotOption",
-                                    );
-                                    setFilteredDepotOptions(filtereddepotOption);
                                     }}
                                   >
                                     <Stack direction="row" pt={3}>
@@ -2704,11 +2681,12 @@ function JobEdit() {
                                         ...prevData,
                                         timeslot_depots: e.value,
                                       })); // Update the selected depot directly
-                                     console.log("Selected depot: ", e.value)
+                                      //  console.log("Selected depot: ", e.value)
                                       setJob({
                                         ...job,
                                         timeslot_depots: e.value, // Update job.timeslot_depots
                                       });
+                                     sendFreightData()
                                     }}
                                   />
                                 </Box>
@@ -2971,6 +2949,28 @@ function JobEdit() {
                                           color="blue.600"
                                         >
                                           {quoteCalculationRes.dangerous_goods}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* tail_lift */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Tail Lift:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.tail_lift}
                                         </Text>
                                       </Flex>
 

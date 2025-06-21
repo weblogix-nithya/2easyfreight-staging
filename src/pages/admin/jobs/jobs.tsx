@@ -1,6 +1,5 @@
-'use client'
-import { useQuery } from "@apollo/client";
-import { SettingsIcon } from "@chakra-ui/icons";
+import { useQuery } from '@apollo/client';
+import { SettingsIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -8,82 +7,130 @@ import {
   Flex,
   Link,
   SimpleGrid,
+  Spinner,
   Tag,
   TagCloseButton,
   TagLabel,
   useColorModeValue,
   useDisclosure,
-} from "@chakra-ui/react";
-import { FullChevronDown } from "components/icons/Icons";
-import ActionBar from "components/jobs/ActionBar";
-import FilterJobsModal from "components/jobs/FilterJobsModal";
+} from '@chakra-ui/react';
+import DateRangePicker from '@wojtekmaj/react-daterange-picker';
+import { Select } from 'chakra-react-select';
+import { FullChevronDown } from 'components/icons/Icons';
+import ActionBar from 'components/jobs/ActionBar';
+import FilterJobsModal from 'components/jobs/FilterJobsModal';
 import {
   defaultJobFilter,
   defaultSelectedFilter,
   filterDisplayNames,
   SelectedFilter,
-} from "components/jobs/Filters";
-import JobBulkAssignModal from "components/jobs/JobBulkAssignModal";
+} from 'components/jobs/Filters';
+import JobBulkAssignModal from 'components/jobs/JobBulkAssignModal';
 import {
   getBulkAssignColumns,
   getColumns,
   tableColumn,
-} from "components/jobs/JobTableColumns";
-import JobTableSettingsModal from "components/jobs/JobTableSettingsModal";
-import { SearchBar } from "components/navbar/searchBar/SearchBar";
-import PaginationTable from "components/table/PaginationTable";
-import { TabsComponent } from "components/tabs/TabsComponet";
-import { GET_AVAILABLE_DRIVERS_QUERY } from "graphql/driver";
+} from 'components/jobs/JobTableColumns';
+import JobTableSettingsModal from 'components/jobs/JobTableSettingsModal';
+import { SearchBar } from 'components/navbar/searchBar/SearchBar';
+import PaginationTable from 'components/table/PaginationTable';
+import { GET_AVAILABLE_DRIVERS_QUERY } from 'graphql/driver';
 import {
   DynamicTableUser,
   GET_DYNAMIC_TABLE_USERS_QUERY,
-} from "graphql/dynamicTableUser";
-import { GET_JOBS_QUERY } from "graphql/job";
-import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
-import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
-import { JoinOnClause } from "graphql/types/types";
+} from 'graphql/dynamicTableUser';
+import { GET_JOBS_QUERY } from 'graphql/job';
+import { GET_JOB_CATEGORIES_QUERY } from 'graphql/jobCategories';
+import { GET_JOB_STATUSES_QUERY } from 'graphql/jobStatus';
+import { JoinOnClause } from 'graphql/types/types';
 import {
   outputDynamicTableBody,
   outputDynamicTableHeader,
-} from "helpers/helper";
-import AdminLayout from "layouts/admin";
-import debounce from "lodash.debounce";
-import { destroyCookie, setCookie } from "nookies";
-import React, { useEffect, useMemo, useState } from "react";
-import { downloadExcel } from "react-export-table-to-excel";
-import { FaFileExcel } from "react-icons/fa";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+} from 'helpers/helper';
+import AdminLayout from 'layouts/admin';
+import debounce from 'lodash.debounce';
+import { destroyCookie, parseCookies, setCookie } from 'nookies';
+import React, { useEffect, useMemo, useState } from 'react';
+import { downloadExcel } from 'react-export-table-to-excel';
+import { FaFileExcel } from 'react-icons/fa';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   setIsFilterTicked,
   setJobFilters,
   setJobMainFilters,
-} from "store/jobFilterSlice";
-import { RootState } from "store/store";
+} from 'store/jobFilterSlice';
+import { RootState } from 'store/store';
 
 export default function JobIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
-  // const textColor = useColorModeValue("secondaryGray.900", "white");
+  const textColor = useColorModeValue("secondaryGray.900", "white");
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [rangeDate, setRangeDate] = useState([null, null]);
 
+  const [isTableLoading, setIsTableLoading] = useState(false);
   const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
     (state: RootState) => state.user,
   );
+  const adminStatusOptions = [
+    {
+      value: "all",
+      label: "Show All",
+      statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    },
+    {
+      value: "current",
+      label: "Current (Unassigned/Scheduled/En Route)",
+      statusIds: [1, 2, 4],
+    },
+    {
+      value: "in_transit",
+      label: "In Transit (Assigned/In Transit)",
+      statusIds: [3, 5],
+    },
+    {
+      value: "completed",
+      label: "Completed (Completed/Delivered)",
+      statusIds: [6, 7],
+    },
+  ];
+
+  const companyStatusOptions = [
+    {
+      value: "all",
+      label: "Show All",
+      statusIds: [1, 2, 3, 4, 5, 6, 7],
+    },
+    {
+      value: "Open",
+      label: "Open",
+      statusIds: [1],
+    },
+    {
+      value: "Completed",
+      label: "Completed",
+      statusIds: [6, 7],
+    },
+  ];
+
+  // Replace the statusOptions with a conditional assignment
+  const statusOptions = isCompany ? companyStatusOptions : adminStatusOptions;
+
   const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
-  // const cookies = parseCookies();
+  const cookies = parseCookies();
   const dispatch = useDispatch();
 
   const [jobStatuses, setJobStatuses] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
-  const [isCompleted, setIsCompleted] = useState(false); // 1 = pending, 2 = active, 4 = inactive
-  const [isPending, setIsPending] = useState(true); // First access is Pending
+  // const [isCompleted, setIsCompleted] = useState(false); // 1 = pending, 2 = active, 4 = inactive
+  // const [isPending, setIsPending] = useState(true); // First access is Pending
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [drivers, setDrivers] = useState([]);
-  // const [selectedDriver, setSelectedDriver] = useState(null);
+  const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOptions, setDriverOptions] = useState([]);
   const [dynamicTableUsers, setDynamicTableUsers] = useState<
     DynamicTableUser[]
@@ -98,34 +145,57 @@ export default function JobIndex() {
   );
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
     useState(filterDisplayNames); // Table Columns
+
   const columns = useMemo(
     () =>
       getColumns(
         isAdmin,
         isCustomer,
         dynamicTableUsers,
-        isPending,
-        isCompleted,
+        // isPending,
+        // isCompleted,
       ),
-    [isCustomer, isAdmin, dynamicTableUsers, isPending, isCompleted],
+    [isCustomer, isAdmin, dynamicTableUsers],
   );
+
+  const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
+  // console.log(columns, "col");
+
+  const companyColumns = columns.filter((column) =>
+    [
+      "name",
+      "company.name",
+      "reference_no",
+      "job_category.name",
+      "job_type.name",
+      "job_status.name",
+      "ready_at",
+      "pick_up_destination.address_formatted",
+      // 'pick_up_destination.address_business_name',
+      "job_destinations.address",
+      // 'job_destinations.address_business_name',
+      "actions",
+    ].includes(column.id),
+  );
+
+  // console.log(companyColumns, "companyColumns");
+
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
     isCustomer,
     dynamicTableUsers,
   );
 
-  // const defaultTableColumns = columns.reduce(
-  //   (prev, column) => [...prev, column.id],
-  //   [],
-  // );
+  const defaultTableColumns = columns.reduce(
+    (prev, column) => [...prev, column.id],
+    [],
+  );
 
   useEffect(() => {
     setIsChecked(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecked]);
-  // const [tableColumns, setTableColumn] =
-  //   useState<string[]>(defaultTableColumns);
+  const [tableColumns, setTableColumn] =
+    useState<string[]>(defaultTableColumns);
   useEffect(() => {
     if (is_filter_ticked == "1") {
       let _jobFilter = jobFilter;
@@ -145,7 +215,6 @@ export default function JobIndex() {
       if (displayName) setMainFilterDisplayNames(displayName);
       updateTags(updatedValues, _jobFilter);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [is_filter_ticked]);
 
   const handleResetAll = () => {
@@ -197,7 +266,6 @@ export default function JobIndex() {
   useEffect(() => {
     getJobStatuses();
     getJobCategories();
-    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const {
@@ -212,56 +280,25 @@ export default function JobIndex() {
     onClose: onCloseBulkAssign,
   } = useDisclosure();
 
-  const adminTabs = [
-    {
-      id: 1,
-      tabName: "Open",
-      hash: "open",
-    },
-    {
-      id: 2,
-      tabName: "Complete",
-      hash: "complete",
-    },
-  ];
-
-  const customerTabs = [
-    {
-      id: 1,
-      tabName: "Pending",
-      hash: "pending",
-    },
-    {
-      id: 3,
-      tabName: "In progress",
-      hash: "in-progress",
-    },
-    {
-      id: 2,
-      tabName: "Complete",
-      hash: "complete",
-    },
-  ];
-
-  const changeTab = useMemo(() => {
-    return debounce((tab) => {
-      setIsPending(tab == 1);
-      setIsCompleted(tab == 2 ? true : false);
-      setQueryPageIndex(0);
-    }, 300);
-  }, []);
+  // const changeTab = useMemo(() => {
+  //   return debounce((tab) => {
+  //     // setIsPending(tab == 1);
+  //     // setIsCompleted(tab == 2 ? true : false);
+  //     setQueryPageIndex(0);
+  //   }, 300);
+  // }, []);
 
   useEffect(() => {
     if (isAdmin) getJobs();
     if (isCompany) getCompanyJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     queryPageIndex,
     queryPageSize,
     searchQuery,
-    isCompleted,
+    // isCompleted,
     mainFilters,
-    isPending,
+    rangeDate,
+    // isPending,
   ]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -315,12 +352,55 @@ export default function JobIndex() {
     },
   });
 
+  const processJobData = (jobsData: any[]) => {
+    // Separate unassigned and assigned jobs
+    const unassignedJobs = jobsData.filter((job) => !job.driver_id);
+    const assignedJobs = jobsData.filter((job) => job.driver_id);
+    // console.log(assignedJobs, "dddd");
+    // Group assigned jobs by driver
+    const groupedByDriver = assignedJobs.reduce((acc, job) => {
+      const driverId = job.driver_id;
+      if (!acc[driverId]) {
+        acc[driverId] = {
+          driverInfo: {
+            id: driverId,
+            name: job.driver?.full_name || "Unknown Driver",
+            isDriverHeader: true,
+            is_tailgated: job.driver?.is_tailgated || false,
+            no_max_capacity: job.driver?.no_max_capacity || "-",
+            no_max_pallets: job.driver?.no_max_pallets || "-",
+            no_max_volume: job.driver?.no_max_volume || "-",
+            phone_no: job.driver?.phone_no || "-",
+            registration_no: job.driver?.registration_no || "-",
+          },
+          jobs: [],
+        };
+      }
+      acc[driverId].jobs.push(job);
+      return acc;
+    }, {});
+
+    // Create final data array with headers and jobs
+    const processedData = [
+      ...unassignedJobs,
+      ...Object.values(groupedByDriver).flatMap((group) => [
+        (
+          group as {
+            driverInfo: { id: string; name: string; isDriverHeader: boolean };
+          }
+        ).driverInfo,
+        ...(group as { jobs: any[] }).jobs,
+      ]),
+    ];
+
+    return processedData;
+  };
   const orderByRelationship = useMemo(() => {
     let join = undefined as JoinOnClause;
     let column = sorting?.id ?? "id";
     let order = sorting?.direction ? "DESC" : "ASC";
     let table_name = "jobs";
-    // let scope = undefined;
+    let scope = undefined;
     if (column.includes("driver")) {
       join = {
         name: "drivers",
@@ -345,7 +425,7 @@ export default function JobIndex() {
 
   const {
     loading,
-    // error,
+    error,
     data: jobs,
     refetch: getJobs,
   } = useQuery(GET_JOBS_QUERY, {
@@ -354,7 +434,14 @@ export default function JobIndex() {
       page: queryPageIndex + 1,
       first: queryPageSize,
       orderByRelationship: orderByRelationship,
-      job_status_ids: isCompleted ? [6, 7] : [1, 2, 3, 4, 5, 8, 9],
+      between_at:
+        rangeDate && rangeDate[0]
+          ? {
+              from_at: rangeDate[0],
+              to_at: rangeDate[1],
+            }
+          : undefined,
+      job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
       ...mainJobFilter,
     },
     skip: !isAdmin,
@@ -362,7 +449,7 @@ export default function JobIndex() {
 
   const {
     loading: companyJobsLoading,
-    // error: companyJobsError,
+    error: companyJobsError,
     data: companyJobs,
     refetch: getCompanyJobs,
   } = useQuery(GET_JOBS_QUERY, {
@@ -372,7 +459,14 @@ export default function JobIndex() {
       first: queryPageSize,
       orderByRelationship: orderByRelationship,
       company_id: parseInt(companyId),
-      job_status_ids: isCompleted ? [6, 7] : isPending ? [1] : [2, 3, 4, 5],
+      between_at:
+        rangeDate && rangeDate[0]
+          ? {
+              from_at: rangeDate[0],
+              to_at: rangeDate[1],
+            }
+          : undefined,
+      job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
       ...mainJobFilter,
     },
     skip: !isCompany,
@@ -408,7 +502,6 @@ export default function JobIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   const { refetch: getDynamicTableUsers } = useQuery(
@@ -450,7 +543,7 @@ export default function JobIndex() {
     });
   };
   const handleSortingChange = (sortBy: string | any[]) => {
-    console.log("handleSorting", sortBy);
+    // console.log("handleSorting", sortBy);
     if (sortBy.length === 0) {
       setSorting({
         id: "id",
@@ -458,7 +551,7 @@ export default function JobIndex() {
       });
     } else {
       const [sort] = sortBy;
-      // const newDirection = sort.desc ? "DESC" : "ASC";
+      const newDirection = sort.desc ? "DESC" : "ASC";
       const newSorting = {
         id: sort.id,
         direction: sort.desc,
@@ -466,6 +559,31 @@ export default function JobIndex() {
       setSorting(newSorting);
     }
   };
+
+  const handleStatusChange = (selectedOption: any) => {
+    setStatusFilter(selectedOption.value);
+    setQueryPageIndex(0);
+
+    // Update job status IDs filter based on selection
+    let statusIds: number[] = [];
+    if (selectedOption.value !== "all") {
+      const option = statusOptions.find(
+        (opt) => opt.value === selectedOption.value,
+      );
+      statusIds = option?.statusIds || [];
+    }
+
+    // Store the status IDs in state or update the existing filter
+    const updatedJobFilter = {
+      ...mainJobFilter,
+      job_status_ids: statusIds.length > 0 ? statusIds : [1, 2, 3, 4, 5, 6, 7],
+    };
+    setMainJobFilter(updatedJobFilter);
+  };
+
+  useEffect(() => {
+    setIsTableLoading(loading || companyJobsLoading);
+  }, [companyJobsLoading, loading]);
 
   return (
     <AdminLayout>
@@ -484,10 +602,12 @@ export default function JobIndex() {
           >
             <h1>Delivery Jobs</h1>
 
-            <Button variant="no-effects" onClick={onOpenSetting}>
-              <SettingsIcon className="mr-2" />
-              Settings
-            </Button>
+            {isAdmin && (
+              <Button variant="no-effects" onClick={onOpenSetting}>
+                <SettingsIcon className="mr-2" />
+                Settings
+              </Button>
+            )}
           </Flex>
           <Flex minWidth="max-content" justifyContent="space-between">
             <Flex>
@@ -497,34 +617,38 @@ export default function JobIndex() {
                 background={menuBg}
                 me="10px"
               />
-              <Button
-                variant="no-effects"
-                onClick={onOpenFilter}
-                className="text-[var(--chakra-colors-primary-400)]"
-              >
-                Filters
-                <FullChevronDown className="ml-2" />
-              </Button>
-              <Checkbox
-                onChange={(e) => {
-                  if (!e.target.checked) {
-                    destroyCookie(null, "jobMainFilters", { path: "*" });
-                    destroyCookie(null, "displayName", { path: "*" });
-                    handleResetAll();
-                  }
-                  setCookie(
-                    null,
-                    "is_filter_ticked",
-                    e.target.checked ? "1" : "0",
-                    {
-                      maxAge: 30 * 24 * 60 * 60,
-                      path: "*",
-                    },
-                  );
-                  dispatch(setIsFilterTicked(e.target.checked ? "1" : "0"));
-                }}
-                isChecked={is_filter_ticked == "1" ? true : false}
-              ></Checkbox>
+              {isAdmin && (
+                <>
+                  <Button
+                    variant="no-effects"
+                    onClick={onOpenFilter}
+                    className="text-[var(--chakra-colors-primary-400)]"
+                  >
+                    Filters
+                    <FullChevronDown className="ml-2" />
+                  </Button>
+                  <Checkbox
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        destroyCookie(null, "jobMainFilters", { path: "*" });
+                        destroyCookie(null, "displayName", { path: "*" });
+                        handleResetAll();
+                      }
+                      setCookie(
+                        null,
+                        "is_filter_ticked",
+                        e.target.checked ? "1" : "0",
+                        {
+                          maxAge: 30 * 24 * 60 * 60,
+                          path: "*",
+                        },
+                      );
+                      dispatch(setIsFilterTicked(e.target.checked ? "1" : "0"));
+                    }}
+                    isChecked={is_filter_ticked == "1" ? true : false}
+                  ></Checkbox>
+                </>
+              )}
             </Flex>
 
             <Flex>
@@ -586,66 +710,134 @@ export default function JobIndex() {
               Clear all
             </Button>
           </Flex>
-          <TabsComponent
+          <Flex>
+            <Box width="300px">
+              <Select
+                options={statusOptions}
+                defaultValue={statusOptions[0]}
+                onChange={handleStatusChange}
+                placeholder="Select Status"
+                className="basic-single"
+                classNamePrefix="select"
+              />
+            </Box>
+            <Box
+              alignItems="center"
+              flexDirection="column"
+              w="30%"
+              maxW="max-content"
+              p="10px 10px"
+              h="max-content"
+              ml="4"
+              sx={{
+                ".react-daterange-picker__wrapper": {
+                  border: "1px solid",
+                  borderColor: "#e3e3e3",
+                  padding: "6px",
+                  borderRadius: "0.375rem",
+                  marginTop: "-15px",
+                },
+              }}
+            >
+              {/* @ts-ignore */}
+              <DateRangePicker value={rangeDate} onChange={setRangeDate} />
+            </Box>
+          </Flex>
+          {/* <TabsComponent
             tabs={isAdmin ? adminTabs : customerTabs}
             onChange={(tabId) => changeTab(tabId)}
-          />
-          {isAdmin && !loading && jobs?.jobs.data.length >= 0 && (
-            <PaginationTable
-              columns={columns}
-              data={jobs?.jobs.data}
-              options={{
-                manualSortBy: true,
-                initialState: {
-                  pageIndex: queryPageIndex,
-                  pageSize: queryPageSize,
-                  sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
-                },
-                manualPagination: true,
-                pageCount: jobs?.jobs.paginatorInfo.lastPage,
-              }}
-              setQueryPageIndex={setQueryPageIndex}
-              setQueryPageSize={setQueryPageSize}
-              isServerSide
-              showPageSizeSelect
-              showRowSelection
-              setSelectedRow={setSelectedJobs}
-              isFilterRowSelected={isShowSelectedOnly}
-              isChecked={isChecked}
-              showManualPages
-              onSortingChange={handleSortingChange}
-              restyleTable
-            />
-          )}
+          /> */}
+          {isTableLoading ? (
+            <Box textAlign="center" py={4} px={10}>
+              Loading <Spinner size="sm" ml={2} />
+            </Box>
+          ) : (
+            <>
+              {isAdmin && !loading && jobs?.jobs.data.length >= 0 && (
+                <PaginationTable
+                  columns={adminColumns}
+                  // data={jobs?.jobs.data}
+                  data={processJobData(jobs?.jobs.data)}
+                  options={{
+                    manualSortBy: true,
+                    initialState: {
+                      pageIndex: queryPageIndex,
+                      pageSize: queryPageSize,
+                      sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
+                    },
+                    manualPagination: true,
+                    pageCount: jobs?.jobs.paginatorInfo.lastPage,
+                  }}
+                  setQueryPageIndex={setQueryPageIndex}
+                  setQueryPageSize={setQueryPageSize}
+                  isServerSide
+                  showPageSizeSelect
+                  showRowSelection
+                  setSelectedRow={setSelectedJobs}
+                  isFilterRowSelected={isShowSelectedOnly}
+                  isChecked={isChecked}
+                  showManualPages
+                  onSortingChange={handleSortingChange}
+                  restyleTable
+                  // getRowProps={getJobRowProps}
+                  getRowProps={(row) => ({
+                    style: {
+                      cursor: "pointer",
+                    },
+                    bg:
+                      row.original.job_status?.id === 1
+                        ? "yellow.50"
+                        : [6, 7].includes(Number(row.original.job_status?.id))
+                        ? "green.50"
+                        : "white",
+                    _hover: { bg: "gray.100" },
+                  })}
+                />
+              )}
 
-          {isCompany &&
-            !companyJobsLoading &&
-            companyJobs?.jobs.data.length >= 0 && (
-              <PaginationTable
-                columns={columns}
-                data={companyJobs?.jobs.data}
-                options={{
-                  manualSortBy: true,
-                  initialState: {
-                    pageIndex: queryPageIndex,
-                    pageSize: queryPageSize,
-                    sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
-                  },
-                  manualPagination: true,
-                  pageCount: companyJobs?.jobs.paginatorInfo.lastPage,
-                }}
-                setQueryPageIndex={setQueryPageIndex}
-                setQueryPageSize={setQueryPageSize}
-                isServerSide
-                showPageSizeSelect
-                showRowSelection
-                setSelectedRow={setSelectedJobs}
-                isFilterRowSelected={isShowSelectedOnly}
-                isChecked={isChecked}
-                showManualPages
-                onSortingChange={handleSortingChange}
-              />
-            )}
+              {isCompany &&
+                !companyJobsLoading &&
+                companyJobs?.jobs.data.length >= 0 && (
+                  <PaginationTable
+                    columns={companyColumns}
+                    data={companyJobs?.jobs.data}
+                    options={{
+                      manualSortBy: true,
+                      initialState: {
+                        pageIndex: queryPageIndex,
+                        pageSize: queryPageSize,
+                        sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
+                      },
+                      manualPagination: true,
+                      pageCount: companyJobs?.jobs.paginatorInfo.lastPage,
+                    }}
+                    setQueryPageIndex={setQueryPageIndex}
+                    setQueryPageSize={setQueryPageSize}
+                    isServerSide
+                    showPageSizeSelect
+                    showRowSelection
+                    setSelectedRow={setSelectedJobs}
+                    isFilterRowSelected={isShowSelectedOnly}
+                    isChecked={isChecked}
+                    showManualPages
+                    onSortingChange={handleSortingChange}
+                    // getRowProps={getJobRowProps}
+                    getRowProps={(row) => ({
+                      style: {
+                        cursor: "pointer",
+                      },
+                      bg:
+                        row.original.job_status?.id == 1
+                          ? "yellow.50"
+                          : [6, 7].includes(Number(row.original.job_status?.id))
+                          ? "green.50"
+                          : "white",
+                      _hover: { bg: "gray.100" },
+                    })}
+                  />
+                )}
+            </>
+          )}
         </SimpleGrid>
 
         {/* Floating Action Bar */}

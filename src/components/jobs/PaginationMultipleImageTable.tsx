@@ -67,11 +67,11 @@ const PaginationMultipleImageTable = <T extends object>({
   onLinkEvent,
   path,
 }: PaginationTableProps<T>) => {
-  // const textColor = useColorModeValue("secondaryGray.900", "white");
-  // //  const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
+  const textColor = useColorModeValue("secondaryGray.900", "white");
+  const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
   const textColorLink = useColorModeValue("blue.600", "blue");
-  // const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
-  // const iconColor = useColorModeValue("brand.500", "white");
+  const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
+  const iconColor = useColorModeValue("brand.500", "white");
   const router = useRouter();
 
   const {
@@ -84,7 +84,7 @@ const PaginationMultipleImageTable = <T extends object>({
     canNextPage,
     nextPage,
     previousPage,
-    // setPageSize,
+    setPageSize,
     state: { pageIndex, pageSize },
   } = useTable<T>({ ...options, columns, data }, usePagination, ...plugins);
 
@@ -93,7 +93,6 @@ const PaginationMultipleImageTable = <T extends object>({
       setQueryPageIndex(pageIndex);
       setQueryPageSize(pageSize);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isServerSide, pageIndex, pageSize, setQueryPageIndex, setQueryPageSize]);
 
   return (
