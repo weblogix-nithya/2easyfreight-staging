@@ -207,7 +207,7 @@ export default function AdminLayout(props: DashboardLayoutProps) {
     <Wrapper
       apiKey={process.env.NEXT_PUBLIC_GOOGLE_API_KEY}
       render={render}
-      libraries={["places"]}
+  libraries={["places", "marker"]}
     >
       {isAuth && (
         <Box className="mk-admin-index">

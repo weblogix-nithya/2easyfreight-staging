@@ -319,5 +319,11 @@ export function TrackingMap({
   //   }
   // });
 
-  return <div ref={mapRef} id="map" style={{ height: "100%" }} />;
+  return (
+    <div style={{ height: '100vh', width: '100%' }}>
+  <div ref={mapRef} id="map" style={{ height: '100%', width: '100%' }} />
+  
+</div>
+
+  )
 }
