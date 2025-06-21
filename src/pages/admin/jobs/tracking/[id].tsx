@@ -15,7 +15,7 @@ import {
   Text,
   Tooltip,
 } from "@chakra-ui/react";
-import { faBoltLightning } from "@fortawesome/free-solid-svg-icons";
+import { faBoltLightning } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { TrackingMap } from "components/map/TrackingMap";
 import RsbJobIndicatorCircle from "components/sidebar/components/RsbJobIndicatorCircle";
@@ -30,7 +30,7 @@ import {
 import debounce from "lodash.debounce";
 import moment from "moment";
 import { useRouter } from "next/router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 
 import AdminLayout from "../../../../layouts/admin";
 
@@ -46,19 +46,18 @@ export default function TrackingJob() {
   const [drivers, setDrivers] = useState([]);
   const [pollingSpeed, setPollingSpeed] = useState(60000);
 
-  const centerChangeHandler = useCallback((data: any) => {
+  const centerChangeHandler = (data: any) => {
     setCenter(data);
-  }, []);
-
-  const debouncedCenterChangeHandler = useMemo(
-    () => debounce(centerChangeHandler, 300),
-    [centerChangeHandler]
+  };
+  const debouncedCenterChangeHandler = useCallback(
+    debounce(centerChangeHandler, 300),
+    [],
   );
 
   const {
     loading: jobLoading,
     data: jobData,
-    // refetch: getJob,
+    refetch: getJob,
   } = useQuery(GET_JOB_QUERY, {
     variables: {
       id: jobId,
@@ -85,7 +84,7 @@ export default function TrackingJob() {
 
   const [
     getDriverCurrentRoutes,
-    { data: _routes, loading: loadingDriverCurrentRoutes },
+    { data: routes, loading: loadingDriverCurrentRoutes },
   ] = useLazyQuery(GET_DRIVER_CURRENT_ROUTE_QUERY, {
     pollInterval: pollingSpeed,
     notifyOnNetworkStatusChange: true,

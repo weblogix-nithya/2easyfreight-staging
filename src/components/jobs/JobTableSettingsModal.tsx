@@ -11,7 +11,6 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Spinner,
   Switch,
   Text,
   UseDisclosureProps,
@@ -40,21 +39,18 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
   const [dynamicTableUsers, setDynamicTableUsers] = useState<
     DynamicTableUser[]
   >([]);
-  const [isLoading, setIsLoading] = useState(true);
-
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const getIndex = (id: UniqueIdentifier) =>
     dynamicTableUsers?.findIndex(
       (dynamicTableUser: DynamicTableUser) => dynamicTableUser.id == id,
     );
-  // const getPosition = (id: UniqueIdentifier) => getIndex(id) + 1;
+  const getPosition = (id: UniqueIdentifier) => getIndex(id) + 1;
   const activeIndex = activeId ? getIndex(activeId) : -1;
 
   useEffect(() => {
     if (isOpen == true) {
       getDynamicTableUsers();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const { refetch: getDynamicTableUsers } = useQuery(
@@ -68,31 +64,14 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         orderByOrder: "ASC",
         user_id: userId,
       },
-          skip: !isOpen, // Skip initial query when modal is closed
       notifyOnNetworkStatusChange: true,
-      fetchPolicy:  "network-only",
       onCompleted: (data) => {
         setDynamicTableUsers(
-          data.dynamicTableUsers.data.map((item: DynamicTableUser) => item));
-        setIsLoading(false);
+          data.dynamicTableUsers.data.map((item: DynamicTableUser) => item),
+        );
       },
     },
   );
-
-    // Prefetch data when component mounts
-    useEffect(() => {
-      getDynamicTableUsers();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-  
-    // Refresh data when modal opens if needed
-    useEffect(() => {
-      if (isOpen) {
-        setIsLoading(true);
-        getDynamicTableUsers();
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
 
   const sortedDynamicTableUsers = dynamicTableUsers.map((item, index) => {
     return {
@@ -108,7 +87,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
       variables: {
         input: sortedDynamicTableUsers,
       },
-      onCompleted: (_data) => {
+      onCompleted: (data) => {
         toast({
           title: "User table settings updated",
           status: "success",
@@ -130,7 +109,6 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
       isOpen={isOpen}
       onClose={onClose}
       size="lg"
-      motionPreset="none" 
     >
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
       <ModalContent>
@@ -138,10 +116,6 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         <ModalCloseButton />
         <ModalBody>
           <VStack w="full" align="start" spacing={3}>
-          {isLoading ? (
-              <Spinner size="xl" />
-            ) : (
-              <>
             <Divider mb="2" />
             <DndContext
               onDragStart={({ active }) => {
@@ -232,10 +206,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
                   </div>
                   <Divider mt="1" />
                 </Box>
-              ))
-            }
-             </>
-            )} 
+              ))}
           </VStack>
         </ModalBody>
         <ModalFooter justifyContent={"center"}>

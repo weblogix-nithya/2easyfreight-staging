@@ -15,7 +15,7 @@ type ActionBarProps = {
   onClickBulkAssign: () => void;
 };
 
-const ActionBar = <_P extends object>({
+const ActionBar = <P extends object>({
   selectedJobs,
   onSwitch,
   onClickBulkAssign,
@@ -52,7 +52,7 @@ const ActionBar = <_P extends object>({
         <Flex align="center" borderRadius="16px">
           <Switch
             id="show-selected"
-            onChange={(_e) => {
+            onChange={(e) => {
               setIsSwitched(!isSwitched);
               onSwitch(!isSwitched);
             }}

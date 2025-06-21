@@ -31,7 +31,7 @@ import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANYS_QUERY } from "graphql/company";
-import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
+import { GET_COMPANY_RATE_QUERY } from "graphql/companyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
@@ -120,11 +120,11 @@ function JobEdit() {
   // });
   const [companyRates, setCompanyRates] = useState([]);
 
-  // const [selectedRegion, setSelectedRegion] = useState({
-  //   area: "",
-  //   cbm_rate: 0,
-  //   minimum_charge: 0,
-  // });
+  const [selectedRegion, setSelectedRegion] = useState({
+    area: "",
+    cbm_rate: 0,
+    minimum_charge: 0,
+  });
   // console.log(refinedData, "refined to wp");
 
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
@@ -151,7 +151,7 @@ function JobEdit() {
   const [jobDateAt, setJobDateAt] = useState(today);
   const [readyAt, setReadyAt] = useState("06:00");
   const [dropAt, setDropAt] = useState("17:00");
-  // const [jobCcEmails, setJobCcEmails] = useState([]);
+  const [jobCcEmails, setJobCcEmails] = useState([]);
   const [jobCcEmailTags, setJobCcEmailTags] = useState([]);
   const [isSameDayJob, setIsSameDayJob] = useState(true);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
@@ -239,7 +239,7 @@ function JobEdit() {
     [],
   );
 
-  const { data: _companyRatesData, refetch: getCompanyRates } = useQuery(
+  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
     GET_COMPANY_RATE_QUERY,
     {
       variables: { company_id: job?.company_id || "" },
@@ -258,7 +258,7 @@ function JobEdit() {
     },
   );
 
-  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+  const { data: depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     onCompleted: (data) => {
       if (data?.allTimeslotDepots) {
         const depots = data.allTimeslotDepots
@@ -271,8 +271,8 @@ function JobEdit() {
             pincode: depot.pincode,
           }));
         setDepotOptions(depots);
-        console.log("depots", data.allTimeslotDepots);
-        console.log("depots", depots);
+        // console.log("depots", data.allTimeslotDepots);
+        // console.log("depots", depots);
       }
     },
     onError: (error) => {
@@ -376,15 +376,15 @@ function JobEdit() {
       setJob((job) => ({ ...job, ...{ company_id: companyId } }));
       getCustomersByCompanyId({ ...defaultVariables, company_id: companyId });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
 
-  const [handleCreateJob, {  }] = useMutation(CREATE_JOB_MUTATION, {
+  const [handleCreateJob, { loading }] = useMutation(CREATE_JOB_MUTATION, {
     variables: {
       input: {
         ...job,
         id: undefined,
         job_status_id: 1,
+        job_type_id: job.job_type_id,
         transport_type: job.transport_type,
         transport_location: job.transport_location,
         timeslot_depots: job.timeslot_depots,
@@ -437,7 +437,7 @@ function JobEdit() {
         stackable: Number(quoteCalculationRes.stackable),
         total: Number(quoteCalculationRes.total),
       });
-       await handleCreateJobDestination({
+      const resultPickup = await handleCreateJobDestination({
         input: {
           ...pickUpDestination,
           is_pickup: true,
@@ -452,7 +452,7 @@ function JobEdit() {
         jobDestination.id = undefined;
         jobDestination.job_id = parseInt(data.createJob.id);
         // small delay to prevent the error of the jobDestination not being created.
-        await handleCreateJobDestination({
+        const result = await handleCreateJobDestination({
           input: {
             ...jobDestination,
             is_pickup: false,
@@ -507,8 +507,8 @@ function JobEdit() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
-    onCompleted: (_data) => {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
+    onCompleted: (data) => {
       /*toast({
         title: "Media updated",
         status: "success",
@@ -617,21 +617,17 @@ function JobEdit() {
     let _jobDestinations = [...jobDestinations];
     _jobDestinations[index] = value;
     setJobDestinations(_jobDestinations);
-    let currentstate=
+    let currentstate =
       _jobDestinations[0]?.address_state == "Victoria"
         ? "VIC"
         : jobDestinations[0]?.address_state == "Queensland"
-        ? "QLD"
-        : "";
-        const filtereddepotOption =
-        depotOptions.filter(
-          (option) => option.state_code == currentstate
-        );
-      console.log(
-        filtereddepotOption,
-        "filtereddepotOption",
-      );
-      setFilteredDepotOptions(filtereddepotOption);     
+          ? "QLD"
+          : "";
+    const filtereddepotOption = depotOptions.filter(
+      (option) => option.state_code == currentstate,
+    );
+    // console.log(filtereddepotOption, "filtereddepotOption");
+    setFilteredDepotOptions(filtereddepotOption);
   };
   useQuery(GET_JOB_CATEGORIES_QUERY, {
     variables: defaultVariables,
@@ -683,7 +679,6 @@ function JobEdit() {
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.customer_id, customerOptions]);
   const handleRemoveFromJobItems = (index: number) => {
     let _jobItems = [...jobItems];
@@ -716,6 +711,19 @@ function JobEdit() {
     _jobItems[index] = value;
     setJobItems(_jobItems);
     // recalculateTempCalculations(_jobItems);
+    const totalWeight = _jobItems.reduce(
+      (sum: any, item: { weight: any }) => sum + item.weight,
+      0,
+    );
+    const totalCbm = _jobItems.reduce(
+      (sum: any, item: { volume: any }) => sum + item.volume,
+      0,
+    );
+    setQuoteCalculationRes({
+      ...quoteCalculationRes,
+      total_weight: totalWeight,
+      cbm_auto: totalCbm,
+    });
   };
 
   useEffect(() => {
@@ -740,7 +748,6 @@ function JobEdit() {
     };
 
     calculateTotals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobItems]);
 
   const addToJobItems = () => {
@@ -752,7 +759,6 @@ function JobEdit() {
   };
   useEffect(() => {
     dateChanged();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobDateAt, readyAt, dropAt]);
   const dateChanged = () => {
     try {
@@ -765,13 +771,33 @@ function JobEdit() {
       //console.log(e);
     }
   };
-
+  // Change className of select based on job.job_type_id
+  const jobTypeClassName = (jobTypeId: number) => {
+    let selectClassName = "";
+    if (jobTypeId === 1) {
+      selectClassName = "bg-[var(--chakra-colors-purple-400)]";
+    } else if (jobTypeId === 2) {
+      selectClassName = "bg-[var(--chakra-colors-orange-500)]";
+    } else if (jobTypeId === 3) {
+      selectClassName = "bg-[var(--chakra-colors-red-500)]";
+    }
+    return selectClassName;
+  };
   const handleRemoveFromTemporaryMedia = (id: number) => {
     let _temporaryMedia = [...temporaryMedia];
     _temporaryMedia = _temporaryMedia.filter((e) => e.id !== id);
     setTemporaryMedia(_temporaryMedia);
   };
   const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {
+     variables: {
+    query: "",
+    page: 1,
+    first: 100,
+    orderByColumn: "id",
+    orderByOrder: "ASC",
+    company_id: job.company_id, // Ensure this is provided if needed
+  },
+    skip: !isCompany,
     onCompleted: (data) => {
       setCustomerOptions([]);
       let _customerOptions = formatToSelect(
@@ -779,9 +805,9 @@ function JobEdit() {
         "id",
         "full_name",
       );
+      console.log(data,_customerOptions, "custSelected");
       setCustomerOptions(_customerOptions);
       if (isCustomer) {
-        // console.log(customerSelected, "customerSelected");
 
         setJob({ ...job, ...{ customer_id: customerId } });
         const selectedCustomer = _customerOptions.find(
@@ -813,7 +839,6 @@ function JobEdit() {
         }),
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -879,7 +904,6 @@ function JobEdit() {
     };
 
     calculateFilteredOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     job.job_category_id,
     jobDateAt,
@@ -929,14 +953,47 @@ function JobEdit() {
     return true;
   };
 
+  // Add this validation helper near the other validation helpers
+  const validateTimeslotDepot = () => {
+    // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
+    if (
+      job.is_inbound_connect === true &&
+      job.job_category_id === 1 &&
+      (!job.timeslot_depots || job.timeslot_depots === "")
+    ) {
+      toast({
+        title: "Timeslot depot required",
+        description:
+          "Please select a timeslot depot when Inbound Connect is required.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleJobCreation = () => {
     if (!validateAddresses()) return;
+    if (!validateTimeslotDepot()) return;
 
     if ((job.job_type_id = null)) {
       toast({
         title: "Job Type Required",
         description:
           "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if ((job.job_category_id == 1 || job.job_category_id == 2) && (!job.transport_type || job.transport_type == "" || job.transport_type == null)) {
+      toast({
+        title: "Transport Type Required",
+        description: "Please select Import or Export as the transport type.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -952,7 +1009,8 @@ function JobEdit() {
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
-    if ((job.job_type_id = null)) {
+    if (!validateTimeslotDepot()) return;
+    if (job.job_type_id === null || "") {
       toast({
         title: "Job Type Required",
         description:
@@ -964,16 +1022,38 @@ function JobEdit() {
       return;
     }
 
+    if ((job.job_category_id == 1 || job.job_category_id == 2) && (!job.transport_type || job.transport_type === "")) {
+      toast({
+        title: "Transport Type Required",
+        description: "Please select Import or Export as the transport type.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // if (refinedData.transport_type === null || "") {
+    //   toast({
+    //     title: "transport Type Required",
+    //     description: "Please select Import or Export as the transport type.",
+    //     status: "warning",
+    //     duration: 3000,
+    //     isClosable: true,
+    //   });
+    //   return;
+    // }
+
     const today = new Date().toISOString(); // Gets current date and time in ISO format
 
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -993,14 +1073,14 @@ function JobEdit() {
       // area: refinedData.area,
       company_rates:
         (job.job_category_id == 1 && refinedData.pick_up_stateCode === "QLD") ||
-        refinedData.pick_up_stateCode === "VIC"
+          refinedData.pick_up_stateCode === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              minimum_charge: rate.minimum_charge,
-            }))
+            company_id: rate.company_id,
+            seafreight_id: rate.seafreight_id,
+            area: rate.area,
+            cbm_rate: rate.cbm_rate,
+            minimum_charge: rate.minimum_charge,
+          }))
           : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
@@ -1011,11 +1091,11 @@ function JobEdit() {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -1052,7 +1132,7 @@ function JobEdit() {
         updated_at: refinedData.updated_at || today,
       })),
     };
-    console.log(payload, "p");
+    // console.log(payload, "p");
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
@@ -1120,6 +1200,70 @@ function JobEdit() {
                       // console.log(refinedData, "n");
                     }}
                   />
+
+
+                  {/* Transport Type Select */}
+                  {(job.job_category_id == 1 || job.job_category_id == 2) && (
+                    <>
+                      <CustomInputField
+                        key="transport_typeKey"
+                        isSelect={true}
+                        optionsArray={[
+                          { value: "import", label: "Import" },
+                          { value: "export", label: "Export" },
+                        ]}
+                        label="Transport Type"
+                        name="transport_type"
+                        value={[
+                          { value: "import", label: "Import" },
+                          { value: "export", label: "Export" },
+                        ].find((_e) => _e.value === job.transport_type)}
+                        placeholder=""
+                        onChange={(e) => {
+                          setJob({ ...job, transport_type: e.value });
+                          setRefinedData({
+                            ...refinedData,
+                            transport_type: e.value,
+                          });
+                        }}
+                      />
+                      <CustomInputField
+                        key="locationKey"
+                        isSelect={true}
+                        optionsArray={[
+                          { value: "VIC", label: "Victoria" },
+                          { value: "QLD", label: "Queensland" },
+                        ]}
+                        label="State"
+                        name="transport_location"
+                        value={[
+                          { value: "VIC", label: "Victoria" },
+                          { value: "QLD", label: "Queensland" },
+                        ].find((_e) => _e.value === job.transport_location)}
+                        placeholder=""
+                        onChange={(e) => {
+                          const newState = {
+                            ...refinedData,
+                            state_code: e.value,
+                            state: e.label,
+                          };
+                          setJob({ ...job, transport_location: e.value });
+                          setRefinedData(newState);
+                        }}
+                      />
+                      <Text
+                        style={{
+                          color: "red",
+                          paddingLeft: "11.4rem",
+                          paddingBottom: "1rem",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Note: For LCL and Airfreight Only
+                      </Text>
+                    </>
+                  )}
+
                   {!isCompany && (
                     <CustomInputField
                       isSelect={true}
@@ -1138,6 +1282,7 @@ function JobEdit() {
                           ...defaultVariables,
                           company_id: e.value,
                         });
+                        console.log(e.value, "company_id");
                         setJob({
                           ...job,
                           company_id: e.value || null,
@@ -1266,13 +1411,13 @@ function JobEdit() {
                     isDisabled={true}
                     name="operator_phone"
                     value={customerSelected.phone_no}
-                    // onChange={
-                      // (e) => {}
+                    onChange={
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
                       //})
-                    // }
+                    }
                   />
 
                   <CustomInputField
@@ -1281,13 +1426,13 @@ function JobEdit() {
                     name="operator_email"
                     isDisabled={true}
                     value={customerSelected.email}
-                    // onChange={
-                      // (e) => {}
+                    onChange={
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
                       //})
-                    // }
+                    }
                   />
 
                   <Flex alignItems="center" mb="16px">
@@ -1332,11 +1477,11 @@ function JobEdit() {
                       setIsSameDayJob(today === e.target.value);
                       setIsTomorrowJob(
                         new Date(e.target.value).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
+                        new Date(
+                          new Date(today).setDate(
+                            new Date(today).getDate() + 1,
+                          ),
+                        ).toDateString(),
                       );
                     }}
                   />
@@ -1496,65 +1641,7 @@ function JobEdit() {
                       />
                     </>
                   )}
-                  {/* Transport Type Select */}
-                  <CustomInputField
-                    key="transport_typeKey"
-                    isSelect={true}
-                    optionsArray={[
-                      { value: "import", label: "Import" },
-                      { value: "export", label: "Export" },
-                    ]}
-                    label="Transport Type"
-                    name="transport_type"
-                    value={[
-                      { value: "import", label: "Import" },
-                      { value: "export", label: "Export" },
-                    ].find((_e) => _e.value === job.transport_type)}
-                    placeholder=""
-                    onChange={(e) => {
-                      setJob({ ...job, transport_type: e.value });
-                      setRefinedData({
-                        ...refinedData,
-                        transport_type: e.value,
-                      });
-                    }}
-                  />
 
-                  {/* Location Select */}
-                  <CustomInputField
-                    key="locationKey"
-                    isSelect={true}
-                    optionsArray={[
-                      { value: "VIC", label: "Victoria" },
-                      { value: "QLD", label: "Queensland" },
-                    ]}
-                    label="State"
-                    name="transport_location"
-                    value={[
-                      { value: "VIC", label: "Victoria" },
-                      { value: "QLD", label: "Queensland" },
-                    ].find((_e) => _e.value === job.transport_location)}
-                    placeholder=""
-                    onChange={(e) => {
-                      const newState = {
-                        ...refinedData,
-                        state_code: e.value,
-                        state: e.label,
-                      };
-                      setJob({ ...job, transport_location: e.value });
-                      setRefinedData(newState);
-                    }}
-                  />
-                  <Text
-                    style={{
-                      color: "red",
-                      paddingLeft: "11.4rem",
-                      paddingBottom: "1rem",
-                      fontSize: "14px",
-                    }}
-                  >
-                    Note: For LCL and Airfreight Only
-                  </Text>
 
                   {/* {!isAdmin && job.transport_location === "QLD" && (
                     <CustomInputField
@@ -1596,6 +1683,7 @@ function JobEdit() {
                   )} */}
                 </Box>
 
+
                 <Divider className="my-12" />
 
                 {/* Addresses */}
@@ -1614,7 +1702,7 @@ function JobEdit() {
                         savedAddressesSelect={savedAddressesSelect}
                         defaultJobDestination={pickUpDestination}
                         entityModel={job}
-                        onAddressSaved={(_hasChanged) => {
+                        onAddressSaved={(hasChanged) => {
                           getCustomerAddresses();
                         }}
                         jobDestinationChanged={(jobDestination) => {
@@ -1631,16 +1719,16 @@ function JobEdit() {
                             pickUpDestination.address_state == "Victoria"
                               ? "VIC"
                               : pickUpDestination.address_state == "Queensland"
-                              ? "QLD"
-                              : "";
+                                ? "QLD"
+                                : "";
                           const filtereddepotOption = depotOptions.filter(
                             (option) => option.state_code == currentPickupstate,
                           );
                           setFilteredDepotOptions(filtereddepotOption);
-                          console.log(
-                            filtereddepotOption,
-                            "filtereddepotOptions",
-                          );
+                          // console.log(
+                          //   filtereddepotOption,
+                          //   "filtereddepotOptions",
+                          // );
                           setJob({
                             ...job,
                             ...{
@@ -1683,7 +1771,7 @@ function JobEdit() {
                             </GridItem>
                             <JobAddressesSection
                               entityModel={job}
-                              onAddressSaved={() => {
+                              onAddressSaved={(hasChanged) => {
                                 getCustomerAddresses();
                               }}
                               savedAddressesSelect={savedAddressesSelect}
@@ -1922,8 +2010,8 @@ function JobEdit() {
                                     ? "VIC"
                                     : jobDestinations[0].address_state ==
                                       "Queensland"
-                                    ? "QLD"
-                                    : "";
+                                      ? "QLD"
+                                      : "";
                                 const filtereddepotOp = depotOptions.filter(
                                   (option) =>
                                     option.state_code == curretstatecode,

@@ -31,7 +31,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
   // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const textColor = useColorModeValue("navy.700", "white");
-  // let menuBg = useColorModeValue("white", "navy.800");
+  let menuBg = useColorModeValue("white", "navy.800");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = React.useState<any>(jobObject);
   // const router = useRouter();
@@ -66,8 +66,8 @@ export default function InvoiceTab(props: { jobObject: any }) {
         customer: _customer ? _customer : jobObject.customer_invoice?.customer,
       },
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobObject]);
+
   return (
     <Box mt={5}>
       {/* Invoice */}
@@ -118,6 +118,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
             <Tbody>
               {job.customer_invoice?.invoice_line_items?.map(
                 (item: any, index: number) => {
+                  console.log(item,'i')
                   return (
                     <Tr key={"row-" + index}>
                       <Td>{item.name}</Td>
@@ -134,10 +135,35 @@ export default function InvoiceTab(props: { jobObject: any }) {
           </Table>
         </Flex>
 
-        <Flex alignItems="center" justifyContent="flex-end" mt={1}>
-          <Box className="w-full mt-4">
+        <Flex className="w-full mt-4 gap-6" justifyContent="space-between">
+  {/* Left Column: Total Weight and CBM */}
+  <Box className="w-1/2 max-w-[400px]">
+    <Flex flexDirection="column">
+      <Flex justifyContent="space-between" className="py-4 ">
+      <p className="text-sm ">
+        <span className="text-sm !font-bold px-1">Total Weight: </span>
+          {job?.job_items?.reduce(
+            (total: number, item: { weight: number }) => total + (item.weight || 0),
+            0
+          ).toFixed(2)}
+        </p>
+      </Flex>
+
+      <Flex justifyContent="space-between" className="py-2">
+        <p className="text-sm text-left">
+        <span className="text-sm !font-bold px-1">CBM: </span>
+          {job?.job_items?.reduce(
+            (total: number, item: { volume: number }) => total + (item.volume || 0),
+            0
+          ).toFixed(2)}
+        </p>
+      </Flex>
+    </Flex>
+  </Box>
+          <Box className="w-1/2 mt-4">
             <Box className="max-w-[400px] ml-auto">
               <Flex flexDirection="column" className="ml-auto">
+             
                 <Flex
                   justifyContent="space-between"
                   className="py-4 border-b border-[#e3e3e3]"
