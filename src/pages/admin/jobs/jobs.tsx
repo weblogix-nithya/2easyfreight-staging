@@ -121,28 +121,20 @@ function formatDate(date: Date, isStart: boolean): string {
 }
 
 export default function JobIndex() {
-  let menuBg = useColorModeValue("white", "navy.800");
-  const textColor = useColorModeValue("secondaryGray.900", "white");
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
   const [statusFilter, setStatusFilter] = useState("all");
-  const [rangeDate, setRangeDate] = useState<[Date, Date]>([
-    new Date(), // or some default start date
-    new Date(), // or some default end date
-  ])
+  const [rangeDate, setRangeDate] = useState<[Date, Date] | null>(null);
   const [isTableLoading, setIsTableLoading] = useState(false);
   const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
     (state: RootState) => state.user,
   );
-
-  // Replace the statusOptions with a conditional assignment
   const statusOptions = useMemo(
     () => (isCompany ? companyStatusOptions : adminStatusOptions),
-    [isCompany],
+    [isCompany],  
   );
-
   const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
   const cookies = parseCookies();
@@ -181,7 +173,7 @@ export default function JobIndex() {
       ),
     [isCustomer, isAdmin, dynamicTableUsers],
   );
-  const { refetch: getDynamicTableUsers,  data: dynamicTableData } = useQuery(
+  const { refetch: getDynamicTableUsers, data: dynamicTableData } = useQuery(
     GET_DYNAMIC_TABLE_USERS_QUERY,
     {
       variables: {
@@ -205,9 +197,13 @@ export default function JobIndex() {
 
   // const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
   const adminColumns = useMemo(() => {
-    return getColumns(true, false, dynamicTableData?.dynamicTableUsers?.data || []);
+    return getColumns(
+      true,
+      false,
+      dynamicTableData?.dynamicTableUsers?.data || [],
+    );
   }, [dynamicTableData]);
-  
+
   // console.log(columns, "col");
 
   const companyColumns = columns.filter((column) =>
@@ -470,15 +466,12 @@ export default function JobIndex() {
     },
     onCompleted: (data) => {
       setJobStatuses([]);
-      data.jobStatuses.data.map((jobStatus: any) => {
-        setJobStatuses((_entity) => [
-          ..._entity,
-          {
-            value: parseInt(jobStatus.id),
-            label: jobStatus.name,
-          },
-        ]);
-      });
+      setJobStatuses(
+        data.jobStatuses.data.map((jobStatus: any) => ({
+          value: parseInt(jobStatus.id),
+          label: jobStatus.name,
+        })),
+      );
     },
   });
 
@@ -536,8 +529,6 @@ export default function JobIndex() {
       },
     },
   );
-
-
 
   const handleExport = () => {
     const header = outputDynamicTableHeader(dynamicTableUsers);
@@ -599,9 +590,9 @@ export default function JobIndex() {
   }, [loading]);
 
   useEffect(() => {
-  refetchJobs();
+    refetchJobs();
   }, [rangeDate]);
-  
+
   return (
     <AdminLayout>
       <Box pt={{ base: "130px", md: "97px", xl: "97px" }}>
@@ -864,7 +855,7 @@ export default function JobIndex() {
                 onCloseSetting();
                 // setSettingOpen(false);
                 getDynamicTableUsers();
-                refetchJobs();              // Optional: Refresh job data
+                refetchJobs(); // Optional: Refresh job data
               }}
             />
           )}

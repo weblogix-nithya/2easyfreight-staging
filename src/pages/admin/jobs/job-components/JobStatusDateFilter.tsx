@@ -54,12 +54,21 @@ const JobStatusDateFilter = ({
       >
         {/* @ts-ignore */}
         <DateRangePicker
-          value={rangeDate}
+          // value={rangeDate}
+          value={rangeDate ?? undefined}
+          // onChange={(range) => {
+          //   if (Array.isArray(range) && range.length === 2) {
+          //     setRangeDate(range as [Date, Date]);
+          //   }
+          // }}
           onChange={(range) => {
-            if (Array.isArray(range) && range.length === 2) {
+            if (!range) {
+              setRangeDate(null);
+            } else if (Array.isArray(range) && range.length === 2) {
               setRangeDate(range as [Date, Date]);
             }
           }}
+            clearIcon={<span style={{ color: 'red', cursor: 'pointer' }}>✕</span>}
         />
       </Box>
     </Flex>
