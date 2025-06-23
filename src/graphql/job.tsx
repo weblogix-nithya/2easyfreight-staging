@@ -654,7 +654,7 @@ export interface CreateJobInput {
   // job_price_quote?: JobPriceCalculationDetail[];
 }
 
-type Job = {
+export type Job = {
   id: number | null;
   //name: string;
   reference_no: string;
