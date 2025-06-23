@@ -599,22 +599,7 @@ export default function JobIndex() {
   }, [loading]);
 
   useEffect(() => {
-    if (rangeDate[0] && rangeDate[1]) {
-      const from_at = formatDate(rangeDate[0], true);
-      const to_at = formatDate(rangeDate[1], false);
-  
-      refetchJobs({
-        variables: {
-          ...filters,
-          between_at: {
-            from_at,
-            to_at,
-          },
-          page: 1,
-          first: queryPageSize,
-        },
-      });
-    }
+  refetchJobs();
   }, [rangeDate]);
   
   return (
