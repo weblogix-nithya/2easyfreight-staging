@@ -32,6 +32,7 @@ export const GET_JOBS_QUERY = gql`
     $weight_to: Int
     $volume_from: Int
     $volume_to: Int
+    $between_at: JobBetweenInput
   ) {
     jobs(
       query: $query
@@ -64,6 +65,7 @@ export const GET_JOBS_QUERY = gql`
       weight_to: $weight_to
       volume_from: $volume_from
       volume_to: $volume_to
+      between_at: $between_at
     ) {
       data {
         id
@@ -153,12 +155,7 @@ export const GET_JOBS_QUERY = gql`
           lat
           lng
           updated_at
-          media {
-            id
-            name
-            downloadable_url
-            collection_name
-          }
+         
           job_destination_status_id
           route_point {
             id
@@ -188,12 +185,7 @@ export const GET_JOBS_QUERY = gql`
           lat
           lng
           updated_at
-          media {
-            id
-            name
-            downloadable_url
-            collection_name
-          }
+         
         }
         job_items {
           id
@@ -345,12 +337,7 @@ export const GET_JOB_QUERY = gql`
           sourceable_id
           updated_at
         }
-        media {
-          id
-          name
-          downloadable_url
-          collection_name
-        }
+     
         route_point {
           id
           route_id
@@ -395,15 +382,7 @@ export const GET_JOB_QUERY = gql`
           name
         }
       }
-      media {
-        id
-        name
-        downloadable_url
-        collection_name
-        file_name
-        uploaded_by
-        created_at
-      }
+   
       chats {
         id
         name

@@ -156,6 +156,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
               <img
                 src={media.downloadable_url}
                 alt={media.name || "Delivery evidence"}
+                  loading="lazy"
                 style={{
                   width: "50px",
                   height: "50px",
@@ -360,6 +361,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
               <img
                 src={media.downloadable_url}
                 alt={media.name || "Pickup evidence"}
+                  loading="lazy"
                 style={{
                   width: "50px",
                   height: "50px",
