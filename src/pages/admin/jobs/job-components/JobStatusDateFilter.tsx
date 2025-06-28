@@ -1,6 +1,6 @@
 import { Box, Flex } from "@chakra-ui/react";
-import { Select } from "chakra-react-select";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
+import { Select } from "chakra-react-select";
 
 interface StatusOption {
   value: string;
@@ -11,8 +11,8 @@ interface StatusOption {
 interface Props {
   statusOptions: StatusOption[];
   onStatusChange: (option: StatusOption) => void;
-  rangeDate: [Date, Date];
-  setRangeDate: (range: [Date, Date]) => void;
+  rangeDate: [Date, Date] | null;
+  setRangeDate: (range: [Date, Date] | null) => void;
 }
 
 const JobStatusDateFilter = ({
@@ -26,7 +26,8 @@ const JobStatusDateFilter = ({
       <Box width="300px">
         <Select
           options={statusOptions}
-          defaultValue={statusOptions[0]}
+          // defaultValue={statusOptions[0]}
+          defaultValue={statusOptions?.[0] ?? null}
           onChange={(value: any) => onStatusChange(value)}
           placeholder="Select Status"
           className="basic-single"
@@ -54,21 +55,21 @@ const JobStatusDateFilter = ({
       >
         {/* @ts-ignore */}
         <DateRangePicker
-          // value={rangeDate}
-          value={rangeDate ?? undefined}
-          // onChange={(range) => {
-          //   if (Array.isArray(range) && range.length === 2) {
-          //     setRangeDate(range as [Date, Date]);
-          //   }
-          // }}
+          value={rangeDate && rangeDate.length === 2 ? rangeDate : [null, null]}
           onChange={(range) => {
-            if (!range) {
+            if (
+              !range ||
+              !Array.isArray(range) ||
+              range.length !== 2 ||
+              !range[0] ||
+              !range[1]
+            ) {
               setRangeDate(null);
-            } else if (Array.isArray(range) && range.length === 2) {
+            } else {
               setRangeDate(range as [Date, Date]);
             }
           }}
-            clearIcon={<span style={{ color: 'red', cursor: 'pointer' }}>✕</span>}
+          clearIcon={<span style={{ color: "red", cursor: "pointer" }}>✕</span>}
         />
       </Box>
     </Flex>

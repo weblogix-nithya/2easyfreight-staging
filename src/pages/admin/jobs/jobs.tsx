@@ -1,22 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { SettingsIcon } from "@chakra-ui/icons";
-import {
-  Box,
-  Button,
-  Checkbox,
-  Flex,
-  Link,
-  SimpleGrid,
-  Spinner,
-  Tag,
-  TagCloseButton,
-  TagLabel,
-  useColorModeValue,
-  useDisclosure,
-} from "@chakra-ui/react";
-import DateRangePicker from "@wojtekmaj/react-daterange-picker";
-import { Select } from "chakra-react-select";
-import { FullChevronDown } from "components/icons/Icons";
+import { Box, SimpleGrid, Spinner, useDisclosure } from "@chakra-ui/react";
 import ActionBar from "components/jobs/ActionBar";
 import {
   defaultJobFilter,
@@ -29,8 +12,8 @@ import {
   getColumns,
   tableColumn,
 } from "components/jobs/JobTableColumns";
-import { SearchBar } from "components/navbar/searchBar/SearchBar";
-import PaginationTable from "components/table/PaginationTable";
+// import { SearchBar } from "components/navbar/searchBar/SearchBar";
+import JobPaginationTable from "components/table/JobPaginationTable";
 import { GET_AVAILABLE_DRIVERS_QUERY } from "graphql/driver";
 import {
   DynamicTableUser,
@@ -46,10 +29,11 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
+import dynamic from "next/dynamic";
 import { destroyCookie, parseCookies, setCookie } from "nookies";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { downloadExcel } from "react-export-table-to-excel";
-import { FaFileExcel } from "react-icons/fa";
+// import { FaFileExcel } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setIsFilterTicked,
@@ -57,9 +41,16 @@ import {
   setJobMainFilters,
 } from "store/jobFilterSlice";
 import { RootState } from "store/store";
+
 import JobFiltersTagRow from "./job-components/JobFiltersTagRow";
 import JobHeader from "./job-components/JobHeader";
-import JobStatusDateFilter from "./job-components/JobStatusDateFilter";
+// import JobStatusDateFilter from "./job-components/JobStatusDateFilter";
+const JobStatusDateFilter = dynamic(
+  () => import("./job-components/JobStatusDateFilter"),
+  {
+    ssr: false,
+  },
+);
 const FilterJobsModal = React.lazy(
   () => import("components/jobs/FilterJobsModal"),
 );
@@ -120,12 +111,20 @@ function formatDate(date: Date, isStart: boolean): string {
   return `${year}-${month}-${day} ${time}`;
 }
 
-export default function JobIndex() {
+// export default function JobIndex() {
+export default function JobIndex({
+  initialLoadOnly = false,
+}: {
+  initialLoadOnly?: boolean;
+}) {
+  const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
+  const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
+
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [_statusFilter, setStatusFilter] = useState("all");
   const [rangeDate, setRangeDate] = useState<[Date, Date] | null>(null);
   const [isTableLoading, setIsTableLoading] = useState(false);
   const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
@@ -133,11 +132,11 @@ export default function JobIndex() {
   );
   const statusOptions = useMemo(
     () => (isCompany ? companyStatusOptions : adminStatusOptions),
-    [isCompany],  
+    [isCompany],
   );
   const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
-  const cookies = parseCookies();
+  const _cookies = parseCookies();
   const dispatch = useDispatch();
 
   const [jobStatuses, setJobStatuses] = useState([]);
@@ -146,7 +145,7 @@ export default function JobIndex() {
   // const [isPending, setIsPending] = useState(true); // First access is Pending
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [drivers, setDrivers] = useState([]);
-  const [selectedDriver, setSelectedDriver] = useState(null);
+  // const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOptions, setDriverOptions] = useState([]);
   const [dynamicTableUsers, setDynamicTableUsers] = useState<
     DynamicTableUser[]
@@ -160,7 +159,7 @@ export default function JobIndex() {
     defaultSelectedFilter,
   );
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
-    useState(filterDisplayNames); // Table Columns
+    useState<typeof filterDisplayNames>(filterDisplayNames);
 
   const columns = useMemo(
     () =>
@@ -231,7 +230,7 @@ export default function JobIndex() {
     dynamicTableUsers,
   );
 
-  const defaultTableColumns = columns.reduce(
+  const _defaultTableColumns = columns.reduce(
     (prev, column) => [...prev, column.id],
     [],
   );
@@ -239,15 +238,15 @@ export default function JobIndex() {
   useEffect(() => {
     setIsChecked(true);
   }, [isChecked]);
-  const [tableColumns, setTableColumn] =
-    useState<string[]>(defaultTableColumns);
+  // const [tableColumns, setTableColumn] =
+  //   useState<string[]>(defaultTableColumns);
 
   const orderByRelationship = useMemo(() => {
     let join = undefined as JoinOnClause;
     let column = sorting?.id ?? "id";
     let order = sorting?.direction ? "DESC" : "ASC";
     let table_name = "jobs";
-    let scope = undefined;
+    // let scope = undefined;
     if (column.includes("driver")) {
       join = {
         name: "drivers",
@@ -346,6 +345,7 @@ export default function JobIndex() {
       getAvailableDrivers();
       getDynamicTableUsers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobs?.jobs?.data?.length]);
 
   useEffect(() => {
@@ -367,6 +367,7 @@ export default function JobIndex() {
       if (displayName) setMainFilterDisplayNames(displayName);
       updateTags(updatedValues, _jobFilter);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [is_filter_ticked]);
 
   const handleResetAll = () => {
@@ -418,6 +419,7 @@ export default function JobIndex() {
   useEffect(() => {
     getJobStatuses();
     getJobCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const {
@@ -442,6 +444,7 @@ export default function JobIndex() {
 
   useEffect(() => {
     refetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryPageIndex, queryPageSize, searchQuery, mainFilters, rangeDate]);
 
   const debouncedSearch = useMemo(
@@ -453,7 +456,11 @@ export default function JobIndex() {
     [],
   );
 
-  useEffect(() => debouncedSearch.cancel(), []);
+  useEffect(
+    () => debouncedSearch.cancel(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const { refetch: getJobStatuses } = useQuery(GET_JOB_STATUSES_QUERY, {
     skip: true,
@@ -555,7 +562,7 @@ export default function JobIndex() {
       });
     } else {
       const [sort] = sortBy;
-      const newDirection = sort.desc ? "DESC" : "ASC";
+      const _newDirection = sort.desc ? "DESC" : "ASC";
       const newSorting = {
         id: sort.id,
         direction: sort.desc,
@@ -587,10 +594,12 @@ export default function JobIndex() {
 
   useEffect(() => {
     setIsTableLoading(loading);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
   useEffect(() => {
     refetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeDate]);
 
   return (
@@ -769,7 +778,7 @@ export default function JobIndex() {
           ) : (
             <>
               {!loading && jobs?.jobs?.data?.length >= 0 && (
-                <PaginationTable
+                <JobPaginationTable
                   columns={isAdmin ? adminColumns : companyColumns}
                   data={isAdmin ? processJobData : jobs.jobs.data}
                   options={{

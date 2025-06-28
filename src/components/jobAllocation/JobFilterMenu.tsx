@@ -22,12 +22,12 @@ import {
     customerName,
     pickupAddress,
     deliveryAddress,
-    australianState,
+    // australianState,
     setCustomerName,
     setPickupAddress,
     setDeliveryAddress,
     setAustralianState,
-    ...props
+    // ...props
   }: {
     customerName: any;
     pickupAddress: any;

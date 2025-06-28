@@ -130,7 +130,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
     row.original.job_status_id == 6 || row.original.job_status_id == 7;
 
   // Only get media if not in status 6 or 7
-  const normalMedia =
+  const _normalMedia =
     filteredDestinations[0]?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
     ) || [];
@@ -338,7 +338,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     row.original.job_status_id == 5 ||
     row.original.job_status_id == 6 ||
     row.original.job_status_id == 7;
-  const normalMedia =
+  const _normalMedia =
     pickupDest?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
     ) || [];
@@ -845,7 +845,7 @@ export const getBulkAssignColumns = (
       {
         id: "order",
         Header: "",
-        Cell: ({ row }: any) => (
+        Cell: ({ _row }: any) => (
           <div>
             <Icon mt="auto" mb="auto" as={MdMenu} h="16px" w="16px" me="8px" />
           </div>
@@ -868,7 +868,7 @@ export const getBulkAssignColumns = (
     {
       id: "order",
       Header: "",
-      Cell: ({ row }: any) => (
+      Cell: ({ _row }: any) => (
         <div>
           <Icon as={MdMenu} h="16px" w="16px" me="8px" />
         </div>

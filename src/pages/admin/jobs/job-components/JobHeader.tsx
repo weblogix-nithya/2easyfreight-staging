@@ -1,18 +1,14 @@
+  import { SettingsIcon } from "@chakra-ui/icons"
 import {
-    Box,
     Button,
     Checkbox,
     Flex,
     Link,
-    Tag,
-    TagCloseButton,
-    TagLabel,
     useColorModeValue
   } from "@chakra-ui/react"
-  import { SettingsIcon } from "@chakra-ui/icons"
-  import { FaFileExcel } from "react-icons/fa"
   import { FullChevronDown } from "components/icons/Icons"
   import { SearchBar } from "components/navbar/searchBar/SearchBar"
+  import { FaFileExcel } from "react-icons/fa"
   
   interface JobHeaderProps {
     isAdmin: boolean

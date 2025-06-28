@@ -19,7 +19,7 @@ export function Map({
   onDriverClick,
   onCenterChanged,
   onZoomChanged,
-  isRouted,
+  // isRouted,
 }: {
   center: google.maps.LatLng;
   zoom: number;
@@ -63,6 +63,7 @@ export function Map({
     }, 200);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Step 2: Render map once it's ready
@@ -202,6 +203,7 @@ export function Map({
       resizeObserver.disconnect();
       mutationObserver.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, center, zoom, markers, drivers]);
 
   return (

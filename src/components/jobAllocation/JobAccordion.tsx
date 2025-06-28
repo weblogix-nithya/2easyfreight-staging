@@ -11,13 +11,13 @@ import {
     Tooltip,
     useColorModeValue,
   } from "@chakra-ui/react";
-  import { useColorMode } from "@chakra-ui/system";
+  // import { useColorMode } from "@chakra-ui/system";
   import {
     faEye,
-    faTruckRampBox,
     faHandHolding,
     faInfinity,
     faMap,
+    faTruckRampBox,
     faWarning,
   } from "@fortawesome/free-solid-svg-icons";
   import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -29,14 +29,14 @@ import {
     selectedJobIdRouting,
     onJobClick,
     onMarkerClick,
-    ...props
+    // ...props
   }: {
     job: any;
     selectedJobIdRouting: any;
     onJobClick: any;
     onMarkerClick: any;
   }) {
-    const { colorMode } = useColorMode();
+    // const { colorMode } = useColorMode();
     const textColor = useColorModeValue("secondaryGray.900", "white");
   
     return (

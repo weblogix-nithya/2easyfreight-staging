@@ -41,7 +41,7 @@ import { TabsComponent } from "components/tabs/TabsComponet";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
-import { GET_COMPANY_RATE_QUERY } from "graphql/companyRate";
+import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_DRIVERS_QUERY } from "graphql/driver";
@@ -128,7 +128,7 @@ function JobEdit() {
   // const [changedFields, setChangedFields] =
   //   useState<typeof defaultJob>(defaultJob);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
-  const [pricecalculationid, setPricecalculationid] = useState(null);
+  const [_pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
   const { id } = router.query;
@@ -153,24 +153,25 @@ function JobEdit() {
   const [jobDestinations, setJobDestinations] = useState([]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [debouncedSearchDriver, setDebouncedSearchDriver] = useState("");
-  let re =
-    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const re = useMemo(() => {
+    return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  }, []);
   const [deleteJobCcEmailId, setDeleteJobCcEmailId] = useState(null);
   const [createdCcEmail, setCreatedCcEmail] = useState(null);
   const [jobCcEmails, setJobCcEmails] = useState([]);
   const [jobCcEmailTags, setJobCcEmailTags] = useState([]);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const customerId = useSelector((state: RootState) => state.user.customerId);
-  const companyId = useSelector((state: RootState) => state.user.companyId);
+  // const customerId = useSelector((state: RootState) => state.user.customerId);
+  // const companyId = useSelector((state: RootState) => state.user.companyId);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
   );
-  const [isSameDayJob, setIsSameDayJob] = useState(false);
-  const [isTomorrowJob, setIsTomorrowJob] = useState(false);
+  const [_isSameDayJob, setIsSameDayJob] = useState(false);
+  const [_isTomorrowJob, setIsTomorrowJob] = useState(false);
   // const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
-  const [locationOptions, setLocationOptions] = useState([
+  const [locationOptions, _setLocationOptions] = useState([
     { value: "VIC", label: "Victoria" },
     { value: "QLD", label: "Queensland" },
   ]);
@@ -178,7 +179,7 @@ function JobEdit() {
   const [depotOptions, setDepotOptions] = useState([]);
   const [filtereddepotOptions, setFilteredDepotOptions] = useState([]);
 
-  const [selectedDepot, setSelectedDepot] = useState("");
+  const [_selectedDepot, setSelectedDepot] = useState("");
 
   const [prevJobState, setPrevJobState] = useState({
     freight_type: refinedData.freight_type,
@@ -189,7 +190,7 @@ function JobEdit() {
 
   const [companyRates, setCompanyRates] = useState([]);
 
-  const [selectedRegion, setSelectedRegion] = useState({
+  const [_selectedRegion, setSelectedRegion] = useState({
     area: "",
     cbm_rate: 0,
     minimum_charge: 0,
@@ -228,7 +229,7 @@ function JobEdit() {
     },
   ];
 
-  const NEW_CUTOFF_RULES_START_DATE = "2024-10-24";
+  // const NEW_CUTOFF_RULES_START_DATE = "2024-10-24";
 
   const itemsTableColumns = useMemo(
     () => [
@@ -277,7 +278,7 @@ function JobEdit() {
         isDownload: true,
       },
     ],
-    [],
+    [isAdmin],
   );
 
   const onChangeSearchQuery = useMemo(() => {
@@ -292,7 +293,7 @@ function JobEdit() {
     }, 300);
   }, []);
 
-  const { data: depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     onCompleted: (data) => {
       if (data?.allTimeslotDepots) {
         const depots = data.allTimeslotDepots
@@ -419,7 +420,7 @@ function JobEdit() {
             (destination: any) => !destination.is_pickup,
           ) || [];
 
-        let currentDestinations =
+        let _currentDestinations =
           data.job.job_destinations.filter(
             (destination: any) => !destination.is_pickup,
           ) || [];
@@ -464,7 +465,7 @@ function JobEdit() {
         setUpdatingMedia(false);
       }
     },
-    onError(error) {
+    onError(_error) {
       // console.log("onError");
       // console.log(error);
     },
@@ -485,7 +486,7 @@ function JobEdit() {
     }
   }, [companyRates, job.company_area]);
 
-  const { loading: companyLoading, data: companyData } = useQuery(
+  const { loading: _companyLoading, data: _companyData } = useQuery(
     GET_COMPANY_QUERY,
     {
       variables: {
@@ -500,7 +501,7 @@ function JobEdit() {
           ...refinedData,
         });
       },
-      onError(error) {
+      onError(_error) {
         // console.log("onError");
         // console.log(error);
       },
@@ -526,7 +527,7 @@ function JobEdit() {
         (location) => location.value === jobData.job.transport_location,
       );
 
-      const matchedJobType = jobTypeOptions.find(
+      const _matchedJobType = jobTypeOptions.find(
         (type) => type.id === jobData.job.job_type_id,
       );
 
@@ -539,6 +540,7 @@ function JobEdit() {
         // job_type_color: matchedJobType?.color || null
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobData, jobCategories, jobTypeOptions, companyRates]); // Use 'jobData' instead of 'data'
 
   const formatToSelect = (
@@ -655,7 +657,7 @@ function JobEdit() {
       let _jobDestinations = [...jobDestinations];
       for (let jobDestination of _jobDestinations) {
         if (jobDestination.is_new) {
-          const resultPickup = await handleCreateJobDestination({
+          await handleCreateJobDestination({
             input: {
               ...jobDestination,
               job_id: parseInt(data.updateJob.id),
@@ -737,7 +739,7 @@ function JobEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Job deleted",
         status: "success",
@@ -837,8 +839,7 @@ function JobEdit() {
     },
   });
   // Use the useQuery hook to fetch the data
-  const { loading, error, data } = useQuery(
-    GET_JOB_PRICE_CALCULATION_DETAIL_QUERY,
+ useQuery(GET_JOB_PRICE_CALCULATION_DETAIL_QUERY,
     {
       variables: {
         job_id: job.id,
@@ -981,7 +982,7 @@ function JobEdit() {
     },
   });
 
-  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
+  const { data: _companyRatesData, refetch: getCompanyRates } = useQuery(
     GET_COMPANY_RATE_QUERY,
     {
       variables: { company_id: job?.company_id || "" },
@@ -1064,6 +1065,7 @@ function JobEdit() {
 
   useEffect(() => {
     dateChanged();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobDateAt, readyAt, dropAt]);
   const dateChanged = () => {
     try {
@@ -1099,7 +1101,7 @@ function JobEdit() {
   };
   //handleDeleteJobItem
   const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       // console.log("Job Item Deleted", data);
     },
     onError: (error) => {
@@ -1110,7 +1112,7 @@ function JobEdit() {
   const [handleDeleteJobDestination, { }] = useMutation(
     DELETE_JOB_DESTINATION_MUTATION,
     {
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         // console.log("Job destination Deleted", data);
       },
       onError: (error) => {
@@ -1148,7 +1150,7 @@ function JobEdit() {
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
   //handleUpdateJobItems
   const [handleUpdateJobItem, { }] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       // console.log("Job item updated");
     },
     onError: (error) => {
@@ -1159,7 +1161,7 @@ function JobEdit() {
   const [handleUpdateJobDestination, { }] = useMutation(
     UPDATE_JOB_DESTINATION_MUTATION,
     {
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         // console.log("Job destination updated");
       },
       onError: (error) => {
@@ -1169,7 +1171,7 @@ function JobEdit() {
   );
   //deleteMedia
   const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Attachment deleted",
         status: "success",
@@ -1232,10 +1234,33 @@ function JobEdit() {
         }),
       );
     },
-    [],
+    [re],
+  );
+  const [handleCreateJobCcEmail, { }] = useMutation(
+    CREATE_JOB_CC_EMAIL_MUTATION,
+    {
+      variables: {
+        input: {
+          job_id: job.id,
+          email: createdCcEmail,
+        },
+      },
+      onCompleted: (_data) => {
+        toast({
+          title: "Additional email notification created",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        getJob();
+      },
+      onError: (error) => {
+        showGraphQLErrorToast(error);
+      },
+    },
   );
   const handleJobCcEmailAdd = useCallback(
-    (event: SyntheticEvent, email: string) => {
+    (_event: SyntheticEvent, email: string) => {
       if (re.test(email)) {
         setCreatedCcEmail(email);
         setTimeout(() => {
@@ -1251,11 +1276,11 @@ function JobEdit() {
         });
       }
     },
-    [],
+    [handleCreateJobCcEmail,re, toast],
   );
 
   const handleJobCcEmailRemove = useCallback(
-    (event: SyntheticEvent, index: number) => {
+    (_event: SyntheticEvent, index: number) => {
       setDeleteJobCcEmailId(jobCcEmails[index]["id"]);
       setJobCcEmails(jobCcEmails.filter((_, i) => i !== index));
       setJobCcEmailTags(jobCcEmailTags.filter((_, i) => i !== index));
@@ -1264,6 +1289,7 @@ function JobEdit() {
         handleDeleteJobCcEmail();
       }, 500);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [jobCcEmailTags, jobCcEmails],
   );
 
@@ -1273,36 +1299,14 @@ function JobEdit() {
       variables: {
         id: deleteJobCcEmailId,
       },
-      onCompleted: (data) => { },
+      onCompleted: (_data) => { },
       onError: (error) => {
         showGraphQLErrorToast(error);
       },
     },
   );
 
-  const [handleCreateJobCcEmail, { }] = useMutation(
-    CREATE_JOB_CC_EMAIL_MUTATION,
-    {
-      variables: {
-        input: {
-          job_id: job.id,
-          email: createdCcEmail,
-        },
-      },
-      onCompleted: (data) => {
-        toast({
-          title: "Additional email notification created",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        getJob();
-      },
-      onError: (error) => {
-        showGraphQLErrorToast(error);
-      },
-    },
-  );
+
 
   useEffect(() => {
     if (job.customer_id && customerOptions.length > 0) {
@@ -1315,7 +1319,7 @@ function JobEdit() {
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
     }
-  }, [job.customer_id, customerOptions]);
+  }, [job.customer_id, customerOptions,getCustomerAddresses]);
 
   const handleCreateJobPriceCalculationDetail = (
     jobPriceDetail: CreateJobPriceCalculationDetailInput,
@@ -1957,7 +1961,7 @@ function JobEdit() {
                           name="operator_phone"
                           value={customerSelected.phone_no}
                           onChange={
-                            (e) => { }
+                            (_e) => { }
                             //setJob({
                             //  ...job,
                             //  [e.target.name]: e.target.value,
@@ -1971,7 +1975,7 @@ function JobEdit() {
                           isDisabled={true}
                           value={customerSelected.email}
                           onChange={
-                            (e) => { }
+                            (_e) => { }
                             //setJob({
                             //  ...job,
                             //  [e.target.name]: e.target.value,
@@ -2255,7 +2259,7 @@ function JobEdit() {
                               entityModel={job}
                               savedAddressesSelect={savedAddressesSelect}
                               defaultJobDestination={pickUpDestination}
-                              onAddressSaved={(hasChanged) => {
+                              onAddressSaved={(_hasChanged) => {
                                 getCustomerAddresses();
                               }}
                               jobDestinationChanged={(jobDestination) => {
@@ -2324,7 +2328,7 @@ function JobEdit() {
                                         index,
                                       );
                                     }}
-                                    onAddressSaved={(hasChanged) => {
+                                    onAddressSaved={(_hasChanged) => {
                                       getCustomerAddresses();
                                     }}
                                   />

@@ -1,8 +1,10 @@
 import dynamic from 'next/dynamic'
 
-// Import your real component from views (or from same folder with a rename)
+// Import dynamically with SSR disabled and pass prop
 const JobPage = dynamic(() => import('./jobs'), {
-  ssr: false
+  ssr: false,
 })
 
-export default JobPage
+export default function JobsPageEntry() {
+  return <JobPage initialLoadOnly={true} />
+}

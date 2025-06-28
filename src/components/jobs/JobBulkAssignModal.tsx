@@ -86,7 +86,7 @@ export default function JobBulkAssignModal({
     variables: {
       input: sortedBulkAssignJobs,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Jobs assigned",
         status: "success",

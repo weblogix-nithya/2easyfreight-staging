@@ -14,11 +14,15 @@ const JobFiltersTagRow = ({
   onRemoveFilter,
   onClearAll
 }: JobFiltersTagRowProps) => {
+  if (!mainFilters || !mainFilterDisplayNames) return null; // ✅ Prevent render on undefined
+
   return (
     <Flex alignItems="left" flexWrap="wrap" mt={2}>
       {Object.keys(mainFilters).map((filterKey) => {
-        const key = filterKey as keyof SelectedFilter
-        if (mainFilters[key]) {
+        const key = filterKey as keyof SelectedFilter;
+        const filterDef = mainFilterDisplayNames[key];
+
+        if (mainFilters[key] && filterDef) {
           return (
             <Tag
               key={filterKey}
@@ -31,13 +35,13 @@ const JobFiltersTagRow = ({
               mb={2}
             >
               <TagLabel>
-                {mainFilterDisplayNames[key].label}:{mainFilterDisplayNames[key].value}
+                {filterDef.label}:{filterDef.value}
               </TagLabel>
               <TagCloseButton onClick={() => onRemoveFilter(key)} />
             </Tag>
-          )
+          );
         }
-        return null
+        return null;
       })}
 
       <Button
@@ -49,7 +53,7 @@ const JobFiltersTagRow = ({
         Clear all
       </Button>
     </Flex>
-  )
-}
+  );
+};
 
 export default JobFiltersTagRow
