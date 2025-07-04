@@ -24,26 +24,16 @@ import {
   formatTime,
   outputDynamicTable,
 } from "helpers/helper";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { MdMenu } from "react-icons/md";
+import { useDispatch } from "react-redux";
+import { setIsShowRightSideBar, setRightSideBarJob } from "store/rightSideBarSlice";
 // import { useDispatch } from "react-redux";
 // import { setIsShowRightSideBar,  } from "store/rightSideBarSlice";
 import { RootState } from "store/store";
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
-
-// export const getJobRowProps = (row: any) => {
-//   return {
-//     style: {
-//       cursor: 'pointer',
-//     },
-//     bg: row.original.job_status?.id == 1 ? 'yellow.50' : 
-//         [6, 7].includes(Number(row.original.job_status?.id)) ? 'green.50' : 
-//         'white',
-//     // _hover: { bg: 'gray.100' }
-//   };
-// };
 
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
@@ -179,25 +169,29 @@ export const JobDestinationWithBusinessNameCellExport = ({ row }: any) => {
   const businessName = filteredDestinations[0]?.address_business_name || "-";
   return `${formattedAddress}\n${businessName}`;
 };
-export const ReadyDropByCell = ({ row }: any) => (
-  <>
-    <Text isTruncated w={"fit-content"}>
-      {row.original.job_category?.name ?? "-"}
-    </Text>
-    <Text isTruncated w={"fit-content"}>
-      R: {formatTime(row.original.ready_at)}
-    </Text>
-    <Text isTruncated w={"fit-content"}>
-      D: {formatTime(row.original.drop_at)}
-    </Text>
-  </>
-);
+export const ReadyDropByCell = ({ row }: any) => {
+  console.log(row?.original?.job?.name,'ffff'); // Log the row object to the console
+  return (
+    <>
+      <Text isTruncated w={"fit-content"}>
+        {row.original.job_category?.name ?? "-"}
+      </Text>
+      <Text isTruncated w={"fit-content"}>
+        R: {(row.original.ready_at)}
+      </Text>
+      <Text isTruncated w={"fit-content"}>
+        D: {(row.original.drop_at)}
+      </Text>
+    </>
+  );
+};
+
 export const ReadyDropByCellExport = ({ row }: any) =>
   `${row.original.job_category?.name ?? "-"}\n
     R: ${formatTime(row.original.ready_at)}\n
     D: ${formatTime(row.original.drop_at)}`;
 export const NotesCell = ({ row }: any) => {
-  const notes = row.original.customer_notes ?? null;
+  const notes = row?.job?.customer_notes ?? null;
   return (
     <>
       <Text
@@ -237,7 +231,7 @@ export const ItemsTypeCell = ({ row }: any) => {
   const items = row.original.job_items;
   return (
     <div>
-      {items.map((item: any) => (
+      {items?.map((item: any) => (
         <Text key={`items-type-${item.id}`} mb={2}>
           {item.item_type.name}
         </Text>
@@ -569,46 +563,46 @@ export const AdminNotesCell = ({ row }: any) => {
   );
 };
 
-// const DeliveryIdCell = ({ row, onMarkerClick }: any) => {
-//   const dispatch = useDispatch();
+const DeliveryIdCell = ({ row, onMarkerClick }: any) => {
+  const dispatch = useDispatch();
   
-//   const handleClick = useCallback(() => {
-//     // Only dispatch essential data for initial render
-//     // const essentialData = {
-//     //   id: row.original.id,
-//     //   name: row.original.name,
-//     //   status: row.original.job_status,
-//     //   type: row.original.job_type
-//     // };
-//     debugger
-//     console.log(row.original, "row.original")
-//     console.log('first,',row)
-//     dispatch(setRightSideBarJob(row));
-//     dispatch(setIsShowRightSideBar(true));
+  const handleClick = useCallback(() => {
+    // Only dispatch essential data for initial render
+    // const essentialData = {
+    //   id: row.original.id,
+    //   name: row.original.name,
+    //   status: row.original.job_status,
+    //   type: row.original.job_type
+    // };
+    // debugger
+    console.log(row.original, "row.original")
+    console.log('first,',row)
+    dispatch(setRightSideBarJob(row));
+    dispatch(setIsShowRightSideBar(true));
     
-//     // Delay full data fetch
-//     setTimeout(() => {
-//       onMarkerClick?.({ job_id: row.original.id });
-//     }, 0);
-//   }, [row.original, dispatch, onMarkerClick]);
+    // Delay full data fetch
+    setTimeout(() => {
+      onMarkerClick?.({ job_id: row.original.id });
+    }, 0);
+  }, [row.original, dispatch, onMarkerClick]);
 
-//   return (
-//     <Text
-//       cursor="pointer"
-//       color="primary.400"
-//       onClick={handleClick}
-//     >
-//       #{row.original.name}
-//     </Text>
-//   );
-// };
+  return (
+    <Text
+      cursor="pointer"
+      color="primary.400"
+      onClick={handleClick}
+    >
+      #{row?.original?.job?.name}
+    </Text>
+  );
+};
 
 export const tableColumn = [
   {
     id: "name",
     Header: "Delivery ID",
-    accessor: "name" as const,
-    // Cell: DeliveryIdCell
+    accessor: "row?.original?.job?.name" as const,
+    Cell: DeliveryIdCell
     // width: "100px",
   },
   {
@@ -749,7 +743,7 @@ export const tableColumn = [
   },
   {
     id: "driver.full_name",
-    Header: "Driver",
+    Header: "Drivers",
     accessor: "driver.full_name" as const,
     enableSorting: true,
   },

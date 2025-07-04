@@ -216,6 +216,118 @@ export const GET_JOBS_QUERY = gql`
   }
 `;
 
+export const GROUPED_PAGINATED_JOBS_QUERY = gql`
+  query GroupedPaginatedJobs(
+    $page: Int
+    $per_page: Int
+    $query: String
+    $job_status_ids: [Int]
+    $company_id: ID
+    $orderBy: [OrderByClause!]
+    $orderByRelationship: [OrderByRelationshipInput!]
+    $between_at: JobBetweenInput
+  ) {
+    groupedPaginatedJobs(
+      page: $page
+      per_page: $per_page
+      query: $query
+      job_status_ids: $job_status_ids
+      company_id: $company_id
+      orderBy: $orderBy
+      orderByRelationship: $orderByRelationship
+      between_at: $between_at
+    ) {
+      current_page
+      last_page
+      total
+      per_page
+      data {
+        driver {
+          id
+          full_name
+          driver_no
+          is_tailgated
+          first_job_start_at_today
+          last_job_drop_at_today
+          cbm_summary_today
+          weight_summary_today
+          no_max_volume
+          no_max_capacity
+          no_max_pallets
+        }
+        job {
+          id
+          reference_no
+          name
+          driver_id
+          total_weight
+          total_volume
+          job_type {
+            id
+            name
+          }
+          job_status {
+            id
+            name
+          }
+          ready_at
+          start_at
+          drop_at
+          pick_up_address
+          last_free_at
+          timeslot
+          extras
+          admin_notes
+          customer_notes
+          driver {
+            id
+            full_name
+          }
+          company {
+            id
+            name
+          }
+          job_category {
+            id
+            name
+          }
+          customer {
+            id
+            full_name
+          }
+          job_items {
+            id
+            quantity
+            weight
+            volume
+            dimension_height
+            dimension_depth
+            dimension_width
+            item_type {
+              id
+              name
+            }
+          }
+          job_destinations {
+            id
+            is_pickup
+            address_line_1
+            address_city
+            address_postal_code
+            address_business_name
+            updated_at
+            media {
+              name
+              collection_name
+              downloadable_url
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const GET_JOB_QUERY = gql`
   query job($id: ID!) {
     job(id: $id) {

@@ -162,7 +162,7 @@ function JobEdit() {
       /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
     [],
   );
-  
+
   const getStateCode = (stateName: string) => {
     const normalizedStateName = stateName.toLowerCase().trim();
     switch (normalizedStateName) {
@@ -804,12 +804,12 @@ function JobEdit() {
       // console.log(e);
     }
   }, [job, jobDateAt, readyAt, dropAt]);
-  
+
   useEffect(() => {
     dateChanged();
   }, [dateChanged]);
 
-    const handleRemoveFromTemporaryMedia = (id: number) => {
+  const handleRemoveFromTemporaryMedia = (id: number) => {
     let _temporaryMedia = [...temporaryMedia];
     _temporaryMedia = _temporaryMedia.filter((e) => e.id !== id);
     setTemporaryMedia(_temporaryMedia);
@@ -889,7 +889,7 @@ function JobEdit() {
       isClosable: true,
     });
   }, [job, toast]);
-  
+
   useEffect(() => {
     // Function to calculate filtered job types based on cutoff logic
     const calculateFilteredOptions = async () => {
@@ -1517,11 +1517,28 @@ function JobEdit() {
                     placeholder=""
                     name="job_date_at"
                     value={jobDateAt}
+                    min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => {
-                      setJobDateAt(e.target.value);
-                      setIsSameDayJob(today === e.target.value);
+                      const selected = e.target.value;
+                      const today = new Date().toISOString().split("T")[0];
+                      if (selected.length >= 8 && selected < today) {
+                        toast({
+                          title: "Invalid Date",
+                          description:
+                            "Past dates are not allowed. Reset to today.",
+                          status: "warning",
+                          duration: 4000,
+                          isClosable: true,
+                        });
+                        setJobDateAt(today);
+                        setIsSameDayJob(true);
+                        setIsTomorrowJob(false);
+                        return;
+                      }
+                      setJobDateAt(selected);
+                      setIsSameDayJob(today === selected);
                       setIsTomorrowJob(
-                        new Date(e.target.value).toDateString() ===
+                        new Date(selected).toDateString() ===
                           new Date(
                             new Date(today).setDate(
                               new Date(today).getDate() + 1,

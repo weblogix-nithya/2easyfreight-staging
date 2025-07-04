@@ -55,7 +55,7 @@ const JobStatusDateFilter = ({
       >
         {/* @ts-ignore */}
         <DateRangePicker
-          value={rangeDate && rangeDate.length === 2 ? rangeDate : [null, null]}
+          value={rangeDate ?? undefined} // Use undefined if null
           onChange={(range) => {
             if (
               !range ||

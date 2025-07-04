@@ -50,28 +50,28 @@ type PaginationTableProps<T extends object> = {
   onSortingChange?: any;
   restyleTable?: boolean;
 } & (
-    | {
+  | {
       isServerSide?: false;
       setQueryPageIndex?: never;
       setQueryPageSize?: never;
     }
-    | {
+  | {
       isServerSide: true;
       setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
       setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
     }
-  ) &
+) &
   (
     | {
-      showRowSelection?: false;
-      setSelectedRow?: never;
-      isFilterRowSelected?: never;
-    }
+        showRowSelection?: false;
+        setSelectedRow?: never;
+        isFilterRowSelected?: never;
+      }
     | {
-      showRowSelection: true;
-      setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
-      isFilterRowSelected: boolean;
-    }
+        showRowSelection: true;
+        setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+        isFilterRowSelected: boolean;
+      }
   );
 
 const PaginationTable = <T extends object>({
@@ -266,8 +266,8 @@ const PaginationTable = <T extends object>({
                                 fontSize="sm"
                                 // fontWeight="500"
                                 className="!text-[var(--chakra-colors-black-400)]"
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                               >
                                 <FontAwesomeIcon
                                   icon={faDownload}
@@ -293,8 +293,8 @@ const PaginationTable = <T extends object>({
                                 fontSize="sm"
                                 // fontWeight="500"
                                 className="!text-[var(--chakra-colors-black-400)]"
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                               >
                                 <FontAwesomeIcon
                                   icon={faPen}
@@ -318,8 +318,8 @@ const PaginationTable = <T extends object>({
                                 fontSize="sm"
                                 // fontWeight="500"
                                 className="!text-[var(--chakra-colors-black-400)]"
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                               >
                                 <FontAwesomeIcon
                                   icon={faEye}
@@ -334,8 +334,9 @@ const PaginationTable = <T extends object>({
                           //@ts-expect-error
                           cell.column.isTracking && (
                             <Link
-                              href={`${path || router.pathname}/tracking/${cell.value
-                                }`}
+                              href={`${path || router.pathname}/tracking/${
+                                cell.value
+                              }`}
                               fontWeight="700"
                             >
                               <Button
@@ -344,8 +345,8 @@ const PaginationTable = <T extends object>({
                                 fontSize="sm"
                                 // fontWeight="500"
                                 className="!text-[#3B68DB]"
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                               >
                                 Track
                               </Button>
@@ -364,8 +365,8 @@ const PaginationTable = <T extends object>({
                               onClick={() => {
                                 onDelete(cell.row.original.id);
                               }}
-                            // color={textColorSecondary}
-                            // borderRadius="7px"
+                              // color={textColorSecondary}
+                              // borderRadius="7px"
                             >
                               <FontAwesomeIcon
                                 icon={
