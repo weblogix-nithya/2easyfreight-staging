@@ -867,18 +867,7 @@ function JobEdit() {
     [re, toast],
   );
 
-  // const resetJobTypeAndShowToast = () => {
-  //   job.job_type_id = null;
-  //   toast({
-  //     title: "Job Type Required",
-  //     description:
-  //       "Standard service is no longer available for this time. Please select Express or Urgent.",
-  //     status: "warning",
-  //     duration: 3000,
-  //     isClosable: true,
-  //   });
-  // };
-  const resetJobTypeAndShowToast = useCallback(() => {
+  const resetJobTypeAndShowToast = () => {
     job.job_type_id = null;
     toast({
       title: "Job Type Required",
@@ -888,82 +877,163 @@ function JobEdit() {
       duration: 3000,
       isClosable: true,
     });
-  }, [job, toast]);
+  };
+  // const resetJobTypeAndShowToast = useCallback(() => {
+  //   job.job_type_id = null;
+  //   toast({
+  //     title: "Job Type Required",
+  //     description:
+  //       "Standard service is no longer available for this time. Please select Express or Urgent.",
+  //     status: "warning",
+  //     duration: 3000,
+  //     isClosable: true,
+  //   });
+  // }, [job, toast]);
 
+  // useEffect(() => {
+  //   // Function to calculate filtered job types based on cutoff logic
+  //   const calculateFilteredOptions = async () => {
+  //     let filteredOptions = Array.isArray(jobTypeOptions)
+  //       ? [...jobTypeOptions]
+  //       : [];
+
+  //     if (
+  //       !job.job_category_id ||
+  //       pickUpDestination.lat === 0 ||
+  //       pickUpDestination.lng === 0
+  //     ) {
+  //       return setFilteredJobTypeOptions(filteredOptions);
+  //     }
+
+  //     try {
+  //       const timezone = await getTimezone(
+  //         pickUpDestination.lat,
+  //         pickUpDestination.lng,
+  //       );
+
+  //       if (job.job_category_id === 1) {
+  //         // LCL Bookings
+  //         if (isSameDayJob) {
+  //           filteredOptions = filteredOptions.filter(
+  //             (opt) => opt.label !== "Standard",
+  //           );
+  //           resetJobTypeAndShowToast();
+  //         } else if (isTomorrowJob) {
+  //           const isAfterLclCutoff = isAfterCutoff("16:00", timezone);
+
+  //           if (isAfterLclCutoff) {
+  //             filteredOptions = filteredOptions.filter(
+  //               (opt) => opt.label !== "Standard",
+  //             );
+  //             resetJobTypeAndShowToast();
+  //           }
+  //         }
+  //       } else if (job.job_category_id === 2) {
+  //         // Airfreight Bookings
+  //         if (isSameDayJob) {
+  //           const isAfterAirfreightCutoff = isAfterCutoff("11:00", timezone);
+
+  //           if (isAfterAirfreightCutoff) {
+  //             filteredOptions = filteredOptions.filter(
+  //               (opt) => opt.label !== "Standard",
+  //             );
+  //             resetJobTypeAndShowToast();
+  //           }
+  //         }
+  //       }
+
+  //       setFilteredJobTypeOptions(filteredOptions);
+  //     } catch (error) {
+  //       console.error(
+  //         "Error fetching timezone or applying cutoff logic",
+  //         error,
+  //       );
+  //     }
+  //   };
+  //   calculateFilteredOptions();
+  //   // eslintrc-disable-next-line react-hooks/exhaustive-deps
+  // }, [
+  //   job.job_category_id,
+  //   jobDateAt,
+  //   pickUpDestination,
+  //   jobTypeOptions,
+  //   isSameDayJob,
+  //   isTomorrowJob,
+  //   resetJobTypeAndShowToast,
+  // ]);
+
+  // Define the reusable function
   useEffect(() => {
-    // Function to calculate filtered job types based on cutoff logic
-    const calculateFilteredOptions = async () => {
-      let filteredOptions = Array.isArray(jobTypeOptions)
-        ? [...jobTypeOptions]
-        : [];
-
-      if (
-        !job.job_category_id ||
-        pickUpDestination.lat === 0 ||
-        pickUpDestination.lng === 0
-      ) {
-        return setFilteredJobTypeOptions(filteredOptions);
-      }
-
+    let hasShownToast = false;
+  
+    const checkAndUpdateJobTypes = async () => {
       try {
+        if (!pickUpDestination?.lat || !pickUpDestination?.lng) return;
+  
         const timezone = await getTimezone(
           pickUpDestination.lat,
-          pickUpDestination.lng,
+          pickUpDestination.lng
         );
-
+  
+        let updatedOptions = [...jobTypeOptions];
+  
+        // LCL (Sea)
         if (job.job_category_id === 1) {
-          // LCL Bookings
           if (isSameDayJob) {
-            filteredOptions = filteredOptions.filter(
-              (opt) => opt.label !== "Standard",
-            );
-            resetJobTypeAndShowToast();
-          } else if (isTomorrowJob) {
-            const isAfterLclCutoff = isAfterCutoff("16:00", timezone);
-
-            if (isAfterLclCutoff) {
-              filteredOptions = filteredOptions.filter(
-                (opt) => opt.label !== "Standard",
-              );
+            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+            if (!hasShownToast) {
               resetJobTypeAndShowToast();
+              hasShownToast = true;
             }
-          }
-        } else if (job.job_category_id === 2) {
-          // Airfreight Bookings
-          if (isSameDayJob) {
-            const isAfterAirfreightCutoff = isAfterCutoff("11:00", timezone);
-
-            if (isAfterAirfreightCutoff) {
-              filteredOptions = filteredOptions.filter(
-                (opt) => opt.label !== "Standard",
-              );
-              resetJobTypeAndShowToast();
+          } else if (isTomorrowJob) {
+            const isAfterCut = isAfterCutoff("16:00", timezone);
+            if (isAfterCut) {
+              updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+              if (!hasShownToast) {
+                resetJobTypeAndShowToast();
+                hasShownToast = true;
+              }
             }
           }
         }
-
-        setFilteredJobTypeOptions(filteredOptions);
+  
+        // Airfreight
+        if (job.job_category_id === 2 && isSameDayJob) {
+          const isAfterCut = isAfterCutoff("11:00", timezone);
+          if (isAfterCut) {
+            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+            if (!hasShownToast) {
+              resetJobTypeAndShowToast();
+              hasShownToast = true;
+            }
+          }
+        }
+  
+        setFilteredJobTypeOptions(updatedOptions);
       } catch (error) {
-        console.error(
-          "Error fetching timezone or applying cutoff logic",
-          error,
-        );
+        console.error("Error updating job type options:", error);
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error ? error.message : "Unknown error occurred",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
       }
     };
-    calculateFilteredOptions();
-    // eslintrc-disable-next-line react-hooks/exhaustive-deps
+  
+    checkAndUpdateJobTypes();
   }, [
+    pickUpDestination?.lat,
+    pickUpDestination?.lng,
     job.job_category_id,
     jobDateAt,
-    pickUpDestination,
-    jobTypeOptions,
     isSameDayJob,
     isTomorrowJob,
-    resetJobTypeAndShowToast,
+    jobTypeOptions,
   ]);
-
-  // Define the reusable function
-
+  
   const validateAddresses = () => {
     if (!pickUpDestination?.address) {
       toast({

@@ -246,6 +246,8 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           id
           full_name
           driver_no
+          phone_no
+          registration_no
           is_tailgated
           first_job_start_at_today
           last_job_drop_at_today

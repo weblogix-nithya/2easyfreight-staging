@@ -6,5 +6,5 @@ const JobPage = dynamic(() => import('./jobs'), {
 })
 
 export default function JobsPageEntry() {
-  return <JobPage initialLoadOnly={true} />
+  return <JobPage />
 }

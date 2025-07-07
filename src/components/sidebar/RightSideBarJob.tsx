@@ -527,7 +527,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
           Base notes
         </FormLabel>
         <Box className="!max-w-md w-full">
-          <p className="text-sm">{job.base_notes ? job.base_notes : "N/A"}</p>
+        <p className="text-sm">{job.base_notes ? job.base_notes : "N/A"}</p>
         </Box>
       </Flex>
 

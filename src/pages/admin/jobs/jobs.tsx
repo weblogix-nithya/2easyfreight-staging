@@ -117,7 +117,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
 }) {
   // const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
   // const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
-
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,7 +132,16 @@ export default function JobIndex({}: // initialLoadOnly = false,
     () => (isCompany ? companyStatusOptions : adminStatusOptions),
     [isCompany],
   );
-  const { filters, displayName, jobMainFilters, is_filter_ticked } =
+  type StatusOption = {
+    value: string;
+    label: string;
+    statusIds: number[];
+  };
+  
+  const [selectedStatus, setSelectedStatus] = useState<(typeof statusOptions)[number] | null>(
+    statusOptions[0]
+  );
+    const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
   const _cookies = parseCookies();
   const dispatch = useDispatch();
@@ -303,7 +311,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     },
   });
   
-  console.log(groupedJobs?.groupedPaginatedJobs?.data, "groupe");
+  // console.log(groupedJobs?.groupedPaginatedJobs?.data, "groupe");
 
   // const {
   //   data: jobs,
@@ -570,6 +578,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   };
 
   const handleStatusChange = (selectedOption: any) => {
+    setSelectedStatus(selectedOption); 
     setStatusFilter(selectedOption.value);
     setQueryPageIndex(0);
 
@@ -762,6 +771,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
           <JobStatusDateFilter
             statusOptions={statusOptions}
             onStatusChange={handleStatusChange}
+            selectedStatus={selectedStatus}
             rangeDate={rangeDate}
             setRangeDate={setRangeDate}
           />

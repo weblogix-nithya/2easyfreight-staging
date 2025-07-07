@@ -1,3 +1,4 @@
+import React, { useCallback } from "react";
 import { Box, Flex } from "@chakra-ui/react";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { Select } from "chakra-react-select";
@@ -13,6 +14,7 @@ interface Props {
   onStatusChange: (option: StatusOption) => void;
   rangeDate: [Date, Date] | null;
   setRangeDate: (range: [Date, Date] | null) => void;
+  selectedStatus: StatusOption | null;
 }
 
 const JobStatusDateFilter = ({
@@ -20,14 +22,26 @@ const JobStatusDateFilter = ({
   onStatusChange,
   rangeDate,
   setRangeDate,
+  selectedStatus,
 }: Props) => {
+  const handleRangeChange = useCallback(
+    (range: any) => {
+      if (Array.isArray(range) && range[0] && range[1]) {
+        setRangeDate(range as [Date, Date]);
+      } else {
+        setRangeDate(null);
+      }
+    },
+    [setRangeDate],
+  );
+  
   return (
     <Flex>
       <Box width="300px">
         <Select
           options={statusOptions}
-          // defaultValue={statusOptions[0]}
-          defaultValue={statusOptions?.[0] ?? null}
+          // defaultValue={statusOptions?.[0] ?? null}
+          value={selectedStatus}
           onChange={(value: any) => onStatusChange(value)}
           placeholder="Select Status"
           className="basic-single"
@@ -56,19 +70,7 @@ const JobStatusDateFilter = ({
         {/* @ts-ignore */}
         <DateRangePicker
           value={rangeDate ?? undefined} // Use undefined if null
-          onChange={(range) => {
-            if (
-              !range ||
-              !Array.isArray(range) ||
-              range.length !== 2 ||
-              !range[0] ||
-              !range[1]
-            ) {
-              setRangeDate(null);
-            } else {
-              setRangeDate(range as [Date, Date]);
-            }
-          }}
+          onChange={handleRangeChange}
           clearIcon={<span style={{ color: "red", cursor: "pointer" }}>✕</span>}
         />
       </Box>

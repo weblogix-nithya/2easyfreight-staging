@@ -85,11 +85,15 @@
   },
   "overrides": {
     "react-google-places-autocomplete": {
-      "react-select": "^4.0.1"
+      "react-select": "^4.0.1",
+      "@emotion/react": "^11.14.0",
+      "@emotion/styled": "^11.14.0"
     }
   },
   "resolutions": {
-    "react-select": "^5.7.4"
+    "react-select": "^5.7.4",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0"
   },
   "browserslist": {
     "production": [

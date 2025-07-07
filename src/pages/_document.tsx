@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-sync-scripts */
+import { Link } from "@chakra-ui/react";
 import { ColorModeScript } from "@chakra-ui/system";
 import { Head, Html, Main, NextScript } from "next/document";
 import theme from "theme/theme";
@@ -7,7 +8,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link rel="apple-touch-icon" href="/logo192.png" />
+        <Link rel="apple-touch-icon" href="/logo192.png" />
         <link rel="manifest" href="/manifest.json"/>
         <link rel="icon" href="/favicon.ico" />
 
