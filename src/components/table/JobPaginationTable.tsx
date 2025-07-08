@@ -20,6 +20,7 @@ import {
   Flex,
   Badge,
   Stack,
+  Wrap,
 } from "@chakra-ui/react";
 import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
 import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
@@ -27,9 +28,14 @@ import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
-import { formatCurrency, formatDate, formatTimeUTCtoInput, formatToTimeDate } from "helpers/helper";
+import {
+  formatCurrency,
+  formatDate,
+  formatTimeUTCtoInput,
+  formatToTimeDate,
+} from "helpers/helper";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import {
   Column,
@@ -62,9 +68,10 @@ const PaginationTable = <T extends object>({
   isChecked,
   onSortingChange,
   restyleTable = false,
-}: PaginationTableProps<T>) => {
+}: // autoResetSelectedRows= false,
+PaginationTableProps<T>) => {
   const router = useRouter();
-  const [pageRows, setPageRows] = useState([]);
+  // const [pageRows, setPageRows] = useState([]);
 
   const pageSizeOptions = [
     { value: 10, label: "10 / page" },
@@ -91,11 +98,13 @@ const PaginationTable = <T extends object>({
     gotoPage,
     pageCount,
     toggleAllRowsSelected,
+    // autoResetSelectedRows
   } = useTable<T>(
     {
       ...options,
       columns,
       data,
+      autoResetSelectedRows: false,
     },
     useSortBy,
     usePagination,
@@ -118,16 +127,11 @@ const PaginationTable = <T extends object>({
     if (showRowSelection) {
       setSelectedRow(selectedFlatRows);
     }
-    setPageRows(
-      isFilterRowSelected ? page.filter((row) => row.isSelected) : page,
-    );
-  }, [
-    page,
-    isFilterRowSelected,
-    showRowSelection,
-    setSelectedRow,
-    selectedFlatRows,
-  ]);
+  }, [page, showRowSelection, setSelectedRow, selectedFlatRows]);
+
+  const pageRows = useMemo(() => {
+    return isFilterRowSelected ? page.filter((row) => row.isSelected) : page;
+  }, [page, isFilterRowSelected]);
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
@@ -150,8 +154,8 @@ const PaginationTable = <T extends object>({
                       ? column.getSortByToggleProps()
                       : undefined,
                   )}
-                  key={column.id || Math.random()}
-                >
+                  key={`column-${column.id || column.Header || index}`}
+                  >
                   {column.render("Header")}
                   {column.enableSorting && (
                     <span>
@@ -178,96 +182,81 @@ const PaginationTable = <T extends object>({
           {pageRows.map((row, index) => {
             // console.log(row, "row one");
             prepareRow(row);
-            const currentDriver = row.original.driver;
+            const driver = row.original.driver;
             const prevDriver = pageRows[index - 1]?.original?.driver;
 
             const shouldShowDriverHeader =
-              currentDriver &&
-              (!prevDriver || currentDriver?.id !== prevDriver?.id);
+              !!driver?.full_name &&
+              (!prevDriver?.full_name || driver?.id !== prevDriver?.id);
 
             return (
-              <React.Fragment key={index}>
+              <React.Fragment key={`driver-header-${index}`}>
                 {shouldShowDriverHeader && (
                   <Tr bg="gray.50">
-                    <Td colSpan={columns.length}>
-                      <VStack align="start" spacing={3}>
-                        {/* First Row: Driver Info & Stats */}
+                    <Td colSpan={columns.length} px={4} py={3}>
+                      <VStack align="start" spacing={2}>
                         <Flex
                           justify="space-between"
-                          align="center"
-                          flexWrap="wrap"
+                          wrap="wrap"
+                          gap={4}
                           w="full"
-                          gap={3}
                         >
                           <Text fontWeight="bold">
-                            Driver: {currentDriver.full_name} —{" "}
-                            {currentDriver.driver_no}
+                            Driver: {driver.full_name} — {driver.driver_no}
                           </Text>
-
-                          <Stack direction="row" spacing={3} flexWrap="wrap">
+                          <Stack direction="row" spacing={3} wrap="wrap">
                             <Badge colorScheme="purple" variant="subtle">
                               First Collection:{" "}
-                              {formatToTimeDate(currentDriver.first_job_start_at_today ?? "2022-01-03 00:00:00")}
-
+                              {formatToTimeDate(
+                                driver.first_job_start_at_today ??
+                                  "2022-01-03 00:00:00",
+                              )}
                             </Badge>
                             <Badge colorScheme="purple" variant="subtle">
-                              Last delivery:{" "}
-                              {formatToTimeDate(currentDriver.last_job_drop_at_today ?? "2022-01-03 00:00:00")}
-
+                              Last Delivery:{" "}
+                              {formatToTimeDate(
+                                driver.last_job_drop_at_today ??
+                                  "2022-01-03 00:00:00",
+                              )}
                             </Badge>
                             <Badge colorScheme="blue" variant="subtle">
-                              CBM:{" "}
-                              {`${currentDriver.cbm_summary_today ?? 0} / ${
-                                currentDriver.no_max_volume ?? 0
-                              }`}
+                              CBM: {driver.cbm_summary_today ?? 0} /{" "}
+                              {driver.no_max_volume ?? 0}
                             </Badge>
                             <Badge colorScheme="blue" variant="subtle">
-                              Weight:{" "}
-                              {`${currentDriver.weight_summary_today ?? 0} / ${
-                                currentDriver.no_max_capacity ?? 0
-                              }`}
+                              Weight: {driver.weight_summary_today ?? 0} /{" "}
+                              {driver.no_max_capacity ?? 0}
                             </Badge>
                             <Badge colorScheme="blue" variant="subtle">
-                              Pallets: {currentDriver.no_max_pallets ?? 0}
+                              Pallets: {driver.no_max_pallets ?? 0}
                             </Badge>
                           </Stack>
                         </Flex>
 
-                        {/* Second Row: Mobile, Rego, Tailgate */}
-                        <Flex
-                          // justify="flex-start"
-                          align="center"
-                          flexWrap="wrap"
-                          w="full"
-                          gap={3}
-                        >
+                        <Flex wrap="wrap" gap={3}>
                           <Badge colorScheme="red" variant="subtle">
-                            Current suburb: WIP
+                            Current Suburb: WIP
                           </Badge>
                           <Badge colorScheme="red" variant="subtle">
-                            Mobile Number: {currentDriver.phone_no ?? "-"}
+                            Mobile Number: {driver.phone_no ?? "-"}
                           </Badge>
                           <Badge colorScheme="red" variant="subtle">
-                            Rego: {currentDriver.registration_no ?? "-"}
+                            Rego: {driver.registration_no ?? "-"}
                           </Badge>
                           <Badge colorScheme="red" variant="subtle">
-                            TAILGATE:{" "}
-                            {currentDriver.is_tailgated ? "Yes" : "No"}
+                            TAILGATE: {driver.is_tailgated ? "Yes" : "No"}
                           </Badge>
                         </Flex>
                       </VStack>
                     </Td>
                   </Tr>
                 )}
-               <Tr {...row.getRowProps()}>
-  {row.cells.map((cell) => {
-    const { key, ...rest } = cell.getCellProps();
-    return (
-      <Td key={cell.id} {...rest}>
-        {cell.render("Cell")}
-      </Td>
-    );
-  })}
+                <Tr {...row.getRowProps()} key={`data-row-${row.id || idx}`}>
+  {row.cells.map((cell) => (
+    <Td key={`cell-${row.id}-${cell.column.id}`} {...cell.getCellProps()}>
+      {cell.render("Cell")}
+    </Td>
+  ))}
 </Tr>
 
               </React.Fragment>

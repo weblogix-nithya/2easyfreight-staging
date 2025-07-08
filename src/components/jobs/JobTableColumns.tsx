@@ -326,7 +326,7 @@ export const ItemsExtrasCell = ({ row }: any) => {
 
 export const DriverCell = ({ row }: any) => {
   return (
-    <Text maxW="100px">{row?.original?.job?.driver?.full_name || "-"}</Text>
+    <Text >{row?.original?.job?.driver?.full_name || "-"}</Text>
   );
 };
 export const ItemsCbmCellExport = ({ row }: any) => {
@@ -357,8 +357,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
         </Text>
       )}
       <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {formatAddress(pickupDest)}
-        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}}`}
+        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
       <Text>{pickupDest?.address_business_name || "-"}</Text>
       {/* {normalMedia.length > 0 && (
@@ -399,14 +398,8 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   )}\n${row.original.job.pick_up_destination?.address_business_name || "-"}`;
 };
 export const BookedByCell = ({ row }: any) => {
-  // console.log(row, "roww");
-  console.log(row.original.job.company.name, 'BOOKED BY');
-
-  return (
-    <>
-      <Text>{row?.original?.job?.company?.name}</Text>
-    </>
-  );
+  const name = row?.original?.job?.company?.name || "-";
+  return <Text>{name}</Text>;
 };
 // export const BookedByCellExport = ({ row }: any) => {
 //   const pickupDest = row.original.job_destinations?.find(
@@ -507,8 +500,11 @@ export const PickupAddressCell = ({ row }: any) => {
 };
 
 export const CustomerReferenceCell = ({ row }: any) => {
-  return <Text maxW="100px">{row?.original?.job?.reference_no || "-"}</Text>;
+  return (
+    <Text maxW="100px" noOfLines={2}> {row?.original?.job?.reference_no || "-"}</Text>
+  );
 };
+
 export const CategoryCell = ({ row }: any) => {
   return (
     <Text maxW="100px">{row?.original?.job?.job_category?.name || "-"}</Text>

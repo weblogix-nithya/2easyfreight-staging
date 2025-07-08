@@ -67,6 +67,8 @@ const JobHeader = ({
               </Button>
 
               <Checkbox
+                id="filter-toggle"
+                name="filter-toggle"
                 onChange={(e) => onToggleFilterCheckbox(e.target.checked)}
                 isChecked={isFilterTicked === "1"}
               />

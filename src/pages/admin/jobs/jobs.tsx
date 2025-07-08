@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Box, SimpleGrid, Spinner, useDisclosure } from "@chakra-ui/react";
+import { Box, SimpleGrid, Spinner, Text, useDisclosure } from "@chakra-ui/react";
 import ActionBar from "components/jobs/ActionBar";
 import {
   defaultJobFilter,
@@ -45,6 +45,7 @@ import { RootState } from "store/store";
 
 import JobFiltersTagRow from "./job-components/JobFiltersTagRow";
 import JobHeader from "./job-components/JobHeader";
+
 const JobStatusDateFilter = dynamic(
   () => import("./job-components/JobStatusDateFilter"),
   {
@@ -57,9 +58,15 @@ const FilterJobsModal = React.lazy(
 const JobBulkAssignModal = React.lazy(
   () => import("components/jobs/JobBulkAssignModal"),
 );
-const JobTableSettingsModal = React.lazy(
-  () => import("components/jobs/JobTableSettingsModal"),
-);
+// const JobTableSettingsModal = React.lazy(
+//   () => import("components/jobs/JobTableSettingsModal"),
+// );
+// Inside Job Index
+const JobTableSettingsModal = dynamic(() => import("components/jobs/JobTableSettingsModal"), {
+  loading: () => <Text>Loading settings...</Text>,
+  ssr: false,
+});
+
 
 const adminStatusOptions = [
   {
@@ -118,7 +125,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
   // const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
   // const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(100);
+  const [queryPageSize, setQueryPageSize] = useState(25);
+  const [fetchedJobs, setFetchedJobs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
   const [_statusFilter, setStatusFilter] = useState("all");
@@ -132,16 +140,12 @@ export default function JobIndex({}: // initialLoadOnly = false,
     () => (isCompany ? companyStatusOptions : adminStatusOptions),
     [isCompany],
   );
-  type StatusOption = {
-    value: string;
-    label: string;
-    statusIds: number[];
-  };
-  
-  const [selectedStatus, setSelectedStatus] = useState<(typeof statusOptions)[number] | null>(
-    statusOptions[0]
-  );
-    const { filters, displayName, jobMainFilters, is_filter_ticked } =
+
+  const [selectedStatus, setSelectedStatus] = useState<
+    (typeof statusOptions)[number] | null
+  >(statusOptions[0]);
+
+  const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
   const _cookies = parseCookies();
   const dispatch = useDispatch();
@@ -310,7 +314,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
     },
   });
-  
+
   // console.log(groupedJobs?.groupedPaginatedJobs?.data, "groupe");
 
   // const {
@@ -578,7 +582,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   };
 
   const handleStatusChange = (selectedOption: any) => {
-    setSelectedStatus(selectedOption); 
+    setSelectedStatus(selectedOption);
     setStatusFilter(selectedOption.value);
     setQueryPageIndex(0);
 
@@ -798,7 +802,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
                         sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
                       },
                       manualPagination: true,
-                      pageCount:  groupedJobs?.groupedPaginatedJobs?.last_page //jobs.jobs.paginatorInfo.lastPage,
+                      pageCount: groupedJobs?.groupedPaginatedJobs?.last_page, //jobs.jobs.paginatorInfo.lastPage,
                     }}
                     setQueryPageIndex={setQueryPageIndex}
                     setQueryPageSize={setQueryPageSize}
@@ -810,7 +814,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
                     isChecked={isChecked}
                     showManualPages
                     onSortingChange={handleSortingChange}
-                    restyleTable                   
+                    restyleTable
                   />
                 )}
             </>
