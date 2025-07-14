@@ -33,6 +33,7 @@ import {
   formatDate,
   formatTimeUTCtoInput,
   formatToTimeDate,
+  getRowBgColor,
 } from "helpers/helper";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -155,7 +156,7 @@ PaginationTableProps<T>) => {
                       : undefined,
                   )}
                   key={`column-${column.id || column.Header || index}`}
-                  >
+                >
                   {column.render("Header")}
                   {column.enableSorting && (
                     <span>
@@ -182,6 +183,8 @@ PaginationTableProps<T>) => {
           {pageRows.map((row, index) => {
             // console.log(row, "row one");
             prepareRow(row);
+            const status = row.original?.job?.job_status?.name;
+
             const driver = row.original.driver;
             const prevDriver = pageRows[index - 1]?.original?.driver;
 
@@ -192,73 +195,97 @@ PaginationTableProps<T>) => {
             return (
               <React.Fragment key={`driver-header-${index}`}>
                 {shouldShowDriverHeader && (
-                  <Tr bg="gray.50">
-                    <Td colSpan={columns.length} px={4} py={3}>
-                      <VStack align="start" spacing={2}>
-                        <Flex
-                          justify="space-between"
-                          wrap="wrap"
-                          gap={4}
-                          w="full"
-                        >
-                          <Text fontWeight="bold">
-                            Driver: {driver.full_name} — {driver.driver_no}
-                          </Text>
-                          <Stack direction="row" spacing={3} wrap="wrap">
-                            <Badge colorScheme="purple" variant="subtle">
-                              First Collection:{" "}
-                              {formatToTimeDate(
-                                driver.first_job_start_at_today ??
-                                  "2022-01-03 00:00:00",
-                              )}
-                            </Badge>
-                            <Badge colorScheme="purple" variant="subtle">
-                              Last Delivery:{" "}
-                              {formatToTimeDate(
-                                driver.last_job_drop_at_today ??
-                                  "2022-01-03 00:00:00",
-                              )}
-                            </Badge>
-                            <Badge colorScheme="blue" variant="subtle">
-                              CBM: {driver.cbm_summary_today ?? 0} /{" "}
-                              {driver.no_max_volume ?? 0}
-                            </Badge>
-                            <Badge colorScheme="blue" variant="subtle">
-                              Weight: {driver.weight_summary_today ?? 0} /{" "}
-                              {driver.no_max_capacity ?? 0}
-                            </Badge>
-                            <Badge colorScheme="blue" variant="subtle">
-                              Pallets: {driver.no_max_pallets ?? 0}
-                            </Badge>
-                          </Stack>
-                        </Flex>
+                  <Tr>
+                    <Td colSpan={columns.length} p={0}>
+                      <Box
+                        bg="gray.100"
+                        px={6}
+                        py={3}
+                        borderTop="4px solid"
+                        borderLeft="4px solid"
+                        borderColor="#2F80ED"
+                        borderRadius="md"
+                        w="100%"
+                      >
+                        <VStack align="start" spacing={2}>
+                          <Flex
+                            wrap="wrap"
+                            justify="space-between"
+                            align="center"
+                            gap={4}
+                            w="full"
+                          >
+                            <Text fontWeight="bold">
+                              Driver: {driver.full_name} — {driver.driver_no}
+                            </Text>
 
-                        <Flex wrap="wrap" gap={3}>
-                          <Badge colorScheme="red" variant="subtle">
-                            Current Suburb: WIP
-                          </Badge>
-                          <Badge colorScheme="red" variant="subtle">
-                            Mobile Number: {driver.phone_no ?? "-"}
-                          </Badge>
-                          <Badge colorScheme="red" variant="subtle">
-                            Rego: {driver.registration_no ?? "-"}
-                          </Badge>
-                          <Badge colorScheme="red" variant="subtle">
-                            TAILGATE: {driver.is_tailgated ? "Yes" : "No"}
-                          </Badge>
-                        </Flex>
-                      </VStack>
+                            <Stack direction="row" spacing={3} wrap="wrap">
+                              <Badge colorScheme="purple" variant="subtle">
+                                First Collection:{" "}
+                                {formatToTimeDate(
+                                  driver.first_job_start_at_today ??
+                                    "2022-01-03 00:00:00",
+                                )}
+                              </Badge>
+                              <Badge colorScheme="purple" variant="subtle">
+                                Last Delivery:{" "}
+                                {formatToTimeDate(
+                                  driver.last_job_drop_at_today ??
+                                    "2022-01-03 00:00:00",
+                                )}
+                              </Badge>
+                              <Badge colorScheme="blue" variant="subtle">
+                                CBM: {driver.cbm_summary_today ?? 0} /{" "}
+                                {driver.no_max_volume ?? 0}
+                              </Badge>
+                              <Badge colorScheme="blue" variant="subtle">
+                                Weight: {driver.weight_summary_today ?? 0} /{" "}
+                                {driver.no_max_capacity ?? 0}
+                              </Badge>
+                              <Badge colorScheme="blue" variant="subtle">
+                                Pallets: {driver.no_max_pallets ?? 0}
+                              </Badge>
+                            </Stack>
+                          </Flex>
+
+                          <Flex
+                            wrap="wrap"
+                            justify="space-between"
+                            gap={4}
+                            w="full"
+                          >
+                            <Badge colorScheme="red" variant="subtle">
+                              Current Suburb: WIP
+                            </Badge>
+                            <Badge colorScheme="red" variant="subtle">
+                              Mobile Number: {driver.phone_no ?? "-"}
+                            </Badge>
+                            <Badge colorScheme="red" variant="subtle">
+                              Rego: {driver.registration_no ?? "-"}
+                            </Badge>
+                            <Badge colorScheme="red" variant="subtle">
+                              TAILGATE: {driver.is_tailgated ? "Yes" : "No"}
+                            </Badge>
+                          </Flex>
+                        </VStack>
+                      </Box>
                     </Td>
                   </Tr>
                 )}
-                <Tr {...row.getRowProps()} key={`data-row-${row.id || idx}`}>
-  {row.cells.map((cell) => (
-    <Td key={`cell-${row.id}-${cell.column.id}`} {...cell.getCellProps()}>
-      {cell.render("Cell")}
-    </Td>
-  ))}
-</Tr>
-
+                <Tr
+                  {...row.getRowProps()}
+                  key={`data-row-${row.id || idx}`}
+                  bg={getRowBgColor(status)}
+                >
+                  {row.cells.map((cell) => (
+                    <Td
+                      key={`cell-${row.id}-${cell.column.id}`}
+                      {...cell.getCellProps()}
+                    >
+                      {cell.render("Cell")}
+                    </Td>
+                  ))}
+                </Tr>
               </React.Fragment>
             );
           })}

@@ -24,6 +24,22 @@ export function formatTimeUTCtoInput(dateTime: string) {
   return moment.utc(dateTime).local().format("HH:mm");
 }
 
+export const getRowBgColor = (status?: string): string => {
+  const normalizedStatus = status?.toLowerCase();
+
+  switch (normalizedStatus) {
+    case "in transit":
+    case "assigned":
+      return "yellow.100"; // light yellow
+    case "delivered":
+    case "completed":
+      return "green.100"; // light green
+    default:
+      return "transparent";
+  }
+};
+
+
 export function formatToTimeDate(apiDate: string): string {
   if (!apiDate) return "-";
   return moment.utc(apiDate).local().format("HH:mm, DD/MM/YYYY");

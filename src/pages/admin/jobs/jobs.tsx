@@ -19,7 +19,7 @@ import {
   DynamicTableUser,
   GET_DYNAMIC_TABLE_USERS_QUERY,
 } from "graphql/dynamicTableUser";
-import { GET_JOBS_QUERY } from "graphql/job";
+import { GET_JOBS_QUERY, Job } from "graphql/job";
 import { GROUPED_PAGINATED_JOBS_QUERY } from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
@@ -125,15 +125,15 @@ export default function JobIndex({}: // initialLoadOnly = false,
   // const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
   // const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(25);
-  const [fetchedJobs, setFetchedJobs] = useState([]);
+  const [queryPageSize, setQueryPageSize] = useState(100);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
   const [_statusFilter, setStatusFilter] = useState("all");
   const today = new Date();
   const [rangeDate, setRangeDate] = useState<[Date, Date]>([today, today]);
   const [isTableLoading, setIsTableLoading] = useState(false);
-  const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
+  const { isAdmin, companyId, customerId, isCompany,isCompanyAdmin, isCustomer, userId } = useSelector(
     (state: RootState) => state.user,
   );
   const statusOptions = useMemo(
@@ -206,18 +206,18 @@ export default function JobIndex({}: // initialLoadOnly = false,
   );
 
   // const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
-  // const adminColumns = useMemo(() => {
-  //   return getColumns(
-  //     true,
-  //     false,
-  //     dynamicTableData?.dynamicTableUsers?.data || [],
-  //   );
-  // }, [dynamicTableData]);
-  const adminColumns = getColumns(
-    true,
-    false,
-    dynamicTableData?.dynamicTableUsers?.data || [],
-  );
+  const adminColumns = useMemo(() => {
+    return getColumns(
+      true,
+      false,
+      dynamicTableData?.dynamicTableUsers?.data || [],
+    );
+  }, [dynamicTableData]);
+  // const adminColumns = getColumns(
+  //   true,
+  //   false,
+  //   dynamicTableData?.dynamicTableUsers?.data || [],
+  // );
   // console.log(columns, "col");
 
   const companyColumns = columns.filter((column) =>
@@ -253,8 +253,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
   useEffect(() => {
     setIsChecked(true);
   }, [isChecked]);
-  // const [tableColumns, setTableColumn] =
-  //   useState<string[]>(defaultTableColumns);
 
   const orderByRelationship = useMemo(() => {
     let join = undefined as JoinOnClause;
@@ -295,6 +293,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       query: searchQuery || "",
       job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
       company_id: isCompany ? parseInt(companyId) : undefined,
+      customer_id: isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
       orderByRelationship: [
         {
           column: "id",
@@ -311,38 +310,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
     },
     skip: !userId,
     onCompleted: (data) => {
-      console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
+      // console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
     },
   });
-
-  // console.log(groupedJobs?.groupedPaginatedJobs?.data, "groupe");
-
-  // const {
-  //   data: jobs,
-  //   loading,
-  //   refetch: refetchJobs,
-  // } = useQuery(GET_JOBS_QUERY, {
-  //   variables: {
-  //     query: searchQuery,
-  //     page: queryPageIndex + 1,
-  //     first: queryPageSize,
-  //     orderByRelationship,
-  //     // between_at: {
-  //     //   from_at: "2025-06-20 00:00:00",
-  //     //   to_at: "2025-06-21 23:59:59"
-  //     // },
-  //     between_at: rangeDate?.[0]
-  //       ? {
-  //           from_at: formatDate(rangeDate[0], true),
-  //           to_at: formatDate(rangeDate[1], false),
-  //         }
-  //       : undefined,
-  //     job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
-  //     company_id: isCompany ? parseInt(companyId) : undefined,
-  //     ...mainJobFilter,
-  //   },
-  //   skip: !userId,
-  // });
 
   const jobs = groupedJobs?.groupedPaginatedJobs;
   const loading = loadingGroupedJobs;

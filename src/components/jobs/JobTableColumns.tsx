@@ -15,6 +15,7 @@ import {
   Textarea,
   useToast,
 } from "@chakra-ui/react";
+import { useRouter } from "next/router";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
 import { UPDATE_JOB_MUTATION } from "graphql/job";
@@ -234,11 +235,11 @@ export const ItemsTypeCell = ({ row }: any) => {
   const items = row.original.job.job_items;
   return (
     <div>
-     {items.map((item: any) => (
-  <Text key={`items-type-${item.id}`} mb={2}>
-    {item.item_type.name}
-  </Text>
-))}
+      {items.map((item: any) => (
+        <Text key={`items-type-${item.id}`} mb={2}>
+          {item.item_type.name}
+        </Text>
+      ))}
     </div>
   );
 };
@@ -277,10 +278,10 @@ export const ItemsQuantityCell = ({ row }: any) => {
   return (
     <div>
       {items.map((item: any) => (
-  <Text key={`items-quantity-${item.id}`} mb={2}>
-    {item?.quantity}
-  </Text>
-))}
+        <Text key={`items-quantity-${item.id}`} mb={2}>
+          {item?.quantity}
+        </Text>
+      ))}
     </div>
   );
 };
@@ -325,9 +326,7 @@ export const ItemsExtrasCell = ({ row }: any) => {
 };
 
 export const DriverCell = ({ row }: any) => {
-  return (
-    <Text >{row?.original?.job?.driver?.full_name || "-"}</Text>
-  );
+  return <Text>{row?.original?.job?.driver?.full_name || "-"}</Text>;
 };
 export const ItemsCbmCellExport = ({ row }: any) => {
   const items = row.original.job.job_items;
@@ -487,7 +486,7 @@ export const PickupBusinessNameCell = ({ row }: any) => {
 
 export const PickupAddressCell = ({ row }: any) => {
   const pickupDest = row.original.job.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true
+    (dest: any) => dest.is_pickup === true,
   );
 
   if (!pickupDest) return <Text>-</Text>;
@@ -501,7 +500,10 @@ export const PickupAddressCell = ({ row }: any) => {
 
 export const CustomerReferenceCell = ({ row }: any) => {
   return (
-    <Text maxW="100px" noOfLines={2}> {row?.original?.job?.reference_no || "-"}</Text>
+    <Text maxW="100px" noOfLines={2}>
+      {" "}
+      {row?.original?.job?.reference_no || "-"}
+    </Text>
   );
 };
 
@@ -643,9 +645,7 @@ const DeliveryIdCell = ({ row, onMarkerClick }: any) => {
 };
 
 export const DeliveryCell = ({ row }: any) => {
-  return (
-    <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>
-  );
+  return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
 };
 export const tableColumn = [
   {
@@ -830,6 +830,7 @@ export const getColumns = (
   };
 
   actionsColumn["Cell"] = ({ row }: any) => {
+    const router = useRouter();
     const id = row?.original?.id;
     const job = row?.original?.job;
     return (
@@ -839,7 +840,12 @@ export const getColumns = (
             aria-label="Edit"
             icon={<EditIcon />}
             size="sm"
-            onClick={() => console.log("Edit", id)}
+            onClick={() => {
+              const jobId = row?.original?.job?.id;
+              if (jobId) {
+                router.push(`/admin/jobs/${jobId}`);
+              }
+            }}
           />
         )}
         {isCustomer && (
@@ -883,7 +889,6 @@ export const getColumns = (
   const dynamicColumns = outputDynamicTable(dynamicTableUsers, tableColumn);
   return [selectionColumn, ...dynamicColumns, actionsColumn];
 };
-
 
 export const getBulkAssignColumns = (
   isAdmin: boolean,
