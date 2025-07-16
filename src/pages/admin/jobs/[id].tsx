@@ -3,43 +3,18 @@ import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
-  Divider,
   Flex,
   FormControl,
-  FormLabel,
   Grid,
-  GridItem,
-  Radio,
-  RadioGroup,
-  SimpleGrid,
-  Stack,
-  Table,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import { faTrashCan } from "@fortawesome/pro-regular-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
-import AreYouSureAlert from "components/alert/AreYouSureAlert";
-import ColorSelect from "components/fields/ColorSelect";
-import CustomInputField from "components/fields/CustomInputField";
-// import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
-import FileInput from "components/fileInput/FileInput";
 import InvoiceTab from "components/jobs/InvoiceTab";
-import JobAddressesSection from "components/jobs/JobAddressesSection";
 import JobDetailsTab from "components/jobs/JobDetailsTab";
-import JobInputTable from "components/jobs/JobInputTable";
 import MessageLogTab from "components/jobs/MessageLogTab";
 import ReportsTab from "components/jobs/ReportsTab";
-import PaginationTable from "components/table/PaginationTable";
 import { TabsComponent } from "components/tabs/TabsComponet";
-import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
 import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
@@ -85,7 +60,6 @@ import { DELETE_MEDIA_MUTATION } from "graphql/media";
 import {
   formatDate,
   formatDateTimeToDB,
-  formatTime,
   formatTimeUTCtoInput,
   // getTimezone,
   // isAfterCutoff,
@@ -99,13 +73,13 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useState,
   useRef,
+  useState,
 } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
-interface CalculationData {
+interface _CalculationData {
   cbm_auto: number;
   total_weight: number;
   freight: number;
@@ -1040,7 +1014,7 @@ function JobEdit() {
     if (job?.company_id && job.company_id !== 0) {
       getCompanyRates({ variables: { company_id: Number(job.company_id) } });
     }
-  }, [job.company_id]);
+  }, [job.company_id,getCompanyRates]);
   useEffect(() => {
     const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
     const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
@@ -1579,7 +1553,7 @@ function JobEdit() {
       toast({ title: "Quote Calculation Success", status: "success" });
       if (isUpdateMode) {
         await handleUpdateJobPriceCalculationDetail(calculationData)
-          .then((data) => {
+          .then((_data) => {
             // console.log("Updated successfully:", data);
             handleUpdateJob();
             toast({
@@ -1781,7 +1755,7 @@ function JobEdit() {
                     jobStatuses={jobStatuses}
                     jobCategories={jobCategories}
                     depotOptions={depotOptions}
-                    setDepotOptions={setDepotOptions}
+                    _setDepotOptions={setDepotOptions}
                     drivers={drivers}
                     companiesOptions={companiesOptions}
                     customerOptions={customerOptions}
@@ -1836,7 +1810,7 @@ function JobEdit() {
                     onChangeCustomerSearchQuery={onChangeCustomerSearchQuery}
                     onChangeSearchQuery={onChangeSearchQuery}
                     textColorSecodary={textColorSecodary}
-                    updatingMedia={updatingMedia}
+                    _updatingMedia={updatingMedia}
                     setUpdatingMedia={setUpdatingMedia}
                   />
                 )}

@@ -33,6 +33,7 @@ import { reorderArray } from "helpers/helper";
 import { useEffect, useState } from "react";
 
 import { JobBulkAssignRow } from "./JobBulkAssignRow";
+import moment from "moment";
 interface FilterJobsModalProps extends UseDisclosureProps {
   driverOptions: { value: number; label: string }[];
   drivers: any;
@@ -62,6 +63,7 @@ export default function JobBulkAssignModal({
     selectedJobs?.findIndex(
       (dynamicTableUser: any) => dynamicTableUser.id == id,
     );
+    console.log(selectedJobs,'sssss')
   const activeIndex = activeId ? getIndex(activeId) : -1;
   const totals = selectedJobs.reduce(
     (acc, job) => {
@@ -79,6 +81,7 @@ export default function JobBulkAssignModal({
       driver_id: selectedDriver.id,
       name: item.original.name,
       sort_id: index + 1,
+          sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"), // ⬅️ NEW
       job_type_id: item.original.job_type_id,
     };
   });

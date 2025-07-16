@@ -1,5 +1,4 @@
 // components/tabs/JobDetailsTab.tsx
-import React from "react";
 import {
   Box,
   Button,
@@ -20,19 +19,21 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import CustomInputField from "components/fields/CustomInputField";
-import JobAddressesSection from "components/jobs/JobAddressesSection";
-import TagsInput from "components/tagsInput";
-import ColorSelect from "components/fields/ColorSelect";
-import { formatDate, formatTime } from "helpers/helper";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
-import JobInputTable from "./JobInputTable";
-import FileInput from "components/fileInput/FileInput";
-import PaginationTable from "components/table/PaginationTable";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
+import ColorSelect from "components/fields/ColorSelect";
+import CustomInputField from "components/fields/CustomInputField";
+import FileInput from "components/fileInput/FileInput";
+import JobAddressesSection from "components/jobs/JobAddressesSection";
+import PaginationTable from "components/table/PaginationTable";
+import TagsInput from "components/tagsInput";
+import { formatDate, formatTime } from "helpers/helper";
+import React from "react";
 
-interface JobDetailsTabProps {
+import JobInputTable from "./JobInputTable";
+
+interface _JobDetailsTabProps {
   depotOptions: any[];
   setDepotOptions: React.Dispatch<React.SetStateAction<any[]>>;
   filtereddepotOptions: any[];
@@ -90,7 +91,7 @@ const JobDetailsTab = ({
   itemsTableColumns,
   itemTypes,
   getJob,  
- updatingMedia,  
+ _updatingMedia,  
   setUpdatingMedia,
   handleDeleteMedia,
   jobLoading,
@@ -100,7 +101,7 @@ const JobDetailsTab = ({
   onChangeSearchQuery,
   textColorSecodary,
   depotOptions,
-  setDepotOptions,
+  _setDepotOptions,
 }) => {
   return (
     <Box mt={10}>

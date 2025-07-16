@@ -38,7 +38,7 @@ function FileInput(props: {
     onUpload,
     isTemporary,
     onTemporaryUpload,
-    _defaulTemporaryFiles = [],
+    defaulTemporaryFiles = [],
     ...rest
   } = props;
   // const brandColor = useColorModeValue("brand.500", "white");
@@ -46,7 +46,7 @@ function FileInput(props: {
   const [media, setMedia] = useState({ raw: null, preview: null });
   const [isMedia, _setIsMedia] = useState(media_url ? true : false);
   const [temporaryFiles, setTemporaryFiles] = useState([]);
-  // const [temporaryTest, setTemporaryTest] = useState(defaulTemporaryFiles);
+  const [_temporaryTest, _setTemporaryTest] = useState(defaulTemporaryFiles);
 
   const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     variables: {

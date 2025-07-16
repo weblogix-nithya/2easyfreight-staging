@@ -614,7 +614,7 @@ export const AdminNotesCell = ({ row }: any) => {
   );
 };
 
-const DeliveryIdCell = ({ row, onMarkerClick }: any) => {
+const _DeliveryIdCell = ({ row, onMarkerClick }: any) => {
   const dispatch = useDispatch();
 
   const handleClick = useCallback(() => {
@@ -635,7 +635,7 @@ const DeliveryIdCell = ({ row, onMarkerClick }: any) => {
     setTimeout(() => {
       onMarkerClick?.({ job_id: row.original.id });
     }, 0);
-  }, [row.original, dispatch, onMarkerClick]);
+  }, [row.original, dispatch, onMarkerClick,row]);
 
   return (
     <Text cursor="pointer" color="primary.400" onClick={handleClick}>

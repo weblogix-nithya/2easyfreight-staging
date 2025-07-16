@@ -3,13 +3,13 @@ import {
   Button,
   Checkbox,
   Flex,
-  Link,
+  // Link,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FullChevronDown } from "components/icons/Icons";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
-import { FaFileExcel } from "react-icons/fa";
 import NextLink from "next/link";
+import { FaFileExcel } from "react-icons/fa";
 
 interface JobHeaderProps {
   isAdmin: boolean;

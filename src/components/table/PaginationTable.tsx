@@ -80,7 +80,7 @@ const PaginationTable = <T extends object>({
   isServerSide = false,
   options,
   plugins = [],
-  showDelete = false,
+  // showDelete = false,
   setQueryPageIndex,
   setQueryPageSize,
   onDelete,
@@ -94,10 +94,10 @@ const PaginationTable = <T extends object>({
   onSortingChange,
   restyleTable = false,
 }: PaginationTableProps<T>) => {
-  const textColor = useColorModeValue("secondaryGray.900", "white");
-  const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
-  const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
-  const iconColor = useColorModeValue("brand.500", "white");
+  // const textColor = useColorModeValue("secondaryGray.900", "white");
+  // const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
+  // const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
+  // const iconColor = useColorModeValue("brand.500", "white");
   const router = useRouter();
   const [pageRows, setPageRows] = useState([]);
 
@@ -126,7 +126,7 @@ const PaginationTable = <T extends object>({
     gotoPage,
     pageCount,
     toggleAllRowsSelected,
-    toggleSortBy,
+    // toggleSortBy,
   } = useTable<T>(
     {
       ...options,
@@ -179,11 +179,11 @@ const PaginationTable = <T extends object>({
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
-  }, [sortBy]);
+  }, [sortBy,onSortingChange]);
 
   useEffect(() => {
     if (!isChecked) toggleAllRowsSelected(isChecked);
-  }, [isChecked]);
+  }, [isChecked, toggleAllRowsSelected]);
 
   return (
     <VStack w="full" align="start" spacing={4}>

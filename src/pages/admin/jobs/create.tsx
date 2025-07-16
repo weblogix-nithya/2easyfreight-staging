@@ -79,9 +79,14 @@ import { RootState } from "store/store";
 function JobEdit() {
   const toast = useToast();
 
-  const { isAdmin, customerId, companyId, isCompany, isCustomer } = useSelector(
-    (state: RootState) => state.user,
-  );
+  const {
+    isAdmin,
+    customerId,
+    companyId,
+    isCompany,
+    isCompanyAdmin,
+    isCustomer,
+  } = useSelector((state: RootState) => state.user);
   // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
@@ -965,22 +970,24 @@ function JobEdit() {
   // Define the reusable function
   useEffect(() => {
     let hasShownToast = false;
-  
+
     const checkAndUpdateJobTypes = async () => {
       try {
         if (!pickUpDestination?.lat || !pickUpDestination?.lng) return;
-  
+
         const timezone = await getTimezone(
           pickUpDestination.lat,
-          pickUpDestination.lng
+          pickUpDestination.lng,
         );
-  
+
         let updatedOptions = [...jobTypeOptions];
-  
+
         // LCL (Sea)
         if (job.job_category_id === 1) {
           if (isSameDayJob) {
-            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+            updatedOptions = updatedOptions.filter(
+              (opt) => opt.label !== "Standard",
+            );
             if (!hasShownToast) {
               resetJobTypeAndShowToast();
               hasShownToast = true;
@@ -988,7 +995,9 @@ function JobEdit() {
           } else if (isTomorrowJob) {
             const isAfterCut = isAfterCutoff("16:00", timezone);
             if (isAfterCut) {
-              updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+              updatedOptions = updatedOptions.filter(
+                (opt) => opt.label !== "Standard",
+              );
               if (!hasShownToast) {
                 resetJobTypeAndShowToast();
                 hasShownToast = true;
@@ -996,19 +1005,21 @@ function JobEdit() {
             }
           }
         }
-  
+
         // Airfreight
         if (job.job_category_id === 2 && isSameDayJob) {
           const isAfterCut = isAfterCutoff("11:00", timezone);
           if (isAfterCut) {
-            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+            updatedOptions = updatedOptions.filter(
+              (opt) => opt.label !== "Standard",
+            );
             if (!hasShownToast) {
               resetJobTypeAndShowToast();
               hasShownToast = true;
             }
           }
         }
-  
+
         setFilteredJobTypeOptions(updatedOptions);
       } catch (error) {
         console.error("Error updating job type options:", error);
@@ -1022,7 +1033,7 @@ function JobEdit() {
         });
       }
     };
-  
+
     checkAndUpdateJobTypes();
   }, [
     pickUpDestination?.lat,
@@ -1033,7 +1044,7 @@ function JobEdit() {
     isTomorrowJob,
     jobTypeOptions,
   ]);
-  
+
   const validateAddresses = () => {
     if (!pickUpDestination?.address) {
       toast({
@@ -1506,7 +1517,10 @@ function JobEdit() {
                       ) || { value: 0, label: "" }
                     }
                     placeholder=""
+                    isDisabled={isCompany || isCompanyAdmin}  
                     onChange={(e) => {
+                      if (isCompany && isCompanyAdmin) return;
+
                       setJob({
                         ...job,
                         customer_id: e.value || null,

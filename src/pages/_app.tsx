@@ -9,6 +9,7 @@ import "styles/MiniCalendar.css";
 import "styles/DatePickerCalendar.css";
 
 import { ApolloProvider } from "@apollo/client";
+import { CacheProvider } from "@emotion/react";
 import { useApollo } from "graphql/ApolloClient";
 import { AppProps } from "next/app";
 import Head from "next/head";
@@ -17,7 +18,6 @@ import { Provider } from "react-redux";
 import { store } from "store/store";
 
 import { Chakra } from "../Chakra";
-import { CacheProvider } from "@emotion/react";
 import { createEmotionCache } from "../emotionCache";
 
 // Handle FA6 quirks in NextJS: https://fontawesome.com/docs/web/use-with/react/use-with#getting-font-awesome-css-to-work

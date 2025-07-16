@@ -1,7 +1,7 @@
-import React, { useCallback } from "react";
 import { Box, Flex } from "@chakra-ui/react";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { Select } from "chakra-react-select";
+import React, { useCallback } from "react";
 
 interface StatusOption {
   value: string;

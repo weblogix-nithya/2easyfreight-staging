@@ -2,46 +2,46 @@
 
 // @ts-nocheck
 import {
-  Button,
+  // Button,
   ButtonGroup,
   HStack,
   IconButton,
-  Link,
+  // Link,
   Table,
   Tbody,
   Td,
   Text,
   Th,
   Thead,
-  Tooltip,
+  // Tooltip,
   Tr,
   VStack,
   Box,
   Flex,
   Badge,
   Stack,
-  Wrap,
+  // Wrap,
 } from "@chakra-ui/react";
-import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
-import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
-import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
+// import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
+// import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
 import {
-  formatCurrency,
-  formatDate,
-  formatTimeUTCtoInput,
+  // formatCurrency,
+  // formatDate,
+  // formatTimeUTCtoInput,
   formatToTimeDate,
   getRowBgColor,
 } from "helpers/helper";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import {
-  Column,
-  PluginHook,
-  TableOptions,
+  // Column,
+  // PluginHook,
+  // TableOptions,
   usePagination,
   useRowSelect,
   useSortBy,
@@ -59,16 +59,16 @@ const PaginationTable = <T extends object>({
   _showDelete = false,
   setQueryPageIndex,
   setQueryPageSize,
-  onDelete,
-  path,
+  // onDelete,
+  // path,
   showPageSizeSelect = false,
-  showManualPages = false,
+  // showManualPages = false,
   showRowSelection = false,
   isFilterRowSelected = false,
   setSelectedRow,
   isChecked,
   onSortingChange,
-  restyleTable = false,
+  // restyleTable = false,
 }: // autoResetSelectedRows= false,
 PaginationTableProps<T>) => {
   const router = useRouter();

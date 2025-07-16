@@ -19,7 +19,7 @@ import {
   DynamicTableUser,
   GET_DYNAMIC_TABLE_USERS_QUERY,
 } from "graphql/dynamicTableUser";
-import { GET_JOBS_QUERY, Job } from "graphql/job";
+// import { GET_JOBS_QUERY, Job } from "graphql/job";
 import { GROUPED_PAGINATED_JOBS_QUERY } from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
@@ -254,7 +254,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     setIsChecked(true);
   }, [isChecked]);
 
-  const orderByRelationship = useMemo(() => {
+  const _orderByRelationship = useMemo(() => {
     let join = undefined as JoinOnClause;
     let column = sorting?.id ?? "id";
     let order = sorting?.direction ? "DESC" : "ASC";
@@ -309,12 +309,12 @@ export default function JobIndex({}: // initialLoadOnly = false,
         : undefined,
     },
     skip: !userId,
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       // console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
     },
   });
 
-  const jobs = groupedJobs?.groupedPaginatedJobs;
+  const _jobs = groupedJobs?.groupedPaginatedJobs;
   const loading = loadingGroupedJobs;
   const refetchJobs = refetchGroupedJobs;
 
