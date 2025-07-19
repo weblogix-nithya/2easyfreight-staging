@@ -2,25 +2,21 @@
 
 // @ts-nocheck
 import {
+  Badge,
+  Box,
   // Button,
   ButtonGroup,
+  Flex,
   HStack,
   IconButton,
-  // Link,
   Table,
   Tbody,
   Td,
   Text,
   Th,
   Thead,
-  // Tooltip,
   Tr,
   VStack,
-  Box,
-  Flex,
-  Badge,
-  Stack,
-  // Wrap,
 } from "@chakra-ui/react";
 // import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
 // import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
@@ -33,9 +29,8 @@ import {
   // formatDate,
   // formatTimeUTCtoInput,
   formatToTimeDate,
-  getRowBgColor,
 } from "helpers/helper";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 import React, { useEffect, useMemo } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import {
@@ -48,7 +43,16 @@ import {
   useTable,
 } from "react-table";
 
-// ... Types remain unchanged
+const getStatusStyle = (status: string) => {
+  const st = status?.toLowerCase();
+  if (["assigned", "in transit"].includes(st))
+    return { background: "#fff3cd", color: "#856404" };
+  if (["completed", "delivered"].includes(st))
+    return { background: "#d4edda", color: "#155724" };
+  if (["rejected", "cancelled"].includes(st))
+    return { background: "#f8d7da", color: "#721c24" };
+  return {};
+};
 
 const PaginationTable = <T extends object>({
   columns,
@@ -68,10 +72,10 @@ const PaginationTable = <T extends object>({
   setSelectedRow,
   isChecked,
   onSortingChange,
-  // restyleTable = false,
-}: // autoResetSelectedRows= false,
+}: // restyleTable = false,
+// autoResetSelectedRows= false,
 PaginationTableProps<T>) => {
-  const router = useRouter();
+  // const router = useRouter();
   // const [pageRows, setPageRows] = useState([]);
 
   const pageSizeOptions = [
@@ -96,8 +100,8 @@ PaginationTableProps<T>) => {
     setPageSize,
     state: { pageIndex, pageSize, sortBy },
     selectedFlatRows,
-    gotoPage,
-    pageCount,
+    // gotoPage,
+    // pageCount,
     toggleAllRowsSelected,
     // autoResetSelectedRows
   } = useTable<T>(
@@ -122,24 +126,29 @@ PaginationTableProps<T>) => {
       setQueryPageIndex(pageIndex);
       setQueryPageSize(pageSize);
     }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isServerSide, pageIndex, pageSize, setQueryPageIndex, setQueryPageSize]);
 
   useEffect(() => {
     if (showRowSelection) {
       setSelectedRow(selectedFlatRows);
     }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, showRowSelection, setSelectedRow, selectedFlatRows]);
 
   const pageRows = useMemo(() => {
     return isFilterRowSelected ? page.filter((row) => row.isSelected) : page;
+  //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, isFilterRowSelected]);
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
 
   useEffect(() => {
     if (!isChecked) toggleAllRowsSelected(isChecked);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecked]);
 
   return (
@@ -198,7 +207,8 @@ PaginationTableProps<T>) => {
                   <Tr>
                     <Td colSpan={columns.length} p={0}>
                       <Box
-                        bg="gray.100"
+                        bg="#1d2d53"
+                        color="#fff"
                         px={6}
                         py={3}
                         borderTop="4px solid"
@@ -208,45 +218,32 @@ PaginationTableProps<T>) => {
                         w="100%"
                       >
                         <VStack align="start" spacing={2}>
-                          <Flex
-                            wrap="wrap"
-                            justify="space-between"
-                            align="center"
-                            gap={4}
-                            w="full"
-                          >
-                            <Text fontWeight="bold">
-                              Driver: {driver.full_name} — {driver.driver_no}
-                            </Text>
+                          <Flex wrap="wrap" justify="space-between" align="start" gap={4} w="full">
+  <Text fontWeight="bold" minW="200px">
+    Driver: {driver.full_name} — {driver.driver_no}
+  </Text>
 
-                            <Stack direction="row" spacing={3} wrap="wrap">
-                              <Badge colorScheme="purple" variant="subtle">
-                                First Collection:{" "}
-                                {formatToTimeDate(
-                                  driver.first_job_start_at_today ??
-                                    "2022-01-03 00:00:00",
-                                )}
-                              </Badge>
-                              <Badge colorScheme="purple" variant="subtle">
-                                Last Delivery:{" "}
-                                {formatToTimeDate(
-                                  driver.last_job_drop_at_today ??
-                                    "2022-01-03 00:00:00",
-                                )}
-                              </Badge>
-                              <Badge colorScheme="blue" variant="subtle">
-                                CBM: {driver.cbm_summary_today ?? 0} /{" "}
-                                {driver.no_max_volume ?? 0}
-                              </Badge>
-                              <Badge colorScheme="blue" variant="subtle">
-                                Weight: {driver.weight_summary_today ?? 0} /{" "}
-                                {driver.no_max_capacity ?? 0}
-                              </Badge>
-                              <Badge colorScheme="blue" variant="subtle">
-                                Pallets: {driver.no_max_pallets ?? 0}
-                              </Badge>
-                            </Stack>
-                          </Flex>
+  <Flex wrap="wrap" gap={3}>
+    <Badge colorScheme="purple" variant="subtle">
+      First Collection:{" "}
+      {formatToTimeDate(driver.first_job_start_at_today ?? "0")}
+    </Badge>
+    <Badge colorScheme="purple" variant="subtle">
+      Last Delivery:{" "}
+      {formatToTimeDate(driver.last_job_drop_at_today ?? "0")}
+    </Badge>
+    <Badge colorScheme="blue" variant="subtle">
+      CBM: {driver.cbm_summary_today ?? 0} / {driver.no_max_volume ?? 0}
+    </Badge>
+    <Badge colorScheme="blue" variant="subtle">
+      Weight: {driver.weight_summary_today ?? 0} / {driver.no_max_capacity ?? 0}
+    </Badge>
+    <Badge colorScheme="blue" variant="subtle">
+      Pallets: {driver.no_max_pallets ?? 0}
+    </Badge>
+  </Flex>
+</Flex>
+
 
                           <Flex
                             wrap="wrap"
@@ -275,7 +272,8 @@ PaginationTableProps<T>) => {
                 <Tr
                   {...row.getRowProps()}
                   key={`data-row-${row.id || idx}`}
-                  bg={getRowBgColor(status)}
+                  style={getStatusStyle(status)}
+                  className="css-en-xlrwr4"
                 >
                   {row.cells.map((cell) => (
                     <Td

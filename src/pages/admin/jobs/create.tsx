@@ -1035,6 +1035,7 @@ function JobEdit() {
     };
 
     checkAndUpdateJobTypes();
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     pickUpDestination?.lat,
     pickUpDestination?.lng,

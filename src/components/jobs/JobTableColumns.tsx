@@ -15,7 +15,6 @@ import {
   Textarea,
   useToast,
 } from "@chakra-ui/react";
-import { useRouter } from "next/router";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
 import { UPDATE_JOB_MUTATION } from "graphql/job";
@@ -26,15 +25,9 @@ import {
   formatToTimeDate,
   outputDynamicTable,
 } from "helpers/helper";
-import React, { useCallback, useState } from "react";
+import { useRouter } from "next/router";
+import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
-import { useDispatch } from "react-redux";
-import {
-  setIsShowRightSideBar,
-  setRightSideBarJob,
-} from "store/rightSideBarSlice";
-// import { useDispatch } from "react-redux";
-// import { setIsShowRightSideBar,  } from "store/rightSideBarSlice";
 import { RootState } from "store/store";
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
@@ -611,36 +604,6 @@ export const AdminNotesCell = ({ row }: any) => {
         </PopoverContent>
       </Popover>
     </Flex>
-  );
-};
-
-const _DeliveryIdCell = ({ row, onMarkerClick }: any) => {
-  const dispatch = useDispatch();
-
-  const handleClick = useCallback(() => {
-    // Only dispatch essential data for initial render
-    // const essentialData = {
-    //   id: row.original.id,
-    //   name: row.original.name,
-    //   status: row.original.job_status,
-    //   type: row.original.job_type
-    // };
-    // debugger
-    console.log(row.original, "row.original");
-    console.log("first,", row);
-    dispatch(setRightSideBarJob(row));
-    dispatch(setIsShowRightSideBar(true));
-
-    // Delay full data fetch
-    setTimeout(() => {
-      onMarkerClick?.({ job_id: row.original.id });
-    }, 0);
-  }, [row.original, dispatch, onMarkerClick,row]);
-
-  return (
-    <Text cursor="pointer" color="primary.400" onClick={handleClick}>
-      #{row?.original?.job?.name}
-    </Text>
   );
 };
 

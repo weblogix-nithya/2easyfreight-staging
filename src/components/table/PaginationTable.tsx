@@ -13,7 +13,6 @@ import {
   Thead,
   Tooltip,
   Tr,
-  useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
 import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
@@ -94,10 +93,6 @@ const PaginationTable = <T extends object>({
   onSortingChange,
   restyleTable = false,
 }: PaginationTableProps<T>) => {
-  // const textColor = useColorModeValue("secondaryGray.900", "white");
-  // const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
-  // const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
-  // const iconColor = useColorModeValue("brand.500", "white");
   const router = useRouter();
   const [pageRows, setPageRows] = useState([]);
 

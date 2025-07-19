@@ -33,7 +33,7 @@ export const getRowBgColor = (status?: string): string => {
       return "yellow.100"; // light yellow
     case "delivered":
     case "completed":
-      return "green.100"; // light green
+      return "green.200"; // light green
     default:
       return "transparent";
   }

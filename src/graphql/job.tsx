@@ -653,6 +653,7 @@ export const BULK_UPDATE_JOB_MUTATION = gql`
       name
       driver_id
       start_at
+      d_sort_id
     }
   }
 `;
@@ -689,6 +690,7 @@ export const GET_ALL_TIMESLOT_DEPOTS = gql`
 export interface UpdateJobInput {
   id: number;
   name?: string;
+  d_sort_id?: number;
   driver_id?: number;
   job_type_id?: number;
   job_status_id?: number;
