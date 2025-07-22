@@ -67,7 +67,6 @@ const JobTableSettingsModal = dynamic(() => import("components/jobs/JobTableSett
   ssr: false,
 });
 
-
 const adminStatusOptions = [
   {
     value: "all",
@@ -220,7 +219,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   // );
   // console.log(columns, "col");
 
-  const companyColumns = columns.filter((column) =>
+const companyColumns = columns.filter((column) =>
     [
       "name",
       "company.name",

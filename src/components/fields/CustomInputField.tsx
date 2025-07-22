@@ -137,7 +137,7 @@ export default function Default(props: {
               value={value}
               defaultValue={defaultValue}
               onChange={onChange}
-              min={props.min}
+              min={min}
               // onClick={type == "date" ? undefined : onClick}
               onClick={
                 type === "date"
