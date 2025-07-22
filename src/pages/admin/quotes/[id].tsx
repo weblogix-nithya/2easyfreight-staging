@@ -43,8 +43,8 @@ import { SEND_CONSIGNMENT_DOCKET } from "graphql/job";
 import { DELETE_MEDIA_MUTATION } from "graphql/media";
 import {
   defaultQuote,
-  GENERATE_QUOTE_PDF_MUTATION,
   DELETE_QUOTE_MUTATION,
+  GENERATE_QUOTE_PDF_MUTATION,
   GET_QUOTE_QUERY,
   PROCESS_QUOTE_AND_BOOK_MUTATION,
   PROCESS_QUOTE_MUTATION,
@@ -206,7 +206,7 @@ export default function QuoteEdit() {
     variables: {
       id: quote.id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title:
           "Quote PDF is being generated. Please wait 1 minute to refresh before downloading.",

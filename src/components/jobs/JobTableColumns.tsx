@@ -25,7 +25,6 @@ import {
   formatToTimeDate,
   outputDynamicTable,
 } from "helpers/helper";
-import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
 import { RootState } from "store/store";
@@ -774,83 +773,80 @@ export const tableColumn = [
     accessor: "admin_notes" as const,
     Cell: AdminNotesCell,
     show: isCustomer,
-  },
-];
+  }];
 
 export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
   dynamicTableUsers?: DynamicTableUser[],
+  isPending?: boolean,
+  isCompleted?: boolean,
 ) => {
-  const actionsColumn = {
-    id: "actions",
-    Header: "Actions",
-    accessor: "id" as const,
-    width: "150px",
-    isView: isCustomer,
-    isEdit: isAdmin,
-    isTracking: isCustomer,
-  };
-
-  actionsColumn["Cell"] = ({ row }: any) => {
-    const router = useRouter();
-    const id = row?.original?.id;
-    const job = row?.original?.job;
-    return (
-      <Flex gap={2}>
-        {isAdmin && (
-          <IconButton
-            aria-label="Edit"
-            icon={<EditIcon />}
-            size="sm"
-            onClick={() => {
-              const jobId = row?.original?.job?.id;
-              if (jobId) {
-                router.push(`/admin/jobs/${jobId}`);
-              }
-            }}
-          />
-        )}
-        {isCustomer && (
-          <IconButton
-            aria-label="View"
-            icon={<MdMenu />}
-            size="sm"
-            onClick={() => console.log("View", id)}
-          />
-        )}
-        {isCustomer && (
-          <IconButton
-            aria-label="Track"
-            icon={<CheckIcon />}
-            size="sm"
-            onClick={() => console.log("Track", job?.name)}
-          />
-        )}
-      </Flex>
-    );
-  };
-
-  const selectionColumn = {
-    id: "selection",
-    Header: ({ getToggleAllRowsSelectedProps }: any) => (
-      <div>
-        <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
-      </div>
-    ),
-    Cell: ({ row }: any) => (
-      <div>
-        <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
-      </div>
-    ),
-  };
-
-  if (!dynamicTableUsers || dynamicTableUsers.length === 0) {
-    return [selectionColumn, ...tableColumn, actionsColumn];
+  if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
+    return [
+      {
+        id: "selection",
+        // The header can use the table's getToggleAllRowsSelectedProps method
+        // to render a checkbox
+        Header: ({ getToggleAllRowsSelectedProps }: any) => (
+          <div>
+            <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+          </div>
+        ),
+        // The cell can use the individual row's getToggleRowSelectedProps method
+        // to the render a checkbox
+        Cell: ({ row }: any) => (
+          <div>
+            <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
+          </div>
+        ),
+      },
+      ...tableColumn,
+      {
+        id: "actions",
+        Header: "Actions",
+        accessor: "id" as const,
+        isView: isCustomer && (isCompleted || isPending),
+        isEdit: isAdmin,
+        isTracking: isCustomer && !(isCompleted || isPending), // only display when Tab is In Progress in Customer Portal.
+      },
+    ];
   }
 
   const dynamicColumns = outputDynamicTable(dynamicTableUsers, tableColumn);
-  return [selectionColumn, ...dynamicColumns, actionsColumn];
+
+  var columns: any[] = [
+    {
+      id: "selection",
+      // The header can use the table's getToggleAllRowsSelectedProps method
+      // to render a checkbox
+      Header: ({ getToggleAllRowsSelectedProps }: any) => (
+        <div>
+          <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+        </div>
+      ),
+      // The cell can use the individual row's getToggleRowSelectedProps method
+      // to the render a checkbox
+      Cell: ({ row }: any) => (
+        <div>
+          <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
+        </div>
+      ),
+    },
+  ];
+
+  columns.push(...dynamicColumns);
+
+  columns.push({
+    id: "actions",
+    Header: "Actions",
+    accessor: "id" as const,
+    isView: isCustomer && (isCompleted || isPending),
+    isEdit: isAdmin,
+    isTracking: isCustomer && !(isCompleted || isPending), // only display when Tab is In Progress in Customer Portal.
+  });
+
+  return columns;
 };
 
 export const getBulkAssignColumns = (
@@ -898,3 +894,4 @@ export const getBulkAssignColumns = (
 
   return columns;
 };
+
