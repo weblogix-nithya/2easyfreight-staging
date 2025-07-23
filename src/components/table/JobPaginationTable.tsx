@@ -277,15 +277,11 @@ PaginationTableProps<T>) => {
                             <Flex wrap="wrap" gap={3}>
                               <Badge colorScheme="purple" variant="subtle">
                                 First Collection:{" "}
-                                {formatToTimeDate(
-                                  driver.first_job_start_at_today ?? "0",
-                                )}
+                               {formatToTimeDate(driver.first_job_start_at_today)}
                               </Badge>
                               <Badge colorScheme="purple" variant="subtle">
                                 Last Delivery:{" "}
-                                {formatToTimeDate(
-                                  driver.last_job_drop_at_today ?? "0",
-                                )}
+                                {formatToTimeDate(driver.last_job_drop_at_today)}
                               </Badge>
                               <Badge colorScheme="blue" variant="subtle">
                                 CBM: {driver.cbm_summary_today ?? 0} /{" "}
@@ -345,6 +341,8 @@ PaginationTableProps<T>) => {
                         paddingRight={restyleTable && 2}
                         paddingInlineEnd={restyleTable && 2}
                       >
+                              <Flex gap={2} wrap="wrap" align="center">
+
                         {
                           //@ts-expect-error
                           cell.column.isDownload && (
@@ -377,7 +375,7 @@ PaginationTableProps<T>) => {
                             //@ts-expect-error
                             cell.column.isEdit) && (
                             <Link
-                              href={`${path || router.pathname}/${cell.value}`}
+                              href={`${path || router.pathname}/${cell.row.original.job.id}`}
                               fontWeight="700"
                             >
                               <Button
@@ -402,7 +400,7 @@ PaginationTableProps<T>) => {
                           //@ts-expect-error
                           cell.column.isView && (
                             <Link
-                              href={`${path || router.pathname}/${cell.value}`}
+                              href={`${path || router.pathname}/${cell.row.original.job.id}`}
                               fontWeight="700"
                             >
                               <Button
@@ -428,7 +426,7 @@ PaginationTableProps<T>) => {
                           cell.column.isTracking && (
                             <Link
                               href={`${path || router.pathname}/tracking/${
-                                cell.value
+                                cell.row.original.job.id
                               }`}
                               fontWeight="700"
                             >
@@ -456,7 +454,7 @@ PaginationTableProps<T>) => {
                               // fontWeight="500"
                               className="!text-[var(--chakra-colors-black-400)]"
                               onClick={() => {
-                                onDelete(cell.row.original.id);
+                                onDelete(cell.row.original.job.id);
                               }}
                               // color={textColorSecondary}
                               // borderRadius="7px"
@@ -473,6 +471,7 @@ PaginationTableProps<T>) => {
                             </Button>
                           )
                         }
+                        </Flex>
                       </Td>
                     );
                   } else if (cell.column.Header === "Instructions") {
