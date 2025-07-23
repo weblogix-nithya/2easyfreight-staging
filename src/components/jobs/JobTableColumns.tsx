@@ -773,7 +773,8 @@ export const tableColumn = [
     accessor: "admin_notes" as const,
     Cell: AdminNotesCell,
     show: isCustomer,
-  }];
+  },
+];
 
 export const getColumns = (
   isAdmin: boolean,
@@ -806,9 +807,9 @@ export const getColumns = (
         id: "actions",
         Header: "Actions",
         accessor: "id" as const,
-        isView: isCustomer && (isCompleted || isPending),
+        isView: isCustomer,
         isEdit: isAdmin,
-        isTracking: isCustomer && !(isCompleted || isPending), // only display when Tab is In Progress in Customer Portal.
+        isTracking: isCustomer,
       },
     ];
   }
@@ -841,10 +842,10 @@ export const getColumns = (
     id: "actions",
     Header: "Actions",
     accessor: "id" as const,
-    isView: isCustomer && (isCompleted || isPending),
+    isView: isCustomer ,
     isEdit: isAdmin,
-    isTracking: isCustomer && !(isCompleted || isPending), // only display when Tab is In Progress in Customer Portal.
-  });
+    isTracking: isCustomer
+    });
 
   return columns;
 };
@@ -872,6 +873,7 @@ export const getBulkAssignColumns = (
         accessor: "id" as const,
         isView: isCustomer,
         isEdit: isAdmin,
+        isTracking: isCustomer,
       },
     ];
   }
@@ -894,4 +896,3 @@ export const getBulkAssignColumns = (
 
   return columns;
 };
-

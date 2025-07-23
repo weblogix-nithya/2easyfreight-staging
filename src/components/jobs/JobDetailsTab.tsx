@@ -90,8 +90,8 @@ const JobDetailsTab = ({
   handleJobItemChanged,
   itemsTableColumns,
   itemTypes,
-  getJob,  
- _updatingMedia,  
+  getJob,
+  _updatingMedia,
   setUpdatingMedia,
   handleDeleteMedia,
   jobLoading,
@@ -328,7 +328,7 @@ const JobDetailsTab = ({
             placeholder=""
             isDisabled={true}
             name="operator_phone"
-            value={customerSelected.phone_no ??""}
+            value={customerSelected.phone_no ?? ""}
             onChange={
               (_e) => {}
               //setJob({
@@ -356,7 +356,7 @@ const JobDetailsTab = ({
             type={"date"}
             placeholder=""
             name="job_date_at"
-            value={jobDateAt ??""}
+            value={jobDateAt ?? ""}
             onChange={(e) => {
               setJobDateAt(e.target.value);
               setIsSameDayJob(today === e.target.value);
@@ -392,7 +392,7 @@ const JobDetailsTab = ({
             type={"time"}
             placeholder=""
             name="drop_at"
-            value={dropAt?? ""}
+            value={dropAt ?? ""}
             onChange={(e) => {
               setDropAt(e.target.value);
               setJob({
@@ -409,7 +409,7 @@ const JobDetailsTab = ({
             label="Timeslot:"
             placeholder=""
             name="timeslot"
-            value={job.timeslot?? ""}
+            value={job.timeslot ?? ""}
             onChange={(e) =>
               setJob({
                 ...job,
@@ -423,7 +423,7 @@ const JobDetailsTab = ({
             type={"date"}
             placeholder=""
             name="last_free_at"
-            value={job.last_free_at?? ""}
+            value={job.last_free_at ?? ""}
             onChange={(e) => {
               const value = e.target.value == "" ? null : e.target.value;
               setJob({
@@ -467,7 +467,7 @@ const JobDetailsTab = ({
             label="Reference:"
             placeholder=""
             name="reference_no"
-            value={job.reference_no?? ""}
+            value={job.reference_no ?? ""}
             onChange={(e) =>
               setJob({
                 ...job,
@@ -989,6 +989,7 @@ const JobDetailsTab = ({
                 <Box>
                   <CustomInputField
                     isSelect={true}
+                    isDisabled={!isAdmin}
                     optionsArray={filtereddepotOptions} // Use the state directly
                     label="Timeslot depots:"
                     value={
