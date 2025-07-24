@@ -321,21 +321,60 @@ function JobEdit() {
     },
   });
 
-  useQuery(GET_JOB_TYPES_QUERY, {
-    variables: defaultVariables,
-    onCompleted: (data) => {
-      setJobTypeOptions([]);
-      data.jobTypes.data.map((_entity: any) => {
-        setJobTypeOptions((jobTypes) => [
-          ...jobTypes,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
+useQuery(GET_JOB_TYPES_QUERY, {
+  variables: defaultVariables,
+  onCompleted: async (data) => {
+    const options = data.jobTypes.data.map((_entity: any) => ({
+      value: parseInt(_entity.id),
+      label: _entity.name,
+    }));
+
+    setJobTypeOptions(options);
+
+    try {
+      // If lat/lng exists, calculate timezone and filter
+      if (pickUpDestination?.lat && pickUpDestination?.lng) {
+        const timezone = await getTimezone(
+          pickUpDestination.lat,
+          pickUpDestination.lng,
+        );
+
+        let updatedOptions = [...options];
+
+        if (job.job_category_id === 1) {
+          if (isSameDayJob) {
+            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+            resetJobTypeAndShowToast();
+          } else if (isTomorrowJob && isAfterCutoff("16:00", timezone)) {
+            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+            resetJobTypeAndShowToast();
+          }
+        }
+
+        if (job.job_category_id === 2 && isSameDayJob && isAfterCutoff("11:00", timezone)) {
+          updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+          resetJobTypeAndShowToast();
+        }
+
+        setFilteredJobTypeOptions(updatedOptions);
+      } else {
+        // ❗️Set full list as fallback until address is selected
+        setFilteredJobTypeOptions(options);
+      }
+    } catch (error) {
+      toast({
+        title: "Error loading job types",
+        description:
+          error instanceof Error ? error.message : "Unknown error",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
       });
-    },
-  });
+      setFilteredJobTypeOptions(options); // fallback to full list
+    }
+  },
+});
+
   useQuery(GET_COMPANYS_QUERY, {
     variables: {
       query: debouncedSearch,

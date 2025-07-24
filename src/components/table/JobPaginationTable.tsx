@@ -106,8 +106,7 @@ const PaginationTable = <T extends object>({
   setSelectedRow,
   isChecked,
   onSortingChange,
-    restyleTable = false,
-
+  restyleTable = false,
 }: // restyleTable = false,
 // autoResetSelectedRows= false,
 PaginationTableProps<T>) => {
@@ -172,10 +171,14 @@ PaginationTableProps<T>) => {
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, showRowSelection, setSelectedRow, selectedFlatRows]);
 
-  const pageRows = useMemo(() => {
-    return isFilterRowSelected ? page.filter((row) => row.isSelected) : page;
-    //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, isFilterRowSelected]);
+  // const pageRows = useMemo(() => {
+  //   return isFilterRowSelected ? page.filter((row) => row.isSelected) : page;
+  //   //eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [page, isFilterRowSelected]);
+
+  const pageRows = isFilterRowSelected
+    ? page.filter((row) => row.isSelected)
+    : page;
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
@@ -277,11 +280,15 @@ PaginationTableProps<T>) => {
                             <Flex wrap="wrap" gap={3}>
                               <Badge colorScheme="purple" variant="subtle">
                                 First Collection:{" "}
-                               {formatToTimeDate(driver.first_job_start_at_today)}
+                                {formatToTimeDate(
+                                  driver.first_job_start_at_today,
+                                )}
                               </Badge>
                               <Badge colorScheme="purple" variant="subtle">
                                 Last Delivery:{" "}
-                                {formatToTimeDate(driver.last_job_drop_at_today)}
+                                {formatToTimeDate(
+                                  driver.last_job_drop_at_today,
+                                )}
                               </Badge>
                               <Badge colorScheme="blue" variant="subtle">
                                 CBM: {driver.cbm_summary_today ?? 0} /{" "}
@@ -331,233 +338,236 @@ PaginationTableProps<T>) => {
                   }
                 >
                   {row?.cells?.map((cell, index) => {
-                  let data;
-                  if (cell.column.Header === "Actions") {
-                    data = (
-                      <Td
-                        key={`action-${index}`}
-                        paddingLeft={restyleTable && 1}
-                        paddingInlineStart={restyleTable && 1}
-                        paddingRight={restyleTable && 2}
-                        paddingInlineEnd={restyleTable && 2}
-                      >
-                              <Flex gap={2} wrap="wrap" align="center">
-
-                        {
-                          //@ts-expect-error
-                          cell.column.isDownload && (
-                            <Link
-                              href={cell.value}
-                              target="_blank"
-                              fontWeight="700"
-                            >
-                              <Button
-                                // bg={boxBg}
-                                bg="white"
-                                fontSize="sm"
-                                // fontWeight="500"
-                                className="!text-[var(--chakra-colors-black-400)]"
-                                // color={textColorSecondary}
-                                // borderRadius="7px"
-                              >
-                                <FontAwesomeIcon
-                                  icon={faDownload}
-                                  className="!text-[var(--chakra-colors-black-400)]"
-                                  size="lg"
-                                />
-                              </Button>
-                            </Link>
-                          )
-                        }
-                        {
-                          //@ts-expect-error
-                          (cell.column.isEdit == undefined ||
-                            //@ts-expect-error
-                            cell.column.isEdit) && (
-                            <Link
-                              href={`${path || router.pathname}/${cell.row.original.job.id}`}
-                              fontWeight="700"
-                            >
-                              <Button
-                                // bg={boxBg}
-                                bg="white"
-                                fontSize="sm"
-                                // fontWeight="500"
-                                className="!text-[var(--chakra-colors-black-400)]"
-                                // color={textColorSecondary}
-                                // borderRadius="7px"
-                              >
-                                <FontAwesomeIcon
-                                  icon={faPen}
-                                  className="!text-[var(--chakra-colors-black-400)]"
-                                  size="lg"
-                                />
-                              </Button>
-                            </Link>
-                          )
-                        }
-                        {
-                          //@ts-expect-error
-                          cell.column.isView && (
-                            <Link
-                              href={`${path || router.pathname}/${cell.row.original.job.id}`}
-                              fontWeight="700"
-                            >
-                              <Button
-                                // bg={boxBg}
-                                bg="white"
-                                fontSize="sm"
-                                // fontWeight="500"
-                                className="!text-[var(--chakra-colors-black-400)]"
-                                // color={textColorSecondary}
-                                // borderRadius="7px"
-                              >
-                                <FontAwesomeIcon
-                                  icon={faEye}
-                                  className="!text-[var(--chakra-colors-black-400)]"
-                                  size="lg"
-                                />
-                              </Button>
-                            </Link>
-                          )
-                        }
-                        {
-                          //@ts-expect-error
-                          cell.column.isTracking && (
-                            <Link
-                              href={`${path || router.pathname}/tracking/${
-                                cell.row.original.job.id
-                              }`}
-                              fontWeight="700"
-                            >
-                              <Button
-                                // bg={boxBg}
-                                bg="white"
-                                fontSize="sm"
-                                // fontWeight="500"
-                                className="!text-[#3B68DB]"
-                                // color={textColorSecondary}
-                                // borderRadius="7px"
-                              >
-                                Track
-                              </Button>
-                            </Link>
-                          )
-                        }
-                        {
-                          //@ts-expect-error
-                          cell.column.isDelete && (
-                            <Button
-                              // bg={boxBg}
-                              bg="white"
-                              fontSize="sm"
-                              // fontWeight="500"
-                              className="!text-[var(--chakra-colors-black-400)]"
-                              onClick={() => {
-                                onDelete(cell.row.original.job.id);
-                              }}
-                              // color={textColorSecondary}
-                              // borderRadius="7px"
-                            >
-                              <FontAwesomeIcon
-                                icon={
-                                  cell.column.deleteIcon != undefined
-                                    ? cell.column.deleteIcon
-                                    : faTrashAlt
-                                }
-                                className="!text-[var(--chakra-colors-black-400)]"
-                                size="lg"
-                              />
-                            </Button>
-                          )
-                        }
-                        </Flex>
-                      </Td>
-                    );
-                  } else if (cell.column.Header === "Instructions") {
-                    data = (
-                      <Td
-                        {...cell.getCellProps()}
-                        key={`instructions-${index}`}
-                        paddingLeft={restyleTable && 1}
-                        paddingInlineStart={restyleTable && 1}
-                        paddingRight={restyleTable && 2}
-                        paddingInlineEnd={restyleTable && 2}
-                      >
-                        <Tooltip
-                          label={
-                            <React.Fragment>
-                              <div className="text-xs">
-                                <p className="mb-2">
-                                  <strong>Pick up Person: </strong>
-                                  {
-                                    // @ts-expect-error
-                                    row.original?.pick_up_name || "N/A"
-                                  }
-                                </p>
-                                <p>
-                                  <strong>Instructions: </strong>
-                                  {
-                                    // @ts-expect-error
-                                    row.original?.pick_up_notes || "N/A"
-                                  }
-                                </p>
-                              </div>
-                            </React.Fragment>
-                          }
-                          aria-label="A tooltip"
+                    let data;
+                    if (cell.column.Header === "Actions") {
+                      data = (
+                        <Td
+                          key={`action-${index}`}
+                          paddingLeft={restyleTable && 1}
+                          paddingInlineStart={restyleTable && 1}
+                          paddingRight={restyleTable && 2}
+                          paddingInlineEnd={restyleTable && 2}
                         >
-                          <FontAwesomeIcon
-                            icon={faMessageLines}
-                            className="!text-[var(--chakra-colors-black-400)] hover:!text-[var(--chakra-colors-primary-400)]"
-                            size="lg"
-                          />
-                        </Tooltip>
-                      </Td>
-                    );
-                  } else {
-                    data = (
-                      <Td
-                        {...cell.getCellProps()}
-                        key={`default-${index}`}
-                        paddingLeft={restyleTable && 1}
-                        paddingInlineStart={restyleTable && 1}
-                        paddingRight={restyleTable && 2}
-                        paddingInlineEnd={restyleTable && 2}
-                        pr="20px"
-                      >
-                        {
-                          // @ts-expect-error
-                          cell.column.type === "date" ? (
-                            <Text>
-                              {cell.value
-                                ? formatDate(cell.value, "DD/MM/YYYY")
-                                : "-"}
+                          <Flex gap={2} wrap="wrap" align="center">
+                            {
+                              //@ts-expect-error
+                              cell.column.isDownload && (
+                                <Link
+                                  href={cell.value}
+                                  target="_blank"
+                                  fontWeight="700"
+                                >
+                                  <Button
+                                    // bg={boxBg}
+                                    bg="white"
+                                    fontSize="sm"
+                                    // fontWeight="500"
+                                    className="!text-[var(--chakra-colors-black-400)]"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
+                                  >
+                                    <FontAwesomeIcon
+                                      icon={faDownload}
+                                      className="!text-[var(--chakra-colors-black-400)]"
+                                      size="lg"
+                                    />
+                                  </Button>
+                                </Link>
+                              )
+                            }
+                            {
+                              //@ts-expect-error
+                              (cell.column.isEdit == undefined ||
+                                //@ts-expect-error
+                                cell.column.isEdit) && (
+                                <Link
+                                  href={`${path || router.pathname}/${
+                                    cell.row.original.job.id
+                                  }`}
+                                  fontWeight="700"
+                                >
+                                  <Button
+                                    // bg={boxBg}
+                                    bg="white"
+                                    fontSize="sm"
+                                    // fontWeight="500"
+                                    className="!text-[var(--chakra-colors-black-400)]"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
+                                  >
+                                    <FontAwesomeIcon
+                                      icon={faPen}
+                                      className="!text-[var(--chakra-colors-black-400)]"
+                                      size="lg"
+                                    />
+                                  </Button>
+                                </Link>
+                              )
+                            }
+                            {
+                              //@ts-expect-error
+                              cell.column.isView && (
+                                <Link
+                                  href={`${path || router.pathname}/${
+                                    cell.row.original.job.id
+                                  }`}
+                                  fontWeight="700"
+                                >
+                                  <Button
+                                    // bg={boxBg}
+                                    bg="white"
+                                    fontSize="sm"
+                                    // fontWeight="500"
+                                    className="!text-[var(--chakra-colors-black-400)]"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
+                                  >
+                                    <FontAwesomeIcon
+                                      icon={faEye}
+                                      className="!text-[var(--chakra-colors-black-400)]"
+                                      size="lg"
+                                    />
+                                  </Button>
+                                </Link>
+                              )
+                            }
+                            {
+                              //@ts-expect-error
+                              cell.column.isTracking && (
+                                <Link
+                                  href={`${path || router.pathname}/tracking/${
+                                    cell.row.original.job.id
+                                  }`}
+                                  fontWeight="700"
+                                >
+                                  <Button
+                                    // bg={boxBg}
+                                    bg="white"
+                                    fontSize="sm"
+                                    // fontWeight="500"
+                                    className="!text-[#3B68DB]"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
+                                  >
+                                    Track
+                                  </Button>
+                                </Link>
+                              )
+                            }
+                            {
+                              //@ts-expect-error
+                              cell.column.isDelete && (
+                                <Button
+                                  // bg={boxBg}
+                                  bg="white"
+                                  fontSize="sm"
+                                  // fontWeight="500"
+                                  className="!text-[var(--chakra-colors-black-400)]"
+                                  onClick={() => {
+                                    onDelete(cell.row.original.job.id);
+                                  }}
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
+                                >
+                                  <FontAwesomeIcon
+                                    icon={
+                                      cell.column.deleteIcon != undefined
+                                        ? cell.column.deleteIcon
+                                        : faTrashAlt
+                                    }
+                                    className="!text-[var(--chakra-colors-black-400)]"
+                                    size="lg"
+                                  />
+                                </Button>
+                              )
+                            }
+                          </Flex>
+                        </Td>
+                      );
+                    } else if (cell.column.Header === "Instructions") {
+                      data = (
+                        <Td
+                          {...cell.getCellProps()}
+                          key={`instructions-${index}`}
+                          paddingLeft={restyleTable && 1}
+                          paddingInlineStart={restyleTable && 1}
+                          paddingRight={restyleTable && 2}
+                          paddingInlineEnd={restyleTable && 2}
+                        >
+                          <Tooltip
+                            label={
+                              <React.Fragment>
+                                <div className="text-xs">
+                                  <p className="mb-2">
+                                    <strong>Pick up Person: </strong>
+                                    {
+                                      // @ts-expect-error
+                                      row.original?.pick_up_name || "N/A"
+                                    }
+                                  </p>
+                                  <p>
+                                    <strong>Instructions: </strong>
+                                    {
+                                      // @ts-expect-error
+                                      row.original?.pick_up_notes || "N/A"
+                                    }
+                                  </p>
+                                </div>
+                              </React.Fragment>
+                            }
+                            aria-label="A tooltip"
+                          >
+                            <FontAwesomeIcon
+                              icon={faMessageLines}
+                              className="!text-[var(--chakra-colors-black-400)] hover:!text-[var(--chakra-colors-primary-400)]"
+                              size="lg"
+                            />
+                          </Tooltip>
+                        </Td>
+                      );
+                    } else {
+                      data = (
+                        <Td
+                          {...cell.getCellProps()}
+                          key={`default-${index}`}
+                          paddingLeft={restyleTable && 1}
+                          paddingInlineStart={restyleTable && 1}
+                          paddingRight={restyleTable && 2}
+                          paddingInlineEnd={restyleTable && 2}
+                          pr="20px"
+                        >
+                          {
+                            // @ts-expect-error
+                            cell.column.type === "date" ? (
+                              <Text>
+                                {cell.value
+                                  ? formatDate(cell.value, "DD/MM/YYYY")
+                                  : "-"}
+                              </Text>
+                            ) : cell.column.type === "money" ? (
+                              <Text>
+                                {cell.value ? formatCurrency(cell.value) : "$0"}
+                              </Text>
+                            ) : cell.column.type === "boolean" ? (
+                              <Text>
+                                {cell.value == true
+                                  ? cell.column.trueLabel || "Yes"
+                                  : cell.column.falseLabel || "No"}
+                              </Text>
+                            ) : (
+                              cell.render("Cell")
+                            )
+                          }
+                          {cell.column.showCompany == true && (
+                            <Text className="text-gray-400">
+                              {row.original.company?.name}
                             </Text>
-                          ) : cell.column.type === "money" ? (
-                            <Text>
-                              {cell.value ? formatCurrency(cell.value) : "$0"}
-                            </Text>
-                          ) : cell.column.type === "boolean" ? (
-                            <Text>
-                              {cell.value == true
-                                ? cell.column.trueLabel || "Yes"
-                                : cell.column.falseLabel || "No"}
-                            </Text>
-                          ) : (
-                            cell.render("Cell")
-                          )
-                        }
-                        {cell.column.showCompany == true && (
-                          <Text className="text-gray-400">
-                            {row.original.company?.name}
-                          </Text>
-                        )}
-                      </Td>
-                    );
-                  }
-                  return data;
-                })}
+                          )}
+                        </Td>
+                      );
+                    }
+                    return data;
+                  })}
                 </Tr>
               </React.Fragment>
             );

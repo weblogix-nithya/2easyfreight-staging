@@ -48,13 +48,20 @@ export const JobDestinationsCell = ({ row }: any) => {
     (destination: any) => destination?.is_pickup === false,
   );
 
+  const first = filteredDestinations[0];
+
   return (
     <>
-      <Text isTruncated w={"fit-content"}>
-        {filteredDestinations.length > 0
-          ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
-          : "-"}
-      </Text>
+      {first ? (
+        <Text whiteSpace="normal" fontSize="sm" minWidth={'170px'}>
+          {first.address_line_1}
+          <br />
+          {first.address_city} {first.address_postal_code}
+        </Text>
+      ) : (
+        <Text>-</Text>
+      )}
+
       {filteredDestinations.length > 1 && (
         <Popover placement="bottom" closeOnBlur={false}>
           <PopoverTrigger>
@@ -81,6 +88,7 @@ export const JobDestinationsCell = ({ row }: any) => {
     </>
   );
 };
+
 export const JobDestinationsCellExport = ({ row }: any) => {
   const filteredDestinations = row.original.job.job_destinations.filter(
     (destination: any) => destination.is_pickup === false,
@@ -97,7 +105,7 @@ export const JobDestinationBusinessNameCell = ({ row }: any) => {
 
   return (
     <>
-      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
+      <Text minW="130px" maxW="170px">{filteredDestinations[0]?.address_business_name || "-"}</Text>
     </>
   );
 };
@@ -191,8 +199,8 @@ export const NotesCell = ({ row }: any) => {
   return (
     <>
       <Text
-        // minWidth={"300px"}
-        maxWidth={"100px"}
+        minWidth={"80px"}
+        maxWidth={"110px"}
         w={"min-content"}
         color="black"
         noOfLines={2}
@@ -390,7 +398,7 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
 };
 export const BookedByCell = ({ row }: any) => {
   const name = row?.original?.job?.company?.name || "-";
-  return <Text>{name}</Text>;
+  return <Text maxW="150px" minW="100px">{name}</Text>;
 };
 // export const BookedByCellExport = ({ row }: any) => {
 //   const pickupDest = row.original.job_destinations?.find(
@@ -464,31 +472,38 @@ export const TimeslotCell = ({ row }: any) => {
   return <Text maxW="100px">{row?.original?.job?.timeslot || "-"}</Text>;
 };
 export const ReadyAtCell = ({ row }: any) => {
-  return <Text maxW="100px">{row?.original?.job?.ready_at || "-"}</Text>;
+  return <Text maxW="150px" minW="100px">{row?.original?.job?.ready_at || "-"}</Text>;
 };
 export const LastFreeAtCell = ({ row }: any) => {
-  return <Text maxW="100px">{row?.original?.job?.last_free_at || "-"}</Text>;
+  console.log(row.original.job,"sa")
+  return <Text maxW="150px" minW="150px">{row?.original?.job?.last_free_at || "-"}</Text>;
 };
 export const PickupBusinessNameCell = ({ row }: any) => {
   const pickupDest = row.original.job.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
-  return <Text maxW="100px">{pickupDest?.address_business_name || "-"}</Text>;
+  return <Text maxW="150px" minW="100px">{pickupDest?.address_business_name || "-"}</Text>;
 };
 
 export const PickupAddressCell = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
+  const pickup = row.original.job.job_destinations?.find(
+    (d: any) => d.is_pickup === true
   );
 
-  if (!pickupDest) return <Text>-</Text>;
+  if (!pickup) return <>-</>;
+
+  const line1 = pickup.address_line_1;
+  const line2 = `${pickup.address_city} ${pickup.address_postal_code}, Australia`;
 
   return (
-    <Text maxW="100px" isTruncated>
-      {`${pickupDest.address_line_1}, ${pickupDest.address_city}, ${pickupDest.address_postal_code}`}
+    <Text whiteSpace="normal" fontSize="sm" minWidth={'170px'}>
+      {line1}
+      {"\n"}
+      {line2}
     </Text>
   );
 };
+
 
 export const CustomerReferenceCell = ({ row }: any) => {
   return (
@@ -618,7 +633,7 @@ export const tableColumn = [
     // width: "100px",
   },
   {
-    id: "bookedBy",
+    id: "company.name",
     Header: "Booked By",
     // accessor: "company.name" as const,
     Cell: BookedByCell, // Use the new cell component
@@ -655,10 +670,10 @@ export const tableColumn = [
     Header: "Date",
     // accessor: "ready_at" as const,
     Cell: ReadyAtCell, // Add this line
-    type: "date",
+    // type: "date",
   },
   {
-    id: "pick_up_address",
+    id: "pick_up_destination.address_formatted",
     Header: "Pickup From",
     // accessor: "pick_up_address" as const,
     Cell: PickupAddressCell, // Add this line
@@ -716,7 +731,7 @@ export const tableColumn = [
     Header: "Last Free Day",
     // accessor: "last_free_at" as const,
     Cell: LastFreeAtCell, // Add this line
-    type: "date",
+    // type: "date",
   },
   {
     id: "job_items.item_type",
@@ -780,8 +795,6 @@ export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
   dynamicTableUsers?: DynamicTableUser[],
-  isPending?: boolean,
-  isCompleted?: boolean,
 ) => {
   if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
     return [
@@ -842,10 +855,10 @@ export const getColumns = (
     id: "actions",
     Header: "Actions",
     accessor: "id" as const,
-    isView: isCustomer ,
+    isView: isCustomer,
     isEdit: isAdmin,
-    isTracking: isCustomer
-    });
+    isTracking: isCustomer,
+  });
 
   return columns;
 };
