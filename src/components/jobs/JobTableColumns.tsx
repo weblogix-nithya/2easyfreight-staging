@@ -195,12 +195,12 @@ export const ReadyDropByCellExport = ({ row }: any) =>
     D: ${formatTime(row.original.job.drop_at)}`;
 
 export const NotesCell = ({ row }: any) => {
-  const notes = row?.original.job?.customer_notes ?? null;
+  const notes = row.original.job.customer_notes ?? null;
   return (
     <>
       <Text
-        minWidth={"80px"}
-        maxWidth={"110px"}
+        // minWidth={"300px"}
+        maxWidth={"100px"}
         w={"min-content"}
         color="black"
         noOfLines={2}
@@ -475,7 +475,7 @@ export const ReadyAtCell = ({ row }: any) => {
   return <Text maxW="150px" minW="100px">{row?.original?.job?.ready_at || "-"}</Text>;
 };
 export const LastFreeAtCell = ({ row }: any) => {
-  console.log(row.original.job,"sa")
+  // console.log(row.original.job,"sa")
   return <Text maxW="150px" minW="150px">{row?.original?.job?.last_free_at || "-"}</Text>;
 };
 export const PickupBusinessNameCell = ({ row }: any) => {
@@ -552,7 +552,7 @@ export const AdminNotesCell = ({ row }: any) => {
     updateAdminNotes({
       variables: {
         input: {
-          id: parseInt(row.original.id),
+          id: parseInt(row.original.job.id),
           admin_notes: notes,
           customer_id: row.original.job.customer_id,
           company_id: row.original.job.company_id,
@@ -787,7 +787,7 @@ export const tableColumn = [
     Header: "Admin Notes",
     accessor: "admin_notes" as const,
     Cell: AdminNotesCell,
-    show: isCustomer,
+    // show: isCustomer,
   },
 ];
 
