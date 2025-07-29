@@ -39,7 +39,7 @@ import {
   CREATE_JOB_MUTATION,
   defaultJob,
   GET_ALL_TIMESLOT_DEPOTS,
-  SEND_CONSIGNMENT_DOCKET,
+  // SEND_CONSIGNMENT_DOCKET,
 } from "graphql/job";
 import defaultJobQuoteData from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
@@ -321,21 +321,60 @@ function JobEdit() {
     },
   });
 
-  useQuery(GET_JOB_TYPES_QUERY, {
-    variables: defaultVariables,
-    onCompleted: (data) => {
-      setJobTypeOptions([]);
-      data.jobTypes.data.map((_entity: any) => {
-        setJobTypeOptions((jobTypes) => [
-          ...jobTypes,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
+useQuery(GET_JOB_TYPES_QUERY, {
+  variables: defaultVariables,
+  onCompleted: async (data) => {
+    const options = data.jobTypes.data.map((_entity: any) => ({
+      value: parseInt(_entity.id),
+      label: _entity.name,
+    }));
+
+    setJobTypeOptions(options);
+
+    try {
+      // If lat/lng exists, calculate timezone and filter
+      if (pickUpDestination?.lat && pickUpDestination?.lng) {
+        const timezone = await getTimezone(
+          pickUpDestination.lat,
+          pickUpDestination.lng,
+        );
+
+        let updatedOptions = [...options];
+
+        if (job.job_category_id === 1) {
+          if (isSameDayJob) {
+            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+            resetJobTypeAndShowToast();
+          } else if (isTomorrowJob && isAfterCutoff("16:00", timezone)) {
+            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+            resetJobTypeAndShowToast();
+          }
+        }
+
+        if (job.job_category_id === 2 && isSameDayJob && isAfterCutoff("11:00", timezone)) {
+          updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+          resetJobTypeAndShowToast();
+        }
+
+        setFilteredJobTypeOptions(updatedOptions);
+      } else {
+        // ❗️Set full list as fallback until address is selected
+        setFilteredJobTypeOptions(options);
+      }
+    } catch (error) {
+      toast({
+        title: "Error loading job types",
+        description:
+          error instanceof Error ? error.message : "Unknown error",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
       });
-    },
-  });
+      setFilteredJobTypeOptions(options); // fallback to full list
+    }
+  },
+});
+
   useQuery(GET_COMPANYS_QUERY, {
     variables: {
       query: debouncedSearch,
@@ -473,11 +512,11 @@ function JobEdit() {
         // handle success case for this media object
       }
 
-      await handleSendConsignmentDocket({
-        variables: {
-          id: parseInt(data.createJob.id),
-        },
-      });
+      // await handleSendConsignmentDocket({
+      //   variables: {
+      //     id: parseInt(data.createJob.id),
+      //   },
+      // });
 
       toast({
         title: "Job created",
@@ -592,7 +631,7 @@ function JobEdit() {
   };
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
 
-  const [handleSendConsignmentDocket] = useMutation(SEND_CONSIGNMENT_DOCKET);
+  // const [handleSendConsignmentDocket] = useMutation(SEND_CONSIGNMENT_DOCKET);
 
   // method to format savedAddresses to be used in the select
   const formatToSelect = (

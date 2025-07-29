@@ -182,6 +182,12 @@ export default function JobIndex({}: // initialLoadOnly = false,
       ),
     [isCustomer, isAdmin, dynamicTableUsers],
   );
+//   const columns = getColumns(
+//   isAdmin,
+//   isCustomer,
+//   dynamicTableUsers,
+// );
+
   const { refetch: getDynamicTableUsers, data: dynamicTableData } = useQuery(
     GET_DYNAMIC_TABLE_USERS_QUERY,
     {
@@ -204,7 +210,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
     },
   );
 
-  // const adminColumns = useMemo(() => columns, []); // Keep existing columns for admin
   const adminColumns = useMemo(() => {
     return getColumns(
       true,
@@ -213,8 +218,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
     );
   }, [dynamicTableData]);
   // const adminColumns = getColumns(
-  //   true,
-  //   false,
+  //  isAdmin,
+  // isCustomer,
   //   dynamicTableData?.dynamicTableUsers?.data || [],
   // );
   // console.log(columns, "col");
@@ -249,9 +254,9 @@ const companyColumns = columns.filter((column) =>
     [],
   );
 
-  useEffect(() => {
-    setIsChecked(true);
-  }, [isChecked]);
+  // useEffect(() => {
+  //   setIsChecked(true);
+  // }, [isChecked]);
 
   const _orderByRelationship = useMemo(() => {
     let join = undefined as JoinOnClause;
