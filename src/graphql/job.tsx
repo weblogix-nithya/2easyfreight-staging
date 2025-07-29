@@ -155,7 +155,7 @@ export const GET_JOBS_QUERY = gql`
           lat
           lng
           updated_at
-         
+
           job_destination_status_id
           route_point {
             id
@@ -185,7 +185,6 @@ export const GET_JOBS_QUERY = gql`
           lat
           lng
           updated_at
-         
         }
         job_items {
           id
@@ -451,7 +450,7 @@ export const GET_JOB_QUERY = gql`
           sourceable_id
           updated_at
         }
-     
+
         route_point {
           id
           route_id
@@ -496,7 +495,24 @@ export const GET_JOB_QUERY = gql`
           name
         }
       }
-   
+      media {
+        id
+        name
+        downloadable_url
+        collection_name
+        file_name
+        uploaded_by
+        created_at
+      }
+      media_admin {
+        id
+        name
+        downloadable_url
+        collection_name
+        file_name
+        uploaded_by
+        created_at
+      }
       chats {
         id
         name
@@ -791,15 +807,17 @@ export type Job = {
   timeslot_depots: string;
   // job_price_quote?: JobPriceCalculationDetail[];
   media: any[] | null;
+  media_admin?: any[] | null;
+
   [key: string]:
-  | string
-  | number
-  | null
-  | boolean
-  | undefined
-  | Date
-  | any[]
-  | any;
+    | string
+    | number
+    | null
+    | boolean
+    | undefined
+    | Date
+    | any[]
+    | any;
 };
 
 export const defaultJob: Job = {
@@ -890,7 +908,7 @@ export type JobQuoteData = {
 const defaultJobQuoteData: JobQuoteData = {
   freight_type: "",
   transport_type: "",
-  service_choice: '',
+  service_choice: "",
   state: "",
   state_code: "",
   created_at: "",
@@ -899,7 +917,7 @@ const defaultJobQuoteData: JobQuoteData = {
   cbm_rate: 0,
   minimum_charge: 0,
   area: "",
-  company_rates:[],
+  company_rates: [],
   job_pickup_address: {
     state: "",
     suburb: "",
@@ -927,7 +945,6 @@ const defaultJobQuoteData: JobQuoteData = {
     stackable: null,
   },
   job_items: [],
-
 };
 
 export default defaultJobQuoteData;

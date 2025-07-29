@@ -39,7 +39,7 @@ import {
   CREATE_JOB_MUTATION,
   defaultJob,
   GET_ALL_TIMESLOT_DEPOTS,
-  SEND_CONSIGNMENT_DOCKET,
+  // SEND_CONSIGNMENT_DOCKET,
 } from "graphql/job";
 import defaultJobQuoteData from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
@@ -512,11 +512,11 @@ useQuery(GET_JOB_TYPES_QUERY, {
         // handle success case for this media object
       }
 
-      await handleSendConsignmentDocket({
-        variables: {
-          id: parseInt(data.createJob.id),
-        },
-      });
+      // await handleSendConsignmentDocket({
+      //   variables: {
+      //     id: parseInt(data.createJob.id),
+      //   },
+      // });
 
       toast({
         title: "Job created",
@@ -631,7 +631,7 @@ useQuery(GET_JOB_TYPES_QUERY, {
   };
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
 
-  const [handleSendConsignmentDocket] = useMutation(SEND_CONSIGNMENT_DOCKET);
+  // const [handleSendConsignmentDocket] = useMutation(SEND_CONSIGNMENT_DOCKET);
 
   // method to format savedAddresses to be used in the select
   const formatToSelect = (

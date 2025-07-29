@@ -53,7 +53,7 @@ export const JobDestinationsCell = ({ row }: any) => {
   return (
     <>
       {first ? (
-        <Text whiteSpace="normal" fontSize="sm" minWidth={'170px'}>
+        <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
           {first.address_line_1}
           <br />
           {first.address_city} {first.address_postal_code}
@@ -105,7 +105,9 @@ export const JobDestinationBusinessNameCell = ({ row }: any) => {
 
   return (
     <>
-      <Text minW="130px" maxW="170px">{filteredDestinations[0]?.address_business_name || "-"}</Text>
+      <Text minW="130px" maxW="170px">
+        {filteredDestinations[0]?.address_business_name || "-"}
+      </Text>
     </>
   );
 };
@@ -173,6 +175,122 @@ export const JobDestinationWithBusinessNameCellExport = ({ row }: any) => {
   const businessName = filteredDestinations[0]?.address_business_name || "-";
   return `${formattedAddress}\n${businessName}`;
 };
+
+export const PickupAddressWithTimeCell = ({ row }: any) => {
+  const pickupDest = row.original.job.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+  const showPickupTime =
+    row.original.job.job_status.id == 4 ||
+    row.original.job.job_status.id == 5 ||
+    row.original.job.job_status.id == 6 ||
+    row.original.job.job_status.id == 7;
+  const _normalMedia =
+    pickupDest?.media?.filter(
+      (item: any) => item.collection_name !== "signatures",
+    ) || [];
+  return (
+    <>
+      {pickupDest?.updated_at && showPickupTime && (
+        <Text fontSize="sm" color="red.600" mb={1}>
+          Collection time:{" "}
+          {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+        </Text>
+      )}
+      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
+      </Text>
+      <Text>{pickupDest?.address_business_name || "-"}</Text>
+      {/* {normalMedia.length > 0 && (
+        <Flex gap={2} flexWrap="wrap">
+          {normalMedia.map((media: any, index: number) => (
+            <Link key={index} href={media.downloadable_url} isExternal>
+              <img
+                src={media.downloadable_url}
+                alt={media.name || "Pickup evidence"}
+                  loading="lazy"
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  objectFit: "cover",
+                  borderRadius: "4px",
+                }}
+              />
+            </Link>
+          ))}
+        </Flex>
+      )} */}
+    </>
+  );
+};
+export const PickupAddressWithTimeCellExport = ({ row }: any) => {
+  const pickupDest = row.original.job.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+  const collectionTime = pickupDest?.updated_at
+    ? `Collection time: ${formatDate(
+        pickupDest.updated_at,
+        "HH:mm, DD/MM/YYYY",
+      )}\n`
+    : "";
+
+  return `${collectionTime}${formatAddress(
+    row.original.job.pick_up_destination,
+  )}\n${row.original.job.pick_up_destination?.address_business_name || "-"}`;
+};
+export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
+  const pickupDest = row.original.job.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+  const showPickupTime =
+    row.original.job.job_status.id == 4 ||
+    row.original.job.job_status.id == 5 ||
+    row.original.job.job_status.id == 6 ||
+    row.original.job.job_status.id == 7;
+
+  return (
+    <>
+      {pickupDest?.updated_at && showPickupTime && (
+        <Text fontSize="sm" color="red.600" mb={1}>
+          Collection time:{" "}
+          {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+        </Text>
+      )}
+      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
+      </Text>
+      <Text>{pickupDest?.address_business_name || "-"}</Text>
+    </>
+  );
+};
+export const JobDestinationWithBusinessNamewithoutMediaCell = ({
+  row,
+}: any) => {
+  const destinations = row?.original?.job?.job_destinations || [];
+  const filteredDestinations = destinations.filter(
+    (destination: any) => destination?.is_pickup === false,
+  );
+  const showDeliveryTime =
+    row.original.job.job_status.id == 6 || row.original.job.job_status.id == 7;
+
+  return (
+    <>
+      {filteredDestinations[0]?.updated_at && showDeliveryTime && (
+        <Text fontSize="sm" color="red.600" mb={1}>
+          Delivery time:{" "}
+          {formatDate(filteredDestinations[0].updated_at, "HH:mm, DD/MM/YYYY")}
+        </Text>
+      )}
+      <Text isTruncated w={"fit-content"}>
+        {filteredDestinations.length > 0
+          ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
+          : "-"}
+      </Text>
+      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
+    </>
+  );
+};
+
 export const ReadyDropByCell = ({ row }: any) => {
   return (
     <>
@@ -334,71 +452,13 @@ export const ItemsCbmCellExport = ({ row }: any) => {
     return [`${item.volume?.toFixed(2)}cbm  \n`];
   });
 };
-export const PickupAddressWithTimeCell = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
-  );
-  const showPickupTime =
-    row.original.job.job_status.id == 4 ||
-    row.original.job.job_status.id == 5 ||
-    row.original.job.job_status.id == 6 ||
-    row.original.job.job_status.id == 7;
-  const _normalMedia =
-    pickupDest?.media?.filter(
-      (item: any) => item.collection_name !== "signatures",
-    ) || [];
-  return (
-    <>
-      {pickupDest?.updated_at && showPickupTime && (
-        <Text fontSize="sm" color="red.600" mb={1}>
-          Collection time:{" "}
-          {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
-        </Text>
-      )}
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
-      </Text>
-      <Text>{pickupDest?.address_business_name || "-"}</Text>
-      {/* {normalMedia.length > 0 && (
-        <Flex gap={2} flexWrap="wrap">
-          {normalMedia.map((media: any, index: number) => (
-            <Link key={index} href={media.downloadable_url} isExternal>
-              <img
-                src={media.downloadable_url}
-                alt={media.name || "Pickup evidence"}
-                  loading="lazy"
-                style={{
-                  width: "50px",
-                  height: "50px",
-                  objectFit: "cover",
-                  borderRadius: "4px",
-                }}
-              />
-            </Link>
-          ))}
-        </Flex>
-      )} */}
-    </>
-  );
-};
-export const PickupAddressWithTimeCellExport = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
-  );
-  const collectionTime = pickupDest?.updated_at
-    ? `Collection time: ${formatDate(
-        pickupDest.updated_at,
-        "HH:mm, DD/MM/YYYY",
-      )}\n`
-    : "";
-
-  return `${collectionTime}${formatAddress(
-    row.original.job.pick_up_destination,
-  )}\n${row.original.job.pick_up_destination?.address_business_name || "-"}`;
-};
 export const BookedByCell = ({ row }: any) => {
   const name = row?.original?.job?.company?.name || "-";
-  return <Text maxW="150px" minW="100px">{name}</Text>;
+  return (
+    <Text maxW="150px" minW="100px">
+      {name}
+    </Text>
+  );
 };
 // export const BookedByCellExport = ({ row }: any) => {
 //   const pickupDest = row.original.job_destinations?.find(
@@ -472,22 +532,34 @@ export const TimeslotCell = ({ row }: any) => {
   return <Text maxW="100px">{row?.original?.job?.timeslot || "-"}</Text>;
 };
 export const ReadyAtCell = ({ row }: any) => {
-  return <Text maxW="150px" minW="100px">{row?.original?.job?.ready_at || "-"}</Text>;
+  return (
+    <Text maxW="150px" minW="100px">
+      {row?.original?.job?.ready_at || "-"}
+    </Text>
+  );
 };
 export const LastFreeAtCell = ({ row }: any) => {
   // console.log(row.original.job,"sa")
-  return <Text maxW="150px" minW="150px">{row?.original?.job?.last_free_at || "-"}</Text>;
+  return (
+    <Text maxW="150px" minW="150px">
+      {row?.original?.job?.last_free_at || "-"}
+    </Text>
+  );
 };
 export const PickupBusinessNameCell = ({ row }: any) => {
   const pickupDest = row.original.job.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
-  return <Text maxW="150px" minW="100px">{pickupDest?.address_business_name || "-"}</Text>;
+  return (
+    <Text maxW="150px" minW="100px">
+      {pickupDest?.address_business_name || "-"}
+    </Text>
+  );
 };
 
 export const PickupAddressCell = ({ row }: any) => {
   const pickup = row.original.job.job_destinations?.find(
-    (d: any) => d.is_pickup === true
+    (d: any) => d.is_pickup === true,
   );
 
   if (!pickup) return <>-</>;
@@ -496,14 +568,13 @@ export const PickupAddressCell = ({ row }: any) => {
   const line2 = `${pickup.address_city} ${pickup.address_postal_code}, Australia`;
 
   return (
-    <Text whiteSpace="normal" fontSize="sm" minWidth={'170px'}>
+    <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
       {line1}
       {"\n"}
       {line2}
     </Text>
   );
 };
-
 
 export const CustomerReferenceCell = ({ row }: any) => {
   return (
@@ -526,6 +597,7 @@ export const AdminNotesCell = ({ row }: any) => {
   const [displayNotes, setDisplayNotes] = useState(
     row.original.job.admin_notes ?? "",
   );
+  console.log(row.original.job.id,row.original.job,"sam")
   const toast = useToast();
 
   const [updateAdminNotes] = useMutation(UPDATE_JOB_MUTATION, {
@@ -554,8 +626,8 @@ export const AdminNotesCell = ({ row }: any) => {
         input: {
           id: parseInt(row.original.job.id),
           admin_notes: notes,
-          customer_id: row.original.job.customer_id,
-          company_id: row.original.job.company_id,
+          customer_id: row.original.job.customer.id,
+          company_id: row.original.job.company.id,
           job_type_id: row.original.job.job_type.id,
         },
       },
@@ -588,6 +660,8 @@ export const AdminNotesCell = ({ row }: any) => {
           <PopoverCloseButton />
           <Flex direction="column" gap={2}>
             <Textarea
+              name="admin_notes"
+              className="mb-4 max-w-md"
               value={notes}
               onChange={(e: any) => setNotes(e.target.value)}
               size="sm"
@@ -624,6 +698,34 @@ export const AdminNotesCell = ({ row }: any) => {
 export const DeliveryCell = ({ row }: any) => {
   return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
 };
+// JobTableColumns.tsx
+
+export const columnsWithoutMedia = [
+  {
+    id: "pick_up_destination.address_formatted",
+    Header: "Pickup From",
+    Cell: PickupAddressWithTimewithoutMediaCell, // Cell without media
+  },
+  {
+    id: "job_destinations.address",
+    Header: "Delivery Address",
+    Cell: JobDestinationWithBusinessNamewithoutMediaCell, // Cell without media
+  },
+];
+
+export const columnsWithMedia = [
+  {
+    id: "pick_up_destination.address_formatted",
+    Header: "Pickup From",
+    Cell: PickupAddressWithTimeCell, // Cell with media
+  },
+  {
+    id: "job_destinations.address",
+    Header: "Delivery Address",
+    Cell: JobDestinationWithBusinessNameCell, // Cell with media
+  },
+];
+
 export const tableColumn = [
   {
     id: "name",
@@ -672,13 +774,13 @@ export const tableColumn = [
     Cell: ReadyAtCell, // Add this line
     // type: "date",
   },
-  {
-    id: "pick_up_destination.address_formatted",
-    Header: "Pickup From",
-    // accessor: "pick_up_address" as const,
-    Cell: PickupAddressCell, // Add this line
-    // width: "150px",
-  },
+  // {
+  //   id: "pick_up_destination.address_formatted",
+  //   Header: "Pickup From",
+  //   // accessor: "pick_up_address" as const,
+  //   Cell: PickupAddressCell, // Add this line
+  //   // width: "150px",
+  // },
   {
     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
     Header: "Pickup Address and Name ",
@@ -694,13 +796,13 @@ export const tableColumn = [
     // accessor: "pick_up_destination.address_business_name" as const,
     Cell: PickupBusinessNameCell, // Add this line
   },
-  {
-    id: "job_destinations.address",
-    Header: "Delivery Address",
-    width: "100px",
-    Cell: JobDestinationsCell,
-    CellExport: JobDestinationsCellExport,
-  },
+  // {
+  //   id: "job_destinations.address",
+  //   Header: "Delivery Address",
+  //   width: "100px",
+  //   Cell: JobDestinationsCell,
+  //   CellExport: JobDestinationsCellExport,
+  // },
   {
     id: "job_destinations.address_business_name",
     Header: "Delivery Business Name",
@@ -795,6 +897,7 @@ export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
   dynamicTableUsers?: DynamicTableUser[],
+  withMedia: boolean = false, // New parameter to decide if media columns should be used
 ) => {
   if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
     return [
@@ -804,16 +907,38 @@ export const getColumns = (
         // to render a checkbox
         Header: ({ getToggleAllRowsSelectedProps }: any) => (
           <div>
-            <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+            <IndeterminateCheckbox
+              {...getToggleAllRowsSelectedProps()}
+              onClick={(e) => {
+                console.log("Checkbox clicked in header");
+                e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
+              }}
+            />
           </div>
         ),
         // The cell can use the individual row's getToggleRowSelectedProps method
-        // to the render a checkbox
-        Cell: ({ row }: any) => (
-          <div>
-            <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
-          </div>
-        ),
+        // to render a checkbox
+        Cell: ({ row }: any) => {
+          console.log(
+            "Rendering row checkbox",
+            row.getToggleRowSelectedProps(),
+          );
+          return (
+            <div
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent the row click from triggering the checkbox action
+              }}
+            >
+              <IndeterminateCheckbox
+                {...row.getToggleRowSelectedProps()}
+                onClick={(e) => {
+                  console.log(`Row ${row.id} checkbox clicked`);
+                  e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
+                }}
+              />
+            </div>
+          );
+        },
       },
       ...tableColumn,
       {
@@ -836,29 +961,58 @@ export const getColumns = (
       // to render a checkbox
       Header: ({ getToggleAllRowsSelectedProps }: any) => (
         <div>
-          <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+          <IndeterminateCheckbox
+            {...getToggleAllRowsSelectedProps()}
+            onClick={(e) => {
+              console.log("Checkbox clicked in header");
+              e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
+            }}
+          />
         </div>
       ),
       // The cell can use the individual row's getToggleRowSelectedProps method
-      // to the render a checkbox
-      Cell: ({ row }: any) => (
-        <div>
-          <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
-        </div>
-      ),
+      // to render a checkbox
+      Cell: ({ row }: any) => {
+        console.log("Rendering row checkbox", row.getToggleRowSelectedProps());
+        return (
+          <div>
+            <IndeterminateCheckbox
+              {...row.getToggleRowSelectedProps()}
+              onClick={(e) => {
+                console.log(`Row ${row.id} checkbox clicked`);
+                e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
+              }}
+            />
+          </div>
+        );
+      },
     },
   ];
 
-  columns.push(...dynamicColumns);
-
-  columns.push({
-    id: "actions",
-    Header: "Actions",
-    accessor: "id" as const,
-    isView: isCustomer,
-    isEdit: isAdmin,
-    isTracking: isCustomer,
+  // Add dynamic columns and ensure no duplicates
+  dynamicColumns.forEach((col: any) => {
+    if (!columns.some((existingColumn) => existingColumn.id === col.id)) {
+      columns.push(col);
+    }
   });
+
+  const columnsToAdd = withMedia ? columnsWithMedia : columnsWithoutMedia;
+  columnsToAdd.forEach((col: any) => {
+    if (!columns.some((existingColumn) => existingColumn.id === col.id)) {
+      columns.push(col);
+    }
+  });
+
+  if (!columns.some((col) => col.id === "actions")) {
+    columns.push({
+      id: "actions",
+      Header: "Actions",
+      accessor: "id",
+      isView: isCustomer,
+      isEdit: isAdmin,
+      isTracking: isCustomer,
+    });
+  }
 
   return columns;
 };

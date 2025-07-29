@@ -60,6 +60,8 @@ export function SearchBar(props: {
       </InputLeftElement>
 
       <Input
+        id="job-search"
+        name="job-search"
         variant="search"
         placeholder={placeholder ? placeholder : "Search..."}
         value={searchQuery}

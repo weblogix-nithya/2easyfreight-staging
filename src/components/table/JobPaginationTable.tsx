@@ -26,7 +26,7 @@ import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
 import { formatCurrency, formatDate, formatToTimeDate } from "helpers/helper";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import {
   Column,
@@ -333,9 +333,9 @@ PaginationTableProps<T>) => {
                   key={`data-row-${row.id || idx}`}
                   style={getStatusStyle(status)}
                   className="css-en-xlrwr4"
-                  onClick={
-                    isChecked ? () => row.toggleRowSelected() : undefined
-                  }
+                  // onClick={
+                  //   isChecked ? () => row.toggleRowSelected() : undefined
+                  // }
                 >
                   {row?.cells?.map((cell, index) => {
                     let data;
@@ -343,10 +343,10 @@ PaginationTableProps<T>) => {
                       data = (
                         <Td
                           key={`action-${index}`}
-                          paddingLeft={restyleTable && 1}
-                          paddingInlineStart={restyleTable && 1}
-                          paddingRight={restyleTable && 2}
-                          paddingInlineEnd={restyleTable && 2}
+                          // paddingLeft={restyleTable && 1}
+                          // paddingInlineStart={restyleTable && 1}
+                          // paddingRight={restyleTable && 2}
+                          // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
                             {
