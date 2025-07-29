@@ -1,5 +1,11 @@
 import { useQuery } from "@apollo/client";
-import { Box, SimpleGrid, Spinner, Text, useDisclosure } from "@chakra-ui/react";
+import {
+  Box,
+  SimpleGrid,
+  Spinner,
+  Text,
+  useDisclosure,
+} from "@chakra-ui/react";
 import ActionBar from "components/jobs/ActionBar";
 import {
   defaultJobFilter,
@@ -11,6 +17,7 @@ import {
   getBulkAssignColumns,
   getColumns,
   tableColumn,
+  getCompanyColumns,
 } from "components/jobs/JobTableColumns";
 // import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import JobPaginationTable from "components/table/JobPaginationTable";
@@ -62,10 +69,13 @@ const JobBulkAssignModal = React.lazy(
 //   () => import("components/jobs/JobTableSettingsModal"),
 // );
 // Inside Job Index
-const JobTableSettingsModal = dynamic(() => import("components/jobs/JobTableSettingsModal"), {
-  loading: () => <Text>Loading settings...</Text>,
-  ssr: false,
-});
+const JobTableSettingsModal = dynamic(
+  () => import("components/jobs/JobTableSettingsModal"),
+  {
+    loading: () => <Text>Loading settings...</Text>,
+    ssr: false,
+  },
+);
 
 const adminStatusOptions = [
   {
@@ -132,9 +142,15 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const today = new Date();
   const [rangeDate, setRangeDate] = useState<[Date, Date]>([today, today]);
   const [isTableLoading, setIsTableLoading] = useState(false);
-  const { isAdmin, companyId, customerId, isCompany,isCompanyAdmin, isCustomer, userId } = useSelector(
-    (state: RootState) => state.user,
-  );
+  const {
+    isAdmin,
+    companyId,
+    customerId,
+    isCompany,
+    isCompanyAdmin,
+    isCustomer,
+    userId,
+  } = useSelector((state: RootState) => state.user);
   const statusOptions = useMemo(
     () => (isCompany ? companyStatusOptions : adminStatusOptions),
     [isCompany],
@@ -148,11 +164,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
     useSelector((state: RootState) => state.jobFilter);
   const _cookies = parseCookies();
   const dispatch = useDispatch();
-
+  const [withMedia, setWithMedia] = useState(false);
   const [jobStatuses, setJobStatuses] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
-  // const [isCompleted, setIsCompleted] = useState(false); // 1 = pending, 2 = active, 4 = inactive
-  // const [isPending, setIsPending] = useState(true); // First access is Pending
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [drivers, setDrivers] = useState([]);
   // const [selectedDriver, setSelectedDriver] = useState(null);
@@ -170,23 +184,15 @@ export default function JobIndex({}: // initialLoadOnly = false,
   );
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
     useState<typeof filterDisplayNames>(filterDisplayNames);
+  const [companyColumns, setCompanyColumns] = useState([]); // State for company columns
 
+  const handleToggleWithMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setWithMedia(e.target.checked); // Update state when checkbox is toggled
+  };
   const columns = useMemo(
-    () =>
-      getColumns(
-        isAdmin,
-        isCustomer,
-        dynamicTableUsers,
-        // isPending,
-        // isCompleted,
-      ),
-    [isCustomer, isAdmin, dynamicTableUsers],
+    () => getColumns(isAdmin, isCustomer, withMedia, dynamicTableUsers),
+    [isCustomer, isAdmin, dynamicTableUsers, withMedia],
   );
-//   const columns = getColumns(
-//   isAdmin,
-//   isCustomer,
-//   dynamicTableUsers,
-// );
 
   const { refetch: getDynamicTableUsers, data: dynamicTableData } = useQuery(
     GET_DYNAMIC_TABLE_USERS_QUERY,
@@ -212,36 +218,36 @@ export default function JobIndex({}: // initialLoadOnly = false,
 
   const adminColumns = useMemo(() => {
     return getColumns(
-      true,
-      false,
+      isAdmin,
+      isCustomer,
+      withMedia,
       dynamicTableData?.dynamicTableUsers?.data || [],
     );
-  }, [dynamicTableData]);
-  // const adminColumns = getColumns(
-  //  isAdmin,
-  // isCustomer,
-  //   dynamicTableData?.dynamicTableUsers?.data || [],
+  }, [dynamicTableData, withMedia]);
+
+  // const companyColumns = getCompanyColumns(isAdmin, isCustomer, withMedia);
+ useEffect(() => {
+    // Recalculate the columns whenever withMedia changes
+    const columns = getCompanyColumns(isAdmin, isCustomer, withMedia);
+    setCompanyColumns(columns); // Set the new columns for company
+    console.log("Company Columns:", columns); // Debugging output to track columns
+  }, [withMedia, isAdmin, isCustomer]); 
+  // const companyColumns = columns.filter((column) =>
+  //   [
+  //     "name",
+  //     "company.name",
+  //     "reference_no",
+  //     "job_category.name",
+  //     "job_type.name",
+  //     "job_status.name",
+  //     "ready_at",
+  //     "pick_up_destination.address_formatted",
+  //     // 'pick_up_destination.address_business_name',
+  //     "job_destinations.address",
+  //     // 'job_destinations.address_business_name',
+  //     "actions",
+  //   ].includes(column.id),
   // );
-  // console.log(columns, "col");
-
-const companyColumns = columns.filter((column) =>
-    [
-      "name",
-      "company.name",
-      "reference_no",
-      "job_category.name",
-      "job_type.name",
-      "job_status.name",
-      "ready_at",
-      "pick_up_destination.address_formatted",
-      // 'pick_up_destination.address_business_name',
-      "job_destinations.address",
-      // 'job_destinations.address_business_name',
-      "actions",
-    ].includes(column.id),
-  );
-
-  // console.log(companyColumns, "companyColumns");
 
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
@@ -253,10 +259,6 @@ const companyColumns = columns.filter((column) =>
     (prev, column) => [...prev, column.id],
     [],
   );
-
-  // useEffect(() => {
-  //   setIsChecked(true);
-  // }, [isChecked]);
 
   const _orderByRelationship = useMemo(() => {
     let join = undefined as JoinOnClause;
@@ -297,7 +299,8 @@ const companyColumns = columns.filter((column) =>
       query: searchQuery || "",
       job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
       company_id: isCompany ? parseInt(companyId) : undefined,
-      customer_id: isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
+      customer_id:
+        isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
       orderByRelationship: [
         {
           column: "id",
@@ -429,7 +432,14 @@ const companyColumns = columns.filter((column) =>
   useEffect(() => {
     refetchJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryPageIndex, queryPageSize, searchQuery, mainFilters, rangeDate]);
+  }, [
+    queryPageIndex,
+    queryPageSize,
+    searchQuery,
+    mainFilters,
+    rangeDate,
+    withMedia,
+  ]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -752,6 +762,8 @@ const companyColumns = columns.filter((column) =>
             selectedStatus={selectedStatus}
             rangeDate={rangeDate}
             setRangeDate={setRangeDate}
+            withMedia={withMedia}
+            handleToggleWithMedia={handleToggleWithMedia}
           />
           {/* <TabsComponent
             tabs={isAdmin ? adminTabs : customerTabs}

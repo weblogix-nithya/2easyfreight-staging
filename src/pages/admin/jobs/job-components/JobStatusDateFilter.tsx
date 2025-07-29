@@ -1,4 +1,4 @@
-import { Box, Flex } from "@chakra-ui/react";
+import { Box, Checkbox, Flex } from "@chakra-ui/react";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { Select } from "chakra-react-select";
 import React, { useCallback } from "react";
@@ -15,6 +15,8 @@ interface Props {
   rangeDate: [Date, Date] | null;
   setRangeDate: (range: [Date, Date] | null) => void;
   selectedStatus: StatusOption | null;
+  withMedia: boolean; 
+  handleToggleWithMedia: (e: React.ChangeEvent<HTMLInputElement>) => void; // Function to handle checkbox toggle
 }
 
 const JobStatusDateFilter = ({
@@ -23,6 +25,8 @@ const JobStatusDateFilter = ({
   rangeDate,
   setRangeDate,
   selectedStatus,
+  withMedia,
+  handleToggleWithMedia
 }: Props) => {
   const handleRangeChange = useCallback(
     (range: any) => {
@@ -34,7 +38,7 @@ const JobStatusDateFilter = ({
     },
     [setRangeDate],
   );
-  
+
   return (
     <Flex>
       <Box width="300px">
@@ -73,6 +77,15 @@ const JobStatusDateFilter = ({
           onChange={handleRangeChange}
           clearIcon={<span style={{ color: "red", cursor: "pointer" }}>✕</span>}
         />
+      </Box>
+      <Box w="100px">
+        <Checkbox
+          isChecked={withMedia}
+          onChange={handleToggleWithMedia} // Trigger the state update on checkbox toggle
+        >
+          {" "}
+          Show With Media
+        </Checkbox>
       </Box>
     </Flex>
   );

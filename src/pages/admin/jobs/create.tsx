@@ -321,59 +321,68 @@ function JobEdit() {
     },
   });
 
-useQuery(GET_JOB_TYPES_QUERY, {
-  variables: defaultVariables,
-  onCompleted: async (data) => {
-    const options = data.jobTypes.data.map((_entity: any) => ({
-      value: parseInt(_entity.id),
-      label: _entity.name,
-    }));
+  useQuery(GET_JOB_TYPES_QUERY, {
+    variables: defaultVariables,
+    onCompleted: async (data) => {
+      const options = data.jobTypes.data.map((_entity: any) => ({
+        value: parseInt(_entity.id),
+        label: _entity.name,
+      }));
 
-    setJobTypeOptions(options);
+      setJobTypeOptions(options);
 
-    try {
-      // If lat/lng exists, calculate timezone and filter
-      if (pickUpDestination?.lat && pickUpDestination?.lng) {
-        const timezone = await getTimezone(
-          pickUpDestination.lat,
-          pickUpDestination.lng,
-        );
+      try {
+        // If lat/lng exists, calculate timezone and filter
+        if (pickUpDestination?.lat && pickUpDestination?.lng) {
+          const timezone = await getTimezone(
+            pickUpDestination.lat,
+            pickUpDestination.lng,
+          );
 
-        let updatedOptions = [...options];
+          let updatedOptions = [...options];
 
-        if (job.job_category_id === 1) {
-          if (isSameDayJob) {
-            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
-            resetJobTypeAndShowToast();
-          } else if (isTomorrowJob && isAfterCutoff("16:00", timezone)) {
-            updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
+          if (job.job_category_id === 1) {
+            if (isSameDayJob) {
+              updatedOptions = updatedOptions.filter(
+                (opt) => opt.label !== "Standard",
+              );
+              resetJobTypeAndShowToast();
+            } else if (isTomorrowJob && isAfterCutoff("16:00", timezone)) {
+              updatedOptions = updatedOptions.filter(
+                (opt) => opt.label !== "Standard",
+              );
+              resetJobTypeAndShowToast();
+            }
+          }
+
+          if (
+            job.job_category_id === 2 &&
+            isSameDayJob &&
+            isAfterCutoff("11:00", timezone)
+          ) {
+            updatedOptions = updatedOptions.filter(
+              (opt) => opt.label !== "Standard",
+            );
             resetJobTypeAndShowToast();
           }
-        }
 
-        if (job.job_category_id === 2 && isSameDayJob && isAfterCutoff("11:00", timezone)) {
-          updatedOptions = updatedOptions.filter((opt) => opt.label !== "Standard");
-          resetJobTypeAndShowToast();
+          setFilteredJobTypeOptions(updatedOptions);
+        } else {
+          // ❗️Set full list as fallback until address is selected
+          setFilteredJobTypeOptions(options);
         }
-
-        setFilteredJobTypeOptions(updatedOptions);
-      } else {
-        // ❗️Set full list as fallback until address is selected
-        setFilteredJobTypeOptions(options);
+      } catch (error) {
+        toast({
+          title: "Error loading job types",
+          description: error instanceof Error ? error.message : "Unknown error",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+        setFilteredJobTypeOptions(options); // fallback to full list
       }
-    } catch (error) {
-      toast({
-        title: "Error loading job types",
-        description:
-          error instanceof Error ? error.message : "Unknown error",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-      setFilteredJobTypeOptions(options); // fallback to full list
-    }
-  },
-});
+    },
+  });
 
   useQuery(GET_COMPANYS_QUERY, {
     variables: {
@@ -431,6 +440,7 @@ useQuery(GET_JOB_TYPES_QUERY, {
       input: {
         ...job,
         id: undefined,
+        company_id: Number(companyId),
         job_status_id: 1,
         job_type_id: job.job_type_id,
         transport_type: job.transport_type,
@@ -1473,7 +1483,7 @@ useQuery(GET_JOB_TYPES_QUERY, {
                     />
                   )}
 
-                <CustomInputField
+                  <CustomInputField
                     isSelect={true}
                     optionsArray={customerOptions}
                     label={isCompany ? "Booked by" : "Customer:"}
@@ -1483,7 +1493,7 @@ useQuery(GET_JOB_TYPES_QUERY, {
                       ) || { value: 0, label: "" }
                     }
                     placeholder=""
-                    isDisabled={isCompany || isCompanyAdmin}  
+                    isDisabled={isCompany || isCompanyAdmin}
                     onChange={(e) => {
                       if (isCompany && isCompanyAdmin) return;
 

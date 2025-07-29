@@ -4,6 +4,7 @@ import {
   Flex,
   Icon,
   IconButton,
+  Link,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -126,7 +127,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
     row.original.job.job_status.id == 6 || row.original.job.job_status.id == 7;
 
   // Only get media if not in status 6 or 7
-  const _normalMedia =
+  const normalMedia =
     filteredDestinations[0]?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
     ) || [];
@@ -145,7 +146,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
           : "-"}
       </Text>
       <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
-      {/* {normalMedia.length > 0 && (
+      {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
@@ -163,7 +164,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
             </Link>
           ))}
         </Flex>
-      )} */}
+      )}
     </>
   );
 };
@@ -185,7 +186,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     row.original.job.job_status.id == 5 ||
     row.original.job.job_status.id == 6 ||
     row.original.job.job_status.id == 7;
-  const _normalMedia =
+  const normalMedia =
     pickupDest?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
     ) || [];
@@ -201,7 +202,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
       <Text>{pickupDest?.address_business_name || "-"}</Text>
-      {/* {normalMedia.length > 0 && (
+      {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
@@ -219,7 +220,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
             </Link>
           ))}
         </Flex>
-      )} */}
+      )}
     </>
   );
 };
@@ -597,7 +598,6 @@ export const AdminNotesCell = ({ row }: any) => {
   const [displayNotes, setDisplayNotes] = useState(
     row.original.job.admin_notes ?? "",
   );
-  console.log(row.original.job.id,row.original.job,"sam")
   const toast = useToast();
 
   const [updateAdminNotes] = useMutation(UPDATE_JOB_MUTATION, {
@@ -896,8 +896,8 @@ export const tableColumn = [
 export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
+  withMedia: boolean,
   dynamicTableUsers?: DynamicTableUser[],
-  withMedia: boolean = false, // New parameter to decide if media columns should be used
 ) => {
   if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
     return [
@@ -910,7 +910,6 @@ export const getColumns = (
             <IndeterminateCheckbox
               {...getToggleAllRowsSelectedProps()}
               onClick={(e) => {
-                console.log("Checkbox clicked in header");
                 e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
               }}
             />
@@ -919,10 +918,6 @@ export const getColumns = (
         // The cell can use the individual row's getToggleRowSelectedProps method
         // to render a checkbox
         Cell: ({ row }: any) => {
-          console.log(
-            "Rendering row checkbox",
-            row.getToggleRowSelectedProps(),
-          );
           return (
             <div
               onClick={(e) => {
@@ -932,7 +927,6 @@ export const getColumns = (
               <IndeterminateCheckbox
                 {...row.getToggleRowSelectedProps()}
                 onClick={(e) => {
-                  console.log(`Row ${row.id} checkbox clicked`);
                   e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
                 }}
               />
@@ -964,7 +958,6 @@ export const getColumns = (
           <IndeterminateCheckbox
             {...getToggleAllRowsSelectedProps()}
             onClick={(e) => {
-              console.log("Checkbox clicked in header");
               e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
             }}
           />
@@ -979,7 +972,6 @@ export const getColumns = (
             <IndeterminateCheckbox
               {...row.getToggleRowSelectedProps()}
               onClick={(e) => {
-                console.log(`Row ${row.id} checkbox clicked`);
                 e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
               }}
             />
@@ -1015,6 +1007,101 @@ export const getColumns = (
   }
 
   return columns;
+};
+
+export const getCompanyColumns = (
+  isAdmin: boolean,
+  isCustomer: boolean,
+  withMedia: boolean,
+) => {
+  return [
+    // Selection checkbox column
+    {
+      id: "selection",
+      Header: ({ getToggleAllRowsSelectedProps }: any) => (
+        <div>
+          <IndeterminateCheckbox
+            {...getToggleAllRowsSelectedProps()}
+            onClick={(e) => {
+              console.log("Checkbox clicked in header");
+              e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
+            }}
+          />
+        </div>
+      ),
+      // Row checkbox
+      Cell: ({ row }: any) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <IndeterminateCheckbox
+            {...row.getToggleRowSelectedProps()}
+            onClick={(e) => {
+              console.log(`Row ${row.id} checkbox clicked`);
+              e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
+            }}
+          />
+        </div>
+      ),
+    },
+    // Columns for company-related data
+    {
+      id: "name",
+      Header: "Delivery ID",
+      Cell: DeliveryCell, // Your custom component for the cell
+    },
+    {
+      id: "company.name",
+      Header: "Booked By",
+      Cell: BookedByCell,
+    },
+    {
+      id: "reference_no",
+      Header: "Customer Reference",
+      Cell: CustomerReferenceCell,
+    },
+    {
+      id: "job_category.name",
+      Header: "Category",
+      Cell: CategoryCell,
+    },
+    {
+      id: "job_type.name",
+      Header: "Type",
+      Cell: JobTypeCell,
+    },
+    {
+      id: "job_status.name",
+      Header: "Status",
+      Cell: StatusCell,
+    },
+    {
+      id: "ready_at",
+      Header: "Date",
+      Cell: ReadyAtCell,
+    },
+    // "Pick-up From" and "Delivery Address" change based on the withMedia state
+    {
+      id: "pick_up_destination.address_formatted",
+      Header: "Pickup From",
+      Cell: withMedia
+        ? PickupAddressWithTimeCell // with media
+        : PickupAddressWithTimewithoutMediaCell, // without media
+    },
+    {
+      id: "job_destinations.address",
+      Header: "Delivery Address",
+      Cell: withMedia
+        ? JobDestinationWithBusinessNameCell // with media
+        : JobDestinationWithBusinessNamewithoutMediaCell, // without media
+    },
+    {
+      id: "actions",
+      Header: "Actions",
+      accessor: "id" as const,
+      isView: isCustomer,
+      isEdit: isAdmin,
+      isTracking: isCustomer,
+    },
+  ];
 };
 
 export const getBulkAssignColumns = (
