@@ -28,6 +28,7 @@ import {
 } from "helpers/helper";
 import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
+import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
@@ -595,10 +596,9 @@ export const CategoryCell = ({ row }: any) => {
 export const AdminNotesCell = ({ row }: any) => {
   const [isEditing, setIsEditing] = useState(false);
   const [notes, setNotes] = useState(row.original.job.admin_notes ?? "");
-  const [displayNotes, setDisplayNotes] = useState(
-    row.original.job.admin_notes ?? "",
-  );
+  const [displayNotes, setDisplayNotes] = useState(row.original.job.admin_notes ?? "");
   const toast = useToast();
+  const isAdmin = useSelector((state: RootState) => state.user.isAdmin); // ✅ check if user is admin
 
   const [updateAdminNotes] = useMutation(UPDATE_JOB_MUTATION, {
     onCompleted: () => {
@@ -639,61 +639,66 @@ export const AdminNotesCell = ({ row }: any) => {
       <Text maxW="200px" noOfLines={2}>
         {displayNotes || "-"}
       </Text>
-      <Popover
-        isOpen={isEditing}
-        onClose={() => {
-          setNotes(displayNotes);
-          setIsEditing(false);
-        }}
-      >
-        <PopoverTrigger>
-          <IconButton
-            aria-label="Edit notes"
-            icon={<EditIcon />}
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsEditing(true)}
-          />
-        </PopoverTrigger>
-        <PopoverContent p={4}>
-          <PopoverArrow />
-          <PopoverCloseButton />
-          <Flex direction="column" gap={2}>
-            <Textarea
-              name="admin_notes"
-              className="mb-4 max-w-md"
-              value={notes}
-              onChange={(e: any) => setNotes(e.target.value)}
+
+      {/* ✅ Only allow editing if user is admin */}
+      {isAdmin && (
+        <Popover
+          isOpen={isEditing}
+          onClose={() => {
+            setNotes(displayNotes);
+            setIsEditing(false);
+          }}
+        >
+          <PopoverTrigger>
+            <IconButton
+              aria-label="Edit notes"
+              icon={<EditIcon />}
               size="sm"
-              rows={4}
-              resize="none"
-              mb={2}
+              variant="ghost"
+              onClick={() => setIsEditing(true)}
             />
-            <Flex gap={2} justifyContent="flex-end">
-              <IconButton
-                aria-label="Save notes"
-                icon={<CheckIcon />}
+          </PopoverTrigger>
+          <PopoverContent p={4}>
+            <PopoverArrow />
+            <PopoverCloseButton />
+            <Flex direction="column" gap={2}>
+              <Textarea
+                name="admin_notes"
+                className="mb-4 max-w-md"
+                value={notes}
+                onChange={(e: any) => setNotes(e.target.value)}
                 size="sm"
-                colorScheme="green"
-                onClick={handleSave}
+                rows={4}
+                resize="none"
+                mb={2}
               />
-              <IconButton
-                aria-label="Cancel editing"
-                icon={<CloseIcon />}
-                size="sm"
-                colorScheme="red"
-                onClick={() => {
-                  setNotes(displayNotes);
-                  setIsEditing(false);
-                }}
-              />
+              <Flex gap={2} justifyContent="flex-end">
+                <IconButton
+                  aria-label="Save notes"
+                  icon={<CheckIcon />}
+                  size="sm"
+                  colorScheme="green"
+                  onClick={handleSave}
+                />
+                <IconButton
+                  aria-label="Cancel editing"
+                  icon={<CloseIcon />}
+                  size="sm"
+                  colorScheme="red"
+                  onClick={() => {
+                    setNotes(displayNotes);
+                    setIsEditing(false);
+                  }}
+                />
+              </Flex>
             </Flex>
-          </Flex>
-        </PopoverContent>
-      </Popover>
+          </PopoverContent>
+        </Popover>
+      )}
     </Flex>
   );
 };
+
 
 export const DeliveryCell = ({ row }: any) => {
   return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
