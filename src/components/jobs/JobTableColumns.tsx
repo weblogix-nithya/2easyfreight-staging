@@ -787,7 +787,7 @@ export const tableColumn = [
     // accessor:
     //   "pick_up_destination.address_formatted,pick_up_destination.address_business_name" as const,
     // width: "200px",
-    Cell: PickupAddressWithTimeCell, // Use the new cell component
+    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
     CellExport: PickupAddressWithTimeCellExport,
   },
   {
@@ -812,7 +812,7 @@ export const tableColumn = [
   {
     id: "job_destinations.address,job_destinations.address_business_name",
     Header: "Delivery Address and Name",
-    Cell: JobDestinationWithBusinessNameCell,
+    Cell: JobDestinationWithBusinessNamewithoutMediaCell,
     CellExport: JobDestinationWithBusinessNameCellExport,
   },
   {

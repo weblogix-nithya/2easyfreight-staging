@@ -1,4 +1,5 @@
-import { Box, Checkbox, Flex } from "@chakra-ui/react";
+import { InfoOutlineIcon } from "@chakra-ui/icons";
+import { Box, Checkbox, Flex , Text} from "@chakra-ui/react";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { Select } from "chakra-react-select";
 import React, { useCallback } from "react";
@@ -15,7 +16,7 @@ interface Props {
   rangeDate: [Date, Date] | null;
   setRangeDate: (range: [Date, Date] | null) => void;
   selectedStatus: StatusOption | null;
-  withMedia: boolean; 
+  withMedia: boolean;
   handleToggleWithMedia: (e: React.ChangeEvent<HTMLInputElement>) => void; // Function to handle checkbox toggle
 }
 
@@ -26,7 +27,7 @@ const JobStatusDateFilter = ({
   setRangeDate,
   selectedStatus,
   withMedia,
-  handleToggleWithMedia
+  handleToggleWithMedia,
 }: Props) => {
   const handleRangeChange = useCallback(
     (range: any) => {
@@ -78,14 +79,17 @@ const JobStatusDateFilter = ({
           clearIcon={<span style={{ color: "red", cursor: "pointer" }}>✕</span>}
         />
       </Box>
-      <Box w="100px">
-        <Checkbox
-          isChecked={withMedia}
-          onChange={handleToggleWithMedia} // Trigger the state update on checkbox toggle
-        >
-          {" "}
-          Show With Media
+      <Box px={2} py={2}>
+        <Checkbox isChecked={withMedia} onChange={handleToggleWithMedia}>
+          <Flex align="center" fontSize="sm" color="gray.600" mt={1}>
+            <InfoOutlineIcon mr={1} />
+            Show images for "Pickup From" and "Delivery Address"
+          </Flex>
         </Checkbox>
+        <Text fontSize="xs" color="gray.500" mt={1} pl={6}>
+          Hint: Loading images may take a few seconds depending on network
+          speed.
+        </Text>
       </Box>
     </Flex>
   );
