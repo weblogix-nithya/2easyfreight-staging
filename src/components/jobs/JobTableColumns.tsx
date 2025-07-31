@@ -26,6 +26,7 @@ import {
   formatToTimeDate,
   outputDynamicTable,
 } from "helpers/helper";
+import Image from "next/image";
 import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
 import { useSelector } from "react-redux";
@@ -57,7 +58,7 @@ export const JobDestinationsCell = ({ row }: any) => {
       {first ? (
         <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
           {first.address_line_1}
-          <br />
+          {"\n"}
           {first.address_city} {first.address_postal_code}
         </Text>
       ) : (
@@ -151,15 +152,16 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
-              <img
+              <Image
                 src={media.downloadable_url}
                 alt={media.name || "Delivery evidence"}
-                  loading="lazy"
+                width={50}
+                height={50}
                 style={{
-                  width: "50px",
-                  height: "50px",
                   objectFit: "cover",
                   borderRadius: "4px",
+                  width: "50px", 
+                  height: "50px",
                 }}
               />
             </Link>
@@ -207,15 +209,16 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
-              <img
+              <Image
                 src={media.downloadable_url}
                 alt={media.name || "Pickup evidence"}
-                  loading="lazy"
+                width={50}
+                height={50}
                 style={{
-                  width: "50px",
-                  height: "50px",
                   objectFit: "cover",
                   borderRadius: "4px",
+                  width: "50px", 
+                  height: "50px",
                 }}
               />
             </Link>
@@ -596,7 +599,9 @@ export const CategoryCell = ({ row }: any) => {
 export const AdminNotesCell = ({ row }: any) => {
   const [isEditing, setIsEditing] = useState(false);
   const [notes, setNotes] = useState(row.original.job.admin_notes ?? "");
-  const [displayNotes, setDisplayNotes] = useState(row.original.job.admin_notes ?? "");
+  const [displayNotes, setDisplayNotes] = useState(
+    row.original.job.admin_notes ?? "",
+  );
   const toast = useToast();
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin); // ✅ check if user is admin
 
@@ -698,7 +703,6 @@ export const AdminNotesCell = ({ row }: any) => {
     </Flex>
   );
 };
-
 
 export const DeliveryCell = ({ row }: any) => {
   return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
@@ -1012,101 +1016,6 @@ export const getColumns = (
   }
 
   return columns;
-};
-
-export const getCompanyColumns = (
-  isAdmin: boolean,
-  isCustomer: boolean,
-  withMedia: boolean,
-) => {
-  return [
-    // Selection checkbox column
-    {
-      id: "selection",
-      Header: ({ getToggleAllRowsSelectedProps }: any) => (
-        <div>
-          <IndeterminateCheckbox
-            {...getToggleAllRowsSelectedProps()}
-            onClick={(e) => {
-              console.log("Checkbox clicked in header");
-              e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
-            }}
-          />
-        </div>
-      ),
-      // Row checkbox
-      Cell: ({ row }: any) => (
-        <div onClick={(e) => e.stopPropagation()}>
-          <IndeterminateCheckbox
-            {...row.getToggleRowSelectedProps()}
-            onClick={(e) => {
-              console.log(`Row ${row.id} checkbox clicked`);
-              e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
-            }}
-          />
-        </div>
-      ),
-    },
-    // Columns for company-related data
-    {
-      id: "name",
-      Header: "Delivery ID",
-      Cell: DeliveryCell, // Your custom component for the cell
-    },
-    {
-      id: "company.name",
-      Header: "Booked By",
-      Cell: BookedByCell,
-    },
-    {
-      id: "reference_no",
-      Header: "Customer Reference",
-      Cell: CustomerReferenceCell,
-    },
-    {
-      id: "job_category.name",
-      Header: "Category",
-      Cell: CategoryCell,
-    },
-    {
-      id: "job_type.name",
-      Header: "Type",
-      Cell: JobTypeCell,
-    },
-    {
-      id: "job_status.name",
-      Header: "Status",
-      Cell: StatusCell,
-    },
-    {
-      id: "ready_at",
-      Header: "Date",
-      Cell: ReadyAtCell,
-    },
-    // "Pick-up From" and "Delivery Address" change based on the withMedia state
-    {
-      id: "pick_up_destination.address_formatted",
-      Header: "Pickup From",
-      Cell: withMedia
-        ? PickupAddressWithTimeCell // with media
-        : PickupAddressWithTimewithoutMediaCell, // without media
-    },
-    {
-      id: "job_destinations.address",
-      Header: "Delivery Address",
-      Cell: withMedia
-        ? JobDestinationWithBusinessNameCell // with media
-        : JobDestinationWithBusinessNamewithoutMediaCell, // without media
-    },
-    {
-      id: "actions",
-      Header: "Actions",
-      accessor: "id" as const,
-      isView: isCustomer,
-      isEdit: isAdmin,
-      isTracking: isCustomer,
-    },
-  ];
 };
 
 export const getBulkAssignColumns = (

@@ -34,7 +34,7 @@ import { RiEyeCloseLine } from "react-icons/ri";
 export default function SignIn() {
   // Chakra color mode
   const textColor = useColorModeValue("navy.700", "white");
-   const textColorSecondary = "gray.400";
+  const textColorSecondary = "gray.400";
   const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
   const textColorBrand = useColorModeValue("brand.500", "white");
   const brandStars = useColorModeValue("brand.500", "brand.400");
@@ -200,10 +200,12 @@ export default function SignIn() {
                 <FormLabel
                   className="!flex ml-1 mb-2 !text-sm !font-medium"
                   color={textColor}
+                  htmlFor="login-email"
                 >
                   Email<Text color={brandStars}>*</Text>
                 </FormLabel>
-                <Input
+                <Input 
+                  id="login-email"
                   isRequired={true}
                   variant="auth"
                   type="email"
@@ -218,12 +220,14 @@ export default function SignIn() {
 
                 <FormLabel
                   className="!flex ml-1 mb-2 !text-sm !font-medium"
+                  htmlFor="login-password"
                   color={textColor}
                 >
                   Password<Text color={brandStars}>*</Text>
                 </FormLabel>
                 <InputGroup size="md">
                   <Input
+                    id="login-password"
                     isRequired={true}
                     placeholder="Min. 8 characters"
                     size="lg"
@@ -256,12 +260,12 @@ export default function SignIn() {
                 <Flex justifyContent="space-between" align="center" mb="24px">
                   <FormControl display="flex" alignItems="center">
                     <Checkbox
-                      id="remember-login"
+                      id="login-remember-checkbox"
                       colorScheme="primary"
                       me="10px"
                     />
                     <FormLabel
-                      htmlFor="remember-login"
+                      htmlFor="login-remember-checkbox"
                       mb="0"
                       fontWeight="normal"
                       color={textColor}

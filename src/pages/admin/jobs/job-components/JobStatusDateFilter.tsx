@@ -1,5 +1,5 @@
 import { InfoOutlineIcon } from "@chakra-ui/icons";
-import { Box, Checkbox, Flex , Text} from "@chakra-ui/react";
+import { Box, Checkbox, Flex, Text } from "@chakra-ui/react";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { Select } from "chakra-react-select";
 import React, { useCallback } from "react";
@@ -80,12 +80,19 @@ const JobStatusDateFilter = ({
         />
       </Box>
       <Box px={2} py={2}>
-        <Checkbox isChecked={withMedia} onChange={handleToggleWithMedia}>
+        <Checkbox
+          id="withMediaCheckbox"
+          name="withMediaCheckbox"
+          isChecked={withMedia}
+          onChange={handleToggleWithMedia}
+          className="cursor-pointer"
+        >
           <Flex align="center" fontSize="sm" color="gray.600" mt={1}>
             <InfoOutlineIcon mr={1} />
-            Show images for "Pickup From" and "Delivery Address"
+            Show images for &quot;Pickup From&quot; and &quot;Delivery Address&quot;
           </Flex>
         </Checkbox>
+
         <Text fontSize="xs" color="gray.500" mt={1} pl={6}>
           Hint: Loading images may take a few seconds depending on network
           speed.

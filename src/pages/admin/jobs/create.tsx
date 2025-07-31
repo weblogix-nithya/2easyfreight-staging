@@ -556,6 +556,7 @@ function JobEdit() {
       });
 
       router.push(`/admin/jobs/${data.createJob.id}`);
+      console.log("navigated")
       setIsSaving(false);
     },
     onError: (error) => {
