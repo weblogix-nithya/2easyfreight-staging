@@ -902,7 +902,7 @@ function JobEdit() {
     },
     onError: (error) => {
       // Handle the error and set data to empty
-      console.warn("Error fetching job price calculation detail:", error);
+      console.log("Error fetching job price calculation detail:", error);
       setIsUpdateMode(false); // No data found, so we need to create a new entry
       setRefinedData(defaultJobQuoteData);
       setQuoteCalculationRes(defaultJobPriceCalculationDetail);

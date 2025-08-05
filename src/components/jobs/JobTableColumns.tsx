@@ -4,6 +4,7 @@ import {
   Flex,
   Icon,
   IconButton,
+  Link,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -25,8 +26,10 @@ import {
   formatToTimeDate,
   outputDynamicTable,
 } from "helpers/helper";
+import Image from "next/image";
 import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
+import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
@@ -55,7 +58,7 @@ export const JobDestinationsCell = ({ row }: any) => {
       {first ? (
         <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
           {first.address_line_1}
-          <br />
+          {"\n"}
           {first.address_city} {first.address_postal_code}
         </Text>
       ) : (
@@ -126,7 +129,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
     row.original.job.job_status.id == 6 || row.original.job.job_status.id == 7;
 
   // Only get media if not in status 6 or 7
-  const _normalMedia =
+  const normalMedia =
     filteredDestinations[0]?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
     ) || [];
@@ -145,25 +148,26 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
           : "-"}
       </Text>
       <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
-      {/* {normalMedia.length > 0 && (
+      {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
-              <img
+              <Image
                 src={media.downloadable_url}
                 alt={media.name || "Delivery evidence"}
-                  loading="lazy"
+                width={50}
+                height={50}
                 style={{
-                  width: "50px",
-                  height: "50px",
                   objectFit: "cover",
                   borderRadius: "4px",
+                  width: "50px", 
+                  height: "50px",
                 }}
               />
             </Link>
           ))}
         </Flex>
-      )} */}
+      )}
     </>
   );
 };
@@ -185,7 +189,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     row.original.job.job_status.id == 5 ||
     row.original.job.job_status.id == 6 ||
     row.original.job.job_status.id == 7;
-  const _normalMedia =
+  const normalMedia =
     pickupDest?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
     ) || [];
@@ -201,25 +205,26 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
       <Text>{pickupDest?.address_business_name || "-"}</Text>
-      {/* {normalMedia.length > 0 && (
+      {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
-              <img
+              <Image
                 src={media.downloadable_url}
                 alt={media.name || "Pickup evidence"}
-                  loading="lazy"
+                width={50}
+                height={50}
                 style={{
-                  width: "50px",
-                  height: "50px",
                   objectFit: "cover",
                   borderRadius: "4px",
+                  width: "50px", 
+                  height: "50px",
                 }}
               />
             </Link>
           ))}
         </Flex>
-      )} */}
+      )}
     </>
   );
 };
@@ -597,8 +602,8 @@ export const AdminNotesCell = ({ row }: any) => {
   const [displayNotes, setDisplayNotes] = useState(
     row.original.job.admin_notes ?? "",
   );
-  console.log(row.original.job.id,row.original.job,"sam")
   const toast = useToast();
+  const isAdmin = useSelector((state: RootState) => state.user.isAdmin); // ✅ check if user is admin
 
   const [updateAdminNotes] = useMutation(UPDATE_JOB_MUTATION, {
     onCompleted: () => {
@@ -639,58 +644,62 @@ export const AdminNotesCell = ({ row }: any) => {
       <Text maxW="200px" noOfLines={2}>
         {displayNotes || "-"}
       </Text>
-      <Popover
-        isOpen={isEditing}
-        onClose={() => {
-          setNotes(displayNotes);
-          setIsEditing(false);
-        }}
-      >
-        <PopoverTrigger>
-          <IconButton
-            aria-label="Edit notes"
-            icon={<EditIcon />}
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsEditing(true)}
-          />
-        </PopoverTrigger>
-        <PopoverContent p={4}>
-          <PopoverArrow />
-          <PopoverCloseButton />
-          <Flex direction="column" gap={2}>
-            <Textarea
-              name="admin_notes"
-              className="mb-4 max-w-md"
-              value={notes}
-              onChange={(e: any) => setNotes(e.target.value)}
+
+      {/* ✅ Only allow editing if user is admin */}
+      {isAdmin && (
+        <Popover
+          isOpen={isEditing}
+          onClose={() => {
+            setNotes(displayNotes);
+            setIsEditing(false);
+          }}
+        >
+          <PopoverTrigger>
+            <IconButton
+              aria-label="Edit notes"
+              icon={<EditIcon />}
               size="sm"
-              rows={4}
-              resize="none"
-              mb={2}
+              variant="ghost"
+              onClick={() => setIsEditing(true)}
             />
-            <Flex gap={2} justifyContent="flex-end">
-              <IconButton
-                aria-label="Save notes"
-                icon={<CheckIcon />}
+          </PopoverTrigger>
+          <PopoverContent p={4}>
+            <PopoverArrow />
+            <PopoverCloseButton />
+            <Flex direction="column" gap={2}>
+              <Textarea
+                name="admin_notes"
+                className="mb-4 max-w-md"
+                value={notes}
+                onChange={(e: any) => setNotes(e.target.value)}
                 size="sm"
-                colorScheme="green"
-                onClick={handleSave}
+                rows={4}
+                resize="none"
+                mb={2}
               />
-              <IconButton
-                aria-label="Cancel editing"
-                icon={<CloseIcon />}
-                size="sm"
-                colorScheme="red"
-                onClick={() => {
-                  setNotes(displayNotes);
-                  setIsEditing(false);
-                }}
-              />
+              <Flex gap={2} justifyContent="flex-end">
+                <IconButton
+                  aria-label="Save notes"
+                  icon={<CheckIcon />}
+                  size="sm"
+                  colorScheme="green"
+                  onClick={handleSave}
+                />
+                <IconButton
+                  aria-label="Cancel editing"
+                  icon={<CloseIcon />}
+                  size="sm"
+                  colorScheme="red"
+                  onClick={() => {
+                    setNotes(displayNotes);
+                    setIsEditing(false);
+                  }}
+                />
+              </Flex>
             </Flex>
-          </Flex>
-        </PopoverContent>
-      </Popover>
+          </PopoverContent>
+        </Popover>
+      )}
     </Flex>
   );
 };
@@ -787,7 +796,7 @@ export const tableColumn = [
     // accessor:
     //   "pick_up_destination.address_formatted,pick_up_destination.address_business_name" as const,
     // width: "200px",
-    Cell: PickupAddressWithTimeCell, // Use the new cell component
+    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
     CellExport: PickupAddressWithTimeCellExport,
   },
   {
@@ -812,7 +821,7 @@ export const tableColumn = [
   {
     id: "job_destinations.address,job_destinations.address_business_name",
     Header: "Delivery Address and Name",
-    Cell: JobDestinationWithBusinessNameCell,
+    Cell: JobDestinationWithBusinessNamewithoutMediaCell,
     CellExport: JobDestinationWithBusinessNameCellExport,
   },
   {
@@ -896,8 +905,8 @@ export const tableColumn = [
 export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
+  withMedia: boolean,
   dynamicTableUsers?: DynamicTableUser[],
-  withMedia: boolean = false, // New parameter to decide if media columns should be used
 ) => {
   if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
     return [
@@ -910,7 +919,6 @@ export const getColumns = (
             <IndeterminateCheckbox
               {...getToggleAllRowsSelectedProps()}
               onClick={(e) => {
-                console.log("Checkbox clicked in header");
                 e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
               }}
             />
@@ -919,10 +927,6 @@ export const getColumns = (
         // The cell can use the individual row's getToggleRowSelectedProps method
         // to render a checkbox
         Cell: ({ row }: any) => {
-          console.log(
-            "Rendering row checkbox",
-            row.getToggleRowSelectedProps(),
-          );
           return (
             <div
               onClick={(e) => {
@@ -932,7 +936,6 @@ export const getColumns = (
               <IndeterminateCheckbox
                 {...row.getToggleRowSelectedProps()}
                 onClick={(e) => {
-                  console.log(`Row ${row.id} checkbox clicked`);
                   e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
                 }}
               />
@@ -964,7 +967,6 @@ export const getColumns = (
           <IndeterminateCheckbox
             {...getToggleAllRowsSelectedProps()}
             onClick={(e) => {
-              console.log("Checkbox clicked in header");
               e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
             }}
           />
@@ -973,13 +975,12 @@ export const getColumns = (
       // The cell can use the individual row's getToggleRowSelectedProps method
       // to render a checkbox
       Cell: ({ row }: any) => {
-        console.log("Rendering row checkbox", row.getToggleRowSelectedProps());
+        // console.log("Rendering row checkbox", row.getToggleRowSelectedProps());
         return (
           <div>
             <IndeterminateCheckbox
               {...row.getToggleRowSelectedProps()}
               onClick={(e) => {
-                console.log(`Row ${row.id} checkbox clicked`);
                 e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
               }}
             />

@@ -1,11 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove swcMinify as it's no longer needed in newer Next.js versions
   eslint: {
-    // Add ESLint configuration
-    ignoreDuringBuilds: false, // Set to true if you want to ignore ESLint errors during builds
+    ignoreDuringBuilds: false,
   },
-  // Add any other necessary configurations here
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 's3.ap-southeast-2.amazonaws.com',
+        pathname: '/2easy-prod-bucket/**',
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig;

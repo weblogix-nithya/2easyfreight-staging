@@ -8,7 +8,8 @@ import {
 } from "@chakra-ui/react";
 import { FullChevronDown } from "components/icons/Icons";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
-import NextLink from "next/link";
+// import NextLink from "next/link";
+// import Router from "next/router";
 import { FaFileExcel } from "react-icons/fa";
 
 interface JobHeaderProps {
@@ -24,7 +25,7 @@ interface JobHeaderProps {
 
 const JobHeader = ({
   isAdmin,
-  isCompany,
+  // isCompany,
   onOpenSetting,
   onOpenFilter,
   isFilterTicked,
@@ -78,12 +79,14 @@ const JobHeader = ({
 
         <Flex>
           <Button
-            as={NextLink}
-            href="/admin/jobs/create"
             variant="primary"
             className="mr-2"
+            // onClick={() => Router.push("/admin/jobs/create")}
+            onClick={() => {
+              window.location.href = "/admin/jobs/create";
+            }}
           >
-            {isCompany ? "New booking" : "Create job"}
+            Create Job
           </Button>
 
           <Button
