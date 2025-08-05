@@ -332,7 +332,7 @@ PaginationTableProps<T>) => {
                   {...row.getRowProps()}
                   key={`data-row-${row.id || idx}`}
                   style={getStatusStyle(status)}
-                  className="css-en-xlrwr4"
+                  // className="css-en-xlrwr4"
                   // onClick={
                   //   isChecked ? () => row.toggleRowSelected() : undefined
                   // }
@@ -387,8 +387,7 @@ PaginationTableProps<T>) => {
                                   fontWeight="700"
                                 >
                                   <Button
-                                    // bg={boxBg}
-                                    bg="white"
+                                     bg="white"
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"

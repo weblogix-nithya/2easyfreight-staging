@@ -9,7 +9,7 @@ import {
 import { FullChevronDown } from "components/icons/Icons";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 // import NextLink from "next/link";
-import Router from "next/router";
+// import Router from "next/router";
 import { FaFileExcel } from "react-icons/fa";
 
 interface JobHeaderProps {
@@ -81,7 +81,10 @@ const JobHeader = ({
           <Button
             variant="primary"
             className="mr-2"
-            onClick={() => Router.push("/admin/jobs/create")}
+            // onClick={() => Router.push("/admin/jobs/create")}
+            onClick={() => {
+              window.location.href = "/admin/jobs/create";
+            }}
           >
             Create Job
           </Button>

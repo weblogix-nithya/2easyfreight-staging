@@ -975,7 +975,7 @@ export const getColumns = (
       // The cell can use the individual row's getToggleRowSelectedProps method
       // to render a checkbox
       Cell: ({ row }: any) => {
-        console.log("Rendering row checkbox", row.getToggleRowSelectedProps());
+        // console.log("Rendering row checkbox", row.getToggleRowSelectedProps());
         return (
           <div>
             <IndeterminateCheckbox

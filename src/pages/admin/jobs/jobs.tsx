@@ -99,6 +99,11 @@ const adminStatusOptions = [
     label: "Completed (Completed/Delivered)",
     statusIds: [6, 7],
   },
+  {
+    value: "Cancelled",
+    label: "Cancelled (Cancelled/Declined)",
+    statusIds: [8, 9],
+  },
 ];
 
 const companyStatusOptions = [
@@ -231,7 +236,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     // Recalculate the columns whenever withMedia changes
     const columns = getCompanyColumns(isAdmin, isCustomer, withMedia);
     setCompanyColumns(columns); // Set the new columns for company
-    console.log("Company Columns:", columns); // Debugging output to track columns
+    // console.log("Company Columns:", columns); // Debugging output to track columns
   }, [withMedia, isAdmin, isCustomer]);
   // const companyColumns = columns.filter((column) =>
   //   [
@@ -346,7 +351,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       customer_id:
         isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
       job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
-       between_at: rangeDate?.[0]
+      between_at: rangeDate?.[0]
         ? {
             from_at: formatDate(rangeDate[0], true),
             to_at: formatDate(rangeDate[1], false),
@@ -468,25 +473,24 @@ export default function JobIndex({}: // initialLoadOnly = false,
   //   }, 300);
   // }, []);
 
-useEffect(() => {
-  if (isAdmin) {
-    refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
-  } else if (isCompany || isCustomer) {
-    getCompanyJobs(); // GET_JOBS_QUERY
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [
-  queryPageIndex,
-  queryPageSize,
-  searchQuery,
-  mainFilters,
-  rangeDate,
-  withMedia,
-  isAdmin,
-  isCompany,
-  isCustomer,
-]);
-
+  useEffect(() => {
+    if (isAdmin) {
+      refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
+    } else if (isCompany || isCustomer) {
+      getCompanyJobs(); // GET_JOBS_QUERY
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    queryPageIndex,
+    queryPageSize,
+    searchQuery,
+    mainFilters,
+    rangeDate,
+    withMedia,
+    isAdmin,
+    isCompany,
+    isCustomer,
+  ]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -818,7 +822,7 @@ useEffect(() => {
               Loading <Spinner size="sm" ml={2} />
             </Box>
           ) : isAdmin ? (
-            _jobs?.data?.length > 0 && (
+            _jobs?.data?.length > 0 ? (
               <JobPaginationTable
                 columns={adminColumns}
                 data={_jobs?.data}
@@ -844,34 +848,40 @@ useEffect(() => {
                 onSortingChange={handleSortingChange}
                 restyleTable
               />
+            ) : (
+              <Box textAlign="center" py={4} px={10} color="gray.600">
+                No records found.
+              </Box>
             )
+          ) : companyJobs?.jobs?.data?.length > 0 ? (
+            <PaginationTable
+              columns={companyColumns}
+              data={companyJobs?.jobs?.data}
+              options={{
+                manualSortBy: true,
+                initialState: {
+                  pageIndex: queryPageIndex,
+                  pageSize: queryPageSize,
+                  sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
+                },
+                manualPagination: true,
+                pageCount: companyJobs?.jobs?.paginatorInfo?.lastPage,
+              }}
+              setQueryPageIndex={setQueryPageIndex}
+              setQueryPageSize={setQueryPageSize}
+              isServerSide
+              showPageSizeSelect
+              showRowSelection
+              setSelectedRow={setSelectedJobs}
+              isFilterRowSelected={isShowSelectedOnly}
+              isChecked={isChecked}
+              showManualPages
+              onSortingChange={handleSortingChange}
+            />
           ) : (
-            companyJobs?.jobs?.data?.length > 0 && (
-              <PaginationTable
-                columns={companyColumns}
-                data={companyJobs?.jobs?.data}
-                options={{
-                  manualSortBy: true,
-                  initialState: {
-                    pageIndex: queryPageIndex,
-                    pageSize: queryPageSize,
-                    sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
-                  },
-                  manualPagination: true,
-                  pageCount: companyJobs?.jobs?.paginatorInfo?.lastPage,
-                }}
-                setQueryPageIndex={setQueryPageIndex}
-                setQueryPageSize={setQueryPageSize}
-                isServerSide
-                showPageSizeSelect
-                showRowSelection
-                setSelectedRow={setSelectedJobs}
-                isFilterRowSelected={isShowSelectedOnly}
-                isChecked={isChecked}
-                showManualPages
-                onSortingChange={handleSortingChange}
-              />
-            )
+            <Box textAlign="center" py={4} px={10} color="gray.600">
+              No records found.
+            </Box>
           )}
         </SimpleGrid>
 
