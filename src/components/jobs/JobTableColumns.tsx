@@ -151,7 +151,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
-            <Link key={index} href={media.downloadable_url} isExternal>
+            <Link key={`${index+1}`} href={media.downloadable_url} isExternal>
               <Image
                 src={media.downloadable_url}
                 alt={media.name || "Delivery evidence"}

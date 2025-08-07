@@ -189,12 +189,9 @@ export function TrackingMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markers]);
 
-
   return (
-    <div style={{ height: '100vh', width: '100%' }}>
-  <div ref={mapRef} id="map" style={{ height: '100%', width: '100%' }} />
-  
-</div>
-
-  )
+    <div style={{ height: "100vh", width: "100%" }}>
+      <div ref={mapRef} id="map" style={{ height: "100%", width: "100%" }} />
+    </div>
+  );
 }
