@@ -826,6 +826,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               <JobPaginationTable
                 columns={adminColumns}
                 data={_jobs?.data}
+                total={_jobs?.total}
                 options={{
                   manualSortBy: true,
                   initialState: {

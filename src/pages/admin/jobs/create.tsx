@@ -656,10 +656,20 @@ function JobPage() {
           reader.readAsArrayBuffer(media.file);
         });
       }
+      console.log("Navigating to:", `/admin/jobs/${data.createJob.id}`);
 
-      // await router.replace(`/admin/jobs/${data.createJob.id}`);
-      router.push(`/admin/jobs/${data.createJob.id}`);
-      // console.log("navigating to", `/admin/jobs/${data.createJob.id}`);
+      // if (router.isReady) {
+      //   await router.push(`/admin/jobs/${data.createJob.id}`);
+      //   console.log("Navigation successful");
+      // } else {
+      //   console.log("Router is not ready, delaying navigation");
+      // }
+      await router.replace(`/admin/jobs/${data.createJob.id}`);
+      if (!router.isReady) {
+        router.reload();
+      }
+      // router.push(`/admin/jobs/${data.createJob.id}`);
+      console.log("navigating to after", `/admin/jobs/${data.createJob.id}`);
       // window.location.href = `/admin/jobs/${data.createJob.id}`;
 
       setIsSaving(false);
