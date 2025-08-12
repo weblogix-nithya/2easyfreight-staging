@@ -184,7 +184,7 @@ export default function InvoiceIndex() {
           </Flex>
           <Divider className="!my-0 !py-0" />
 
-          {isAdmin && !loading && invoices?.invoices.data.length >= 0 && (
+          {isAdmin && !loading && invoices?.invoices?.data?.length >= 0 && (
             <PaginationTable
               columns={columns}
               data={invoices?.invoices.data}

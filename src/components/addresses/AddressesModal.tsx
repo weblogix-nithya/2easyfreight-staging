@@ -13,16 +13,17 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  useColorModeValue,
+  // useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
 import React, { useEffect, useRef, useState } from "react";
-import { GenericAddressType } from "./genericAddressType";
+
 import {
-  fetchSuggestions,
   fetchPlaceDetails,
+  fetchSuggestions,
   getAddressComponent,
 } from "../../utils/autocomplete";
+import { GenericAddressType } from "./genericAddressType";
 
 export default function AddressesModal<T extends GenericAddressType>(props: {
   defaultAddress?: T;
@@ -40,7 +41,7 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
   } = props;
   const prevQueryRef = useRef("");
   const selectedLabelRef = useRef("");
-  const textColor = useColorModeValue("navy.700", "white");
+  // const textColor = useColorModeValue("navy.700", "white");
   const [entityAddress, setEntityAddress] = useState<GenericAddressType>({
     id: defaultAddress?.id ?? 0,
     address: defaultAddress?.address ?? "",

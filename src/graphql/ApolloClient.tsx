@@ -5,8 +5,6 @@ import {
   HttpOptions,
   InMemoryCache,
   NormalizedCacheObject} from "@apollo/client";
-import { onError } from "@apollo/client/link/error";
-import { setContext } from "@apollo/client/link/context";
 import { createUploadLink } from "apollo-upload-client";
 import { destroyCookie, parseCookies } from "nookies";
 import { useMemo } from "react";
@@ -26,117 +24,72 @@ const clearAllCookies = () => {
     "user_id",
     "state",
   ];
-  cookieNames.forEach((name) => destroyCookie(null, name, { path: "/" }));
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.clear();
-    } catch {}
-    try {
-      sessionStorage.clear();
-    } catch {}
-  }
-};
 
-const createLink = (opts: HttpOptions = {}) =>
-  createUploadLink({
-    uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
-    credentials: "include",
-    fetchOptions: { credentials: "include" },
-    ...opts,
+  // const paths = ["/", "/admin", "/admin/jobs", "*"];
+
+  // cookieNames.forEach(name => {
+  //   paths.forEach(path => {
+  //   destroyCookie(null, name, { path });
+  // });
+
+  
+  cookieNames.forEach((name) => {
+    destroyCookie(null, name, { path: "/" });
   });
 
-// ✅ Auth link — reads token from cookies for every request
-// apolloclient.tsx
-const authLink = setContext((_, { headers }) => {
-  const { access_token } = parseCookies();
-  const next: Record<string, string> = { ...(headers as any) };
-  if (access_token) next.Authorization = `Bearer ${access_token}`;
-  else delete next.Authorization;                 // ← important
-  return { headers: next };
-});
+  // Optional: clear localStorage/sessionStorage if you use them
+  localStorage.clear();
+  sessionStorage.clear();
+};
 
-
-
-let alreadyRedirecting = false;
-
-const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
-  // Gather all error messages
-  const msgs: string[] = [];
-
-  if (graphQLErrors?.length) {
-    for (const e of graphQLErrors) if (e?.message) msgs.push(String(e.message));
-  }
-
-  const n = networkError as any;
-  if (n?.result?.errors?.length) {
-    for (const e of n.result.errors)
-      if (e?.message) msgs.push(String(e.message));
-  }
-  if (networkError?.message) msgs.push(String(networkError.message));
-
-  // Only redirect if any message contains the word "unauthenticated"
-  const shouldRedirect = msgs.some((m) =>
-    m.toLowerCase().includes("unauthenticated"),
-  );
-
-  // Debug: see which operation triggered it and with what messages
-  if (msgs.length) {
-    // eslint-disable-next-line no-console
-    console.debug("[Apollo errorLink]", {
-      op: operation.operationName,
-      msgs,
-      shouldRedirect,
-    });
-  }
-
-  if (!shouldRedirect) return;
-
-  // Don’t redirect if this operation opted out
-  const { noAuthRedirect } = operation.getContext?.() || {};
-  if (noAuthRedirect) return;
-
-  // Don’t redirect from /auth/*, and only once
-  const path = typeof window !== "undefined" ? window.location.pathname : "";
-  if (alreadyRedirecting || path.startsWith("/auth")) return;
-
-  alreadyRedirecting = true;
-  clearAllCookies();
-  if (typeof window !== "undefined") {
-    const next = path || "/admin";
-    apolloClient?.clearStore?.().finally(() => {
-      window.location.assign(`/auth/login?next=${encodeURIComponent(next)}`);
-    });
-  }
-});
+const createLink = (opts: HttpOptions = {}) => {
+  return createUploadLink({
+    uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
+    credentials: "include",
+    fetchOptions: {
+      credentials: "include",
+    },
+    ...opts,
+  });
+};
 
 function createApolloClient() {
   const uploadLink = createLink();
-  
-  const errorLink = new ApolloLink((operation, forward) => {
-    return forward(operation).map((response) => {
-      const { errors } = response;
-      const networkError = (response as any).networkError;
-      const graphQLErrors = errors;
 
-      if (networkError?.message?.includes("401") ||
-        graphQLErrors?.some((error: { message: string }) => error.message.includes("Unauthenticated"))) {
-        clearAllCookies();
+const errorLink = new ApolloLink((operation, forward) => {
+  return forward(operation).map((response) => {
+    const { errors } = response;
+    const networkError = (response as any).networkError;
+    const graphQLErrors = errors;
 
-        apolloClient?.clearStore().then(() => {
-          window.location.href = "/auth/login";
-        });
-      }
+    if (
+      networkError?.message?.includes("401") ||
+      graphQLErrors?.some((error: { message: string }) =>
+        error.message.toLowerCase().includes("unauthenticated")
+      )
+    ) {
+      // Redirect to login page and pass the current URL as `redirectTo`
+      const redirectTo = window.location.pathname + window.location.search;
+      
+      clearAllCookies(); // Clear cookies upon unauthentication
 
-      return response;
-    });
+      apolloClient?.clearStore().then(() => {
+        window.location.href = `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`;
+      });
+    }
+
+    return response;  // Return the response
   });
+});
 
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
-    link: from([errorLink, authLink, uploadLink]),
+    link: from([errorLink, uploadLink]),
     cache: new InMemoryCache({ addTypename: false }),
     defaultOptions: {
-      watchQuery: { errorPolicy: "all" },
+      watchQuery: {
+        errorPolicy: "all",
+      },
     },
   });
 }
@@ -144,24 +97,37 @@ function createApolloClient() {
 export function initializeApollo(initialState = {}) {
   const _apolloClient = apolloClient ?? createApolloClient();
 
+  // If your page has Next.js data fetching methods that use Apollo Client, the initial state
+  // gets hydrated here
   if (initialState) {
+    // Get existing cache, loaded during client side data fetching
     const existingCache = _apolloClient.extract();
+    // Restore the cache using the data passed from getStaticProps/getServerSideProps
+    // combined with the existing cached data
     _apolloClient.cache.restore({ ...existingCache, ...initialState });
   }
+  // For SSG and SSR always create a new Apollo Client
   if (typeof window === "undefined") return _apolloClient;
+  // Create the Apollo Client once in the client
   if (!apolloClient) apolloClient = _apolloClient;
-
-  // Call kept for compatibility — now does nothing
   setAuthToken();
   return _apolloClient;
 }
-
-// ✅ No-op now, but keeps compatibility with existing calls
-export const setAuthToken = () => {
-  // No longer needed — authLink now handles this automatically
-};
 
 export function useApollo(initialState: NormalizedCacheObject) {
   const store = useMemo(() => initializeApollo(initialState), [initialState]);
   return store;
 }
+
+export const setAuthToken = () => {
+  const cookies = parseCookies();
+  const token = cookies.access_token || "";
+
+  const options: HttpOptions = {
+    headers: {
+      Authorization: token ? `Bearer ${token}` : null,
+    },
+  };
+
+  apolloClient.setLink(createLink(options));
+};

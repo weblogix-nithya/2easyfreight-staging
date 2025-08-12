@@ -124,7 +124,6 @@ function JobEdit() {
   const routeReady = router.isReady && typeof router.query.id === "string";
   const jobId = routeReady ? parseInt(router.query.id as string, 10) : null;
   const id = jobId;
-  console.log(id, "ids");
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);
   const [tabId, setActiveTab] = useState(1);

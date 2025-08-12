@@ -29,9 +29,14 @@ import {
 } from "graphql/customerAddress";
 import debounce from "lodash.debounce";
 import React, { useEffect, useMemo, useState } from "react";
-import GooglePlacesAutocomplete, {
-  geocodeByPlaceId,
-} from "react-google-places-autocomplete";
+// import GooglePlacesAutocomplete, {
+//   geocodeByPlaceId,
+// } from "react-google-places-autocomplete";
+import {
+  fetchSuggestions,
+  fetchPlaceDetails,
+  getAddressComponent,
+} from "../../utils/autocomplete";
 
 export default function CustomerAddressesTab(props: any) {
   const toast = useToast();
@@ -46,6 +51,7 @@ export default function CustomerAddressesTab(props: any) {
   const [searchQuery, setSearchQuery] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [googleAddress, setGoogleAddress] = useState(null);
+  const [suggestions, setSuggestions] = useState([]); // Store the fetched suggestions
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -53,6 +59,17 @@ export default function CustomerAddressesTab(props: any) {
       setQueryPageIndex(0);
     }, 300);
   }, []);
+
+  useEffect(() => {
+    const fetchAutoCompleteResults = async () => {
+      if (searchQuery.length >= 2) {
+        // Minimum length of 2 characters
+        const results = await fetchSuggestions(searchQuery); // Fetch suggestions for Australia
+        setSuggestions(results); // Set the suggestions to state
+      }
+    };
+    fetchAutoCompleteResults();
+  }, [searchQuery]);
 
   const columns = useMemo(
     () => [
@@ -149,50 +166,79 @@ export default function CustomerAddressesTab(props: any) {
     },
   );
 
-  function updateCustomerAddress(placeId: string) {
-    geocodeByPlaceId(placeId)
-      .then((results) => {
-        var addressLine1 = "";
-        var addressCity = "";
-        var addressState = "";
-        var addressCountry = "";
-        var addressPostalCode = "";
+  // function updateCustomerAddress(placeId: string) {
+  //   geocodeByPlaceId(placeId)
+  //     .then((results) => {
+  //       var addressLine1 = "";
+  //       var addressCity = "";
+  //       var addressState = "";
+  //       var addressCountry = "";
+  //       var addressPostalCode = "";
 
-        if (results[0]) {
-          results[0].address_components.forEach((component) => {
-            if (component.types.includes("street_number")) {
-              addressLine1 += component.long_name + " ";
-            } else if (component.types.includes("route")) {
-              addressLine1 += component.long_name;
-            } else if (component.types.includes("locality")) {
-              addressCity = component.long_name;
-            } else if (
-              component.types.includes("administrative_area_level_1")
-            ) {
-              addressState = component.long_name;
-            } else if (component.types.includes("country")) {
-              addressCountry = component.long_name;
-            } else if (component.types.includes("postal_code")) {
-              addressPostalCode = component.long_name;
-            }
-          });
+  //       if (results[0]) {
+  //         results[0].address_components.forEach((component) => {
+  //           if (component.types.includes("street_number")) {
+  //             addressLine1 += component.long_name + " ";
+  //           } else if (component.types.includes("route")) {
+  //             addressLine1 += component.long_name;
+  //           } else if (component.types.includes("locality")) {
+  //             addressCity = component.long_name;
+  //           } else if (
+  //             component.types.includes("administrative_area_level_1")
+  //           ) {
+  //             addressState = component.long_name;
+  //           } else if (component.types.includes("country")) {
+  //             addressCountry = component.long_name;
+  //           } else if (component.types.includes("postal_code")) {
+  //             addressPostalCode = component.long_name;
+  //           }
+  //         });
 
-          if (results[0].geometry.location) {
-            setCustomerAddress({
-              ...customerAddress,
-              name: results[0].formatted_address,
-              address_line_1: addressLine1,
-              address_city: addressCity,
-              address_state: addressState,
-              address_country: addressCountry,
-              address_postal_code: addressPostalCode,
-              lat: results[0].geometry.location.lat(),
-              lng: results[0].geometry.location.lng(),
-            });
-          }
-        }
-      })
-      .catch((error) => console.error(error));
+  //         if (results[0].geometry.location) {
+  //           setCustomerAddress({
+  //             ...customerAddress,
+  //             name: results[0].formatted_address,
+  //             address_line_1: addressLine1,
+  //             address_city: addressCity,
+  //             address_state: addressState,
+  //             address_country: addressCountry,
+  //             address_postal_code: addressPostalCode,
+  //             lat: results[0].geometry.location.lat(),
+  //             lng: results[0].geometry.location.lng(),
+  //           });
+  //         }
+  //       }
+  //     })
+  //     .catch((error) => console.error(error));
+  // }
+  const handleAddressSelect = async (placeId) => {
+    const data = await fetchPlaceDetails(placeId); // Fetch the full place details
+    if (data) {
+      setGoogleAddress(data); // Update the selected address state
+      updateCustomerAddress(data); // Update the address form fields with the selected address
+    }
+  };
+
+  function updateCustomerAddress(data) {
+    const components = data.addressComponents || [];
+
+    setCustomerAddress({
+      ...customerAddress,
+      name: data.formattedAddress || "",
+      address_line_1:
+        getAddressComponent(components, "street_address") ||
+        getAddressComponent(components, "route") ||
+        "",
+      address_city: getAddressComponent(components, "locality"),
+      address_state: getAddressComponent(
+        components,
+        "administrative_area_level_1",
+      ),
+      address_country: getAddressComponent(components, "country"),
+      address_postal_code: getAddressComponent(components, "postal_code"),
+      lat: data.location?.latitude || 0,
+      lng: data.location?.longitude || 0,
+    });
   }
 
   return (
@@ -233,8 +279,28 @@ export default function CustomerAddressesTab(props: any) {
                 >
                   Search address
                 </FormLabel>
+                <Input
+                  placeholder="Type location"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)} // Update searchQuery as user types
+                  size="lg"
+                />
+                <Flex direction="column">
+                  {suggestions.map((sugg) => {
+                    const fullLabel =
+                      `${sugg.mainText}, ${sugg.secondaryText}`.trim();
+                    return (
+                      <Button
+                        key={sugg.placeId}
+                        onClick={() => handleAddressSelect(sugg.placeId)} // Select this address
+                      >
+                        {fullLabel}
+                      </Button>
+                    );
+                  })}
+                </Flex>
 
-                <GooglePlacesAutocomplete
+                {/* <GooglePlacesAutocomplete
                   apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
                   autocompletionRequest={{
                     componentRestrictions: {
@@ -288,7 +354,7 @@ export default function CustomerAddressesTab(props: any) {
                       }),
                     },
                   }}
-                />
+                /> */}
               </Flex>
 
               <Flex alignItems="center" mb="16px">
