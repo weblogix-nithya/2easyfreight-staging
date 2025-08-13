@@ -629,7 +629,7 @@ export default function JobAllocationIndex() {
                       </AccordionButton>
 
                       <AccordionPanel p={0}>
-                        {jobs?.jobs.data.map((job: any) => {
+                        {jobs?.jobs?.data?.map((job: any) => {
                           if (
                             job.job_type_id === jobType.id &&
                             job.driver_id == null
@@ -678,7 +678,7 @@ export default function JobAllocationIndex() {
                   </AccordionButton>
 
                   <AccordionPanel p={0}>
-                    {jobs?.jobs.data.map((job: any) => {
+                    {jobs?.jobs?.data?.map((job: any) => {
                       if (job.job_status_id === "9" && job.driver_id != null) {
                         return (
                           <JobAccordion
@@ -726,7 +726,7 @@ export default function JobAllocationIndex() {
                       </AccordionButton>
 
                       <AccordionPanel p={0}>
-                        {jobs?.jobs.data.map((job: any) => {
+                        {jobs?.jobs?.data?.map((job: any) => {
                           if (
                             job.job_type_id === jobType.id &&
                             ["2", "3", "4", "5"].includes(job.job_status_id)
@@ -781,7 +781,7 @@ export default function JobAllocationIndex() {
                       </AccordionButton>
 
                       <AccordionPanel p={0}>
-                        {jobs?.jobs.data.map((job: any) => {
+                        {jobs?.jobs?.data?.map((job: any) => {
                           if (
                             job.job_type_id === jobType.id &&
                             ["6", "7"].includes(job.job_status_id)

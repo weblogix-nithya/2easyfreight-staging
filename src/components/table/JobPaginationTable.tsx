@@ -54,6 +54,7 @@ const getStatusStyle = (status: string) => {
 type PaginationTableProps<T extends object> = {
   columns: Column<T>[];
   data: T[];
+  total: number;  
   options?: Omit<TableOptions<T>, "data" | "columns">;
   plugins?: PluginHook<T>[];
   path?: string;
@@ -91,6 +92,7 @@ type PaginationTableProps<T extends object> = {
 const PaginationTable = <T extends object>({
   columns,
   data,
+  total,
   isServerSide = false,
   options,
   plugins = [],
@@ -593,7 +595,7 @@ PaginationTableProps<T>) => {
           <>
             <Text>
               Showing {pageIndex * pageSize + 1} to {(pageIndex + 1) * pageSize}{" "}
-              of {data.length} entries
+              of {total} entries
             </Text>
             <ButtonGroup isAttached variant="outline">
               <IconButton

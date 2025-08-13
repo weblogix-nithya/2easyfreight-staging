@@ -26,14 +26,14 @@ import {
 import { GET_COMPANYS_QUERY } from "graphql/company";
 import { formatDateTimeToDB } from "helpers/helper";
 import debounce from "lodash.debounce";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 import { SelectedFilter } from "./Filters";
 
 interface FilterJobsModalProps extends UseDisclosureProps {
-  jobStatuses?: { value: string; label: string }[];
+  // jobStatuses?: { value: string; label: string }[];
   jobCategories?: { value: string; label: string }[];
   onFilterApply: (
     selectedFilters: SelectedFilter,
@@ -49,7 +49,7 @@ interface FilterJobsModalProps extends UseDisclosureProps {
 export default function FilterJobsModal({
   isOpen,
   onClose,
-  jobStatuses,
+  // jobStatuses,
   jobCategories,
   onFilterApply,
   selectedFilters,
@@ -95,7 +95,29 @@ export default function FilterJobsModal({
     { value: "Tasmania", label: "TAS" },
   ];
 
-  useQuery(GET_COMPANYS_QUERY, {
+  // useQuery(GET_COMPANYS_QUERY, {
+  //   variables: {
+  //     query: debouncedSearch,
+  //     page: 1,
+  //     first: 100,
+  //     orderByColumn: "id",
+  //     orderByOrder: "ASC",
+  //   },
+  //   onCompleted: (data) => {
+  //     setCompaniesOptions([]);
+  //     data.companys.data.map((_entity: any) => {
+  //       setCompaniesOptions((companys) => [
+  //         ...companys,
+  //         {
+  //           value: parseInt(_entity.id),
+  //           label: _entity.name,
+  //         },
+  //       ]);
+  //     });
+  //   },
+  // });
+  // before: useQuery(..., { onCompleted: (...) { setCompaniesOptions(...) } })
+  const { data: companiesData } = useQuery(GET_COMPANYS_QUERY, {
     variables: {
       query: debouncedSearch,
       page: 1,
@@ -103,19 +125,25 @@ export default function FilterJobsModal({
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
-    onCompleted: (data) => {
-      setCompaniesOptions([]);
-      data.companys.data.map((_entity: any) => {
-        setCompaniesOptions((companys) => [
-          ...companys,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
-      });
-    },
+    skip: !isOpen, // don't fetch while modal is closed
   });
+  useEffect(() => {
+    if (!companiesData?.companys?.data) return;
+    setCompaniesOptions(
+      companiesData.companys.data.map((e: any) => ({
+        value: Number(e.id),
+        label: e.name,
+      })),
+    );
+  }, [companiesData]);
+
+  useEffect(() => {
+    return () => {
+      // lodash.debounce adds .cancel()
+      // @ts-ignore
+      onChangeSearchCompany.cancel?.();
+    };
+  }, [onChangeSearchCompany]);
 
   function handleInputHighlight(
     event: React.MouseEvent<HTMLInputElement, MouseEvent>,
@@ -322,7 +350,7 @@ export default function FilterJobsModal({
                 }}
               />
             </Box>
-            <Box w={"full"}>
+            {/* <Box w={"full"}>
               <FormLabel>Status</FormLabel>
               <Select
                 components={{
@@ -353,7 +381,7 @@ export default function FilterJobsModal({
                   });
                 }}
               />
-            </Box>
+            </Box> */}
             <Box w={"full"}>
               <Checkbox
                 isChecked={selectedFilters.is_tailgate_required}

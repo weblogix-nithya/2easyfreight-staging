@@ -104,7 +104,7 @@ export default function AdminLayout(props: DashboardLayoutProps) {
           ),
         ),
       );
-      if (
+      if (  
         cookies.is_admin !== undefined &&
         cookies.is_admin !== "undefined" &&
         cookies.is_admin !== ""

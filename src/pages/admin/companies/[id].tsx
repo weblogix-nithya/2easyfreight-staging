@@ -143,6 +143,7 @@ function CompanyEdit() {
     variables: {
       id: id,
     },
+    skip: !id,
     onCompleted: (data) => {
       if (data?.company == null) {
         router.push("/admin/companies");
@@ -1246,7 +1247,7 @@ function CompanyEdit() {
 
                         <Textarea
                           name="admin_notes"
-                          value={company.admin_notes}
+                          value={company.admin_notes ||""}
                           onChange={(e) =>
                             setCompany({
                               ...company,
@@ -1275,7 +1276,7 @@ function CompanyEdit() {
                         <Flex className="flex-col w-full max-w-md">
                           <Textarea
                             name="base_notes"
-                            value={company.base_notes}
+                            value={company.base_notes ||""}
                             onChange={(e) =>
                               setCompany({
                                 ...company,
