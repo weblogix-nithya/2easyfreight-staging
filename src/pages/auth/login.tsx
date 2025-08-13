@@ -52,6 +52,8 @@ export default function SignIn() {
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
   const router = useRouter();
+  const { redirectTo } = router.query; // Get `redirectTo` from query params
+
   const toast = useToast();
 
   const [username, setUsername] = useState(
@@ -121,7 +123,15 @@ export default function SignIn() {
           });
           setAuthToken();
 
-          router.push("/admin/dashboard");
+          // const { redirectTo } = router.query;
+          if (redirectTo) {
+            // If `redirectTo` exists, redirect to that URL
+            router.push(redirectTo as string);
+          } else {
+            // If no `redirectTo`, default to dashboard
+            router.push("/admin/dashboard");
+          }
+          // router.push("/admin/dashboard");
         } else {
           toast({
             title: "Login failed",
@@ -204,7 +214,7 @@ export default function SignIn() {
                 >
                   Email<Text color={brandStars}>*</Text>
                 </FormLabel>
-                <Input 
+                <Input
                   id="login-email"
                   isRequired={true}
                   variant="auth"

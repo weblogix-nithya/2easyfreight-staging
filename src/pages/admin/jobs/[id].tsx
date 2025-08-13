@@ -154,7 +154,9 @@ function JobEdit() {
   const [_pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
-  const { id } = router.query;
+  const routeReady = router.isReady && typeof router.query.id === "string";
+  const jobId = routeReady ? parseInt(router.query.id as string, 10) : null;
+  const id = jobId;
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);
   const [tabId, setActiveTab] = useState(1);
@@ -427,34 +429,6 @@ function JobEdit() {
     }, 300);
   }, []);
 
-  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
-    onCompleted: (data) => {
-      if (data?.allTimeslotDepots) {
-        const depots = data.allTimeslotDepots
-          .filter((depot: any) => depot.is_active)
-          .map((depot: any) => ({
-            value: depot.depot_name,
-            label: depot.depot_name,
-            price: depot.depot_price,
-            state_code: depot.state_code,
-            pincode: depot.pincode,
-          }));
-        setDepotOptions(depots);
-        // console.log("depots", depots)
-      }
-    },
-    onError: (error) => {
-      console.error("Error fetching depots:", error);
-      toast({
-        title: "Error fetching depots",
-        description: error.message,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    },
-  });
-
   const {
     loading: jobLoading,
     data: jobData, // Renamed 'data' to 'jobData'
@@ -463,8 +437,10 @@ function JobEdit() {
     variables: {
       id: id,
     },
-    skip: !id,
+    skip: !routeReady || !id,
     onCompleted: (data) => {
+      if (!isMounted.current) return; // ✅ don't set state after unmount
+
       if (!data?.job) {
         router.push("/admin/jobs");
         return;
@@ -618,6 +594,35 @@ function JobEdit() {
     },
   });
 
+  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+    context: { noAuthRedirect: true },
+    onCompleted: (data) => {
+      if (!isMounted.current) return; // ✅ skip if unmounted
+      if (data?.allTimeslotDepots) {
+        const depots = data.allTimeslotDepots
+          .filter((depot: any) => depot.is_active)
+          .map((depot: any) => ({
+            value: depot.depot_name,
+            label: depot.depot_name,
+            price: depot.depot_price,
+            state_code: depot.state_code,
+            pincode: depot.pincode,
+          }));
+        setDepotOptions(depots);
+      }
+    },
+    onError: (error) => {
+      console.error("Error fetching depots:", error);
+      if (!isMounted.current) return; // ✅ skip if unmounted
+      toast({
+        title: "Error fetching depots",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    },
+  });
   useEffect(() => {
     if (job.company_area && companyRates.length > 0) {
       const matchingRate = companyRates.find(
@@ -1158,7 +1163,7 @@ function JobEdit() {
     if (job?.company_id && job.company_id !== 0) {
       getCompanyRates({ variables: { company_id: Number(job.company_id) } });
     }
-  }, [job.company_id,getCompanyRates]);
+  }, [job.company_id, getCompanyRates]);
   useEffect(() => {
     const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
     const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);

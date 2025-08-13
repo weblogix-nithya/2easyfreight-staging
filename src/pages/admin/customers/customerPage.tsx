@@ -1,4 +1,4 @@
- import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -18,7 +18,6 @@ import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-
 
 export default function CustomerIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
@@ -134,23 +133,26 @@ export default function CustomerIndex() {
             </Link>
           </Flex>
 
-          {isAdmin && !loading && customers?.customers.data.length >= 0 && (
-            <PaginationTable
-              columns={columns}
-              data={customers?.customers.data}
-              options={{
-                initialState: {
-                  pageIndex: queryPageIndex,
-                  pageSize: queryPageSize,
-                },
-                manualPagination: true,
-                pageCount: customers?.customers.paginatorInfo.lastPage,
-              }}
-              setQueryPageIndex={setQueryPageIndex}
-              setQueryPageSize={setQueryPageSize}
-              isServerSide
-            />
-          )}
+          {isAdmin &&
+            !loading &&
+            customers?.customers &&
+            customers?.customers.data?.length >= 0 && (
+              <PaginationTable
+                columns={columns}
+                data={customers?.customers.data}
+                options={{
+                  initialState: {
+                    pageIndex: queryPageIndex,
+                    pageSize: queryPageSize,
+                  },
+                  manualPagination: true,
+                  pageCount: customers?.customers.paginatorInfo.lastPage,
+                }}
+                setQueryPageIndex={setQueryPageIndex}
+                setQueryPageSize={setQueryPageSize}
+                isServerSide
+              />
+            )}
 
           {isCompany &&
             !companyCustomerLoading &&
@@ -173,7 +175,7 @@ export default function CustomerIndex() {
             )}
         </SimpleGrid>
       </Box>
-      <PrivateAccessModal isOpen={isOpen} onClose={onClose}  />
+      <PrivateAccessModal isOpen={isOpen} onClose={onClose} />
     </AdminLayout>
   );
 }

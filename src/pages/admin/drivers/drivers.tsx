@@ -140,7 +140,7 @@ export default function DriverIndex() {
 
           <TabsComponent tabs={tabs} onChange={(tabId) => changeTab(tabId)} />
 
-          {!loading && drivers?.drivers.data.length >= 0 && (
+          {!loading && drivers?.drivers?.data?.length >= 0 && (
             <PaginationTable
               columns={columns}
               data={drivers?.drivers.data}

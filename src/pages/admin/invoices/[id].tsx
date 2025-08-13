@@ -9,7 +9,7 @@ import {
   FormLabel,
   Grid,
   Input,
-  Link,
+  // Link,
   SimpleGrid,
   Skeleton,
   Table,
@@ -82,6 +82,7 @@ function InvoiceEdit() {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isInvoicePdfgenerate, setIsInvoicePdfgenerate] = useState(false);
 
   // const [paymentTerm, setPaymentTerm] = useState(null);
 
@@ -106,6 +107,7 @@ function InvoiceEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    skip: !id,
     onCompleted: (data) => {
       setInvoiceLineItems(data.invoiceLineItems.data);
     },
@@ -168,6 +170,7 @@ function InvoiceEdit() {
     variables: {
       id: id,
     },
+    skip: !id,
     onCompleted: (data) => {
       if (data?.invoice == null) {
         router.push("/admin/invoices");
@@ -269,7 +272,7 @@ function InvoiceEdit() {
         });
 
         toast({
-          title: "Regenerating invoice PDF, please wait 1min to update",
+          title: "Regenerating invoice PDF, please wait 10 seconds to update",
           status: "info",
           duration: 3000,
           isClosable: true,
@@ -277,6 +280,7 @@ function InvoiceEdit() {
         });
 
         setIsInvoicePdfUpdating(true);
+        setIsInvoicePdfgenerate(true);
         setIsHandleUpdateInvoiceLineItemsLoading(true);
 
         for (let invoiceLineItem of invoiceLineItems) {
@@ -312,6 +316,8 @@ function InvoiceEdit() {
           getInvoiceLineItems();
           setIsHandleUpdateInvoiceLineItemsLoading(false);
           handleGenerateInvoicePdf();
+          setIsInvoicePdfgenerate(false);
+
         }, 5000);
       },
       onError: (error) => {
@@ -362,7 +368,7 @@ function InvoiceEdit() {
       },
       onCompleted: (_data) => {
         toast({
-          title: "Invoice generating. Please wait 1min to update",
+          title: "Invoice generating. Please wait 10 seconds to update",
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -371,7 +377,6 @@ function InvoiceEdit() {
         shouldSendInvoice = invoiceStatusId == "2" ? false : shouldSendInvoice;
         setTimeout(() => {
           getInvoice();
-          setIsInvoicePdfUpdating(false);
           if (
             shouldSendInvoice &&
             invoice.invoice_status_id != undefined &&
@@ -380,7 +385,7 @@ function InvoiceEdit() {
           ) {
             handleSendInvoice();
           }
-        }, 60000);
+        }, 10000);
       },
       onError: (error) => {
         showGraphQLErrorToast(error);
@@ -502,6 +507,7 @@ function InvoiceEdit() {
                       className="!h-[39px]"
                       onClick={() => {
                         setIsInvoicePdfUpdating(true);
+                        setIsInvoicePdfgenerate(true);
                         handleGenerateInvoicePdf();
                       }}
                       isLoading={invoiceLoading}
@@ -1051,20 +1057,69 @@ function InvoiceEdit() {
                 )}
 
               {invoice.job && invoice.job.invoice_url != null && (
-                <Link
-                  href={invoice.job.invoice_url}
-                  isExternal
-                  className="w-[49%]"
-                >
-                  <Button
-                    variant="secondary"
-                    className="w-[100%]"
-                    isLoading={invoiceLoading || isInvoicePdfUpdating}
-                    isDisabled={isInvoicePdfUpdating}
-                  >
-                    Download PDF
-                  </Button>
-                </Link>
+                // <Link
+                //   href={invoice.job.invoice_url}
+                //   isExternal
+                //   className="w-[49%]"
+                // >
+                //   <Button
+                //     variant="secondary"
+                //     className="w-[100%]"
+                //     isLoading={invoiceLoading || isInvoicePdfUpdating}
+                //     isDisabled={isInvoicePdfUpdating}
+                //   >
+                //     Download PDF
+                //   </Button>
+                // </Link>
+                 <Button
+                        mx="5px"
+                        variant="secondary"
+                        isLoading={isInvoicePdfgenerate}
+                        isDisabled={invoiceLoading}
+                        // hidden={isCustomer}
+                        onClick={() => {
+                          // setIsInvoicePdfgenerate(true);
+                          if (isInvoicePdfUpdating) {
+                            toast({
+                              title: "Waiting for the updated PDF...",
+                              status: "info",
+                              duration: 5000,
+                              isClosable: true,
+                            });
+
+                            setTimeout(async () => {
+                              await getInvoice(); // Refresh quote to get latest PDF
+                              setIsInvoicePdfgenerate(false); // Reset flag
+
+                              toast({
+                                title:
+                                  "Invoice PDF is refreshed. Try Downloading now...",
+                                status: "success",
+                                duration: 3000,
+                                isClosable: true,
+                              });
+
+                              // if (quote?.quote_url) {
+                              //   window.open(
+                              //     quote.quote_url,
+                              //     "_blank",
+                              //     "noopener,noreferrer",
+                              //   );
+                              // }
+                            }, 10000); // Wait 10 sec
+                          } else {
+                            if (invoice.job.invoice_url) {
+                              window.open(
+                               invoice.job.invoice_url,
+                                "_blank",
+                                "noopener,noreferrer",
+                              );
+                            }
+                          }
+                        }}
+                      >
+                        Download PDF
+                      </Button>
               )}
               {invoice.invoice_status_id != undefined &&
                 invoice.invoice_status_id != "1" && (
