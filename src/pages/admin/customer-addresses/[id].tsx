@@ -23,12 +23,13 @@ import {
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+
 // import GooglePlacesAutocomplete, {
 //   geocodeByPlaceId,
 // } from "react-google-places-autocomplete";
 import {
-  fetchSuggestions,
   fetchPlaceDetails,
+  fetchSuggestions,
   getAddressComponent,
 } from "../../../utils/autocomplete";
 

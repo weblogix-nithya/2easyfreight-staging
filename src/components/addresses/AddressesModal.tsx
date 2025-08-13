@@ -24,8 +24,8 @@ import {
   getAddressComponent,
 } from "../../utils/autocomplete";
 import { GenericAddressType } from "./genericAddressType";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHandHolding, faInfinity, faTruckRampBox, faWarning } from "@fortawesome/free-solid-svg-icons";
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faHandHolding, faInfinity, faTruckRampBox, faWarning } from "@fortawesome/free-solid-svg-icons";
 
 export default function AddressesModal<T extends GenericAddressType>(props: {
   defaultAddress?: T;

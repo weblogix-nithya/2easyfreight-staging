@@ -107,6 +107,7 @@ function InvoiceEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    skip: !id,
     onCompleted: (data) => {
       setInvoiceLineItems(data.invoiceLineItems.data);
     },
@@ -169,6 +170,7 @@ function InvoiceEdit() {
     variables: {
       id: id,
     },
+    skip: !id,
     onCompleted: (data) => {
       if (data?.invoice == null) {
         router.push("/admin/invoices");

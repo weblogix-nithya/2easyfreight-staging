@@ -29,12 +29,13 @@ import {
 } from "graphql/customerAddress";
 import debounce from "lodash.debounce";
 import React, { useEffect, useMemo, useState } from "react";
+
 // import GooglePlacesAutocomplete, {
 //   geocodeByPlaceId,
 // } from "react-google-places-autocomplete";
 import {
-  fetchSuggestions,
   fetchPlaceDetails,
+  fetchSuggestions,
   getAddressComponent,
 } from "../../utils/autocomplete";
 
@@ -50,8 +51,8 @@ export default function CustomerAddressesTab(props: any) {
   const [queryPageSize, setQueryPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [googleAddress, setGoogleAddress] = useState(null);
-  const [suggestions, setSuggestions] = useState([]); // Store the fetched suggestions
+  const [googleAddress, _setGoogleAddress] = useState(null);
+  const [_suggestions, setSuggestions] = useState([]); // Store the fetched suggestions
   // ADD (near other useState hooks)
   const [addressQuery, setAddressQuery] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);

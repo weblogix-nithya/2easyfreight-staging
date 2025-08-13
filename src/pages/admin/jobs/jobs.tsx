@@ -171,7 +171,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const _cookies = parseCookies();
   const dispatch = useDispatch();
   const [withMedia, setWithMedia] = useState(false);
-  const [jobStatuses, setJobStatuses] = useState([]);
+  const [_jobStatuses, setJobStatuses] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -211,6 +211,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
         orderByOrder: "ASC",
         user_id: userId,
       },
+      skip: !userId,
       notifyOnNetworkStatusChange: true,
       onCompleted: (data) => {
         setDynamicTableUsers(
@@ -315,6 +316,29 @@ export default function JobIndex({}: // initialLoadOnly = false,
             to_at: formatDate(rangeDate[1], false),
           }
         : undefined,
+        has_job_category_ids:1, // mainJobFilter?.has_job_category_ids?.map((o: any) => o.value),
+
+      states: mainJobFilter?.states?.map((o: any) => o.value),
+      job_date_at: mainJobFilter?.job_date_at,
+      suburbs: mainJobFilter?.suburbs?.map((o: any) => o.value),
+      address_business_name: mainJobFilter?.address_business_name?.map(
+        (o: any) => o.value,
+      ),
+      has_company_ids: mainJobFilter?.has_company_ids?.map((o: any) => o.value),
+      is_tailgate_required: mainJobFilter?.is_tailgate_required ?? undefined,
+
+      weight_from: mainJobFilter?.weight_from
+        ? Number(mainJobFilter.weight_from)
+        : undefined,
+      weight_to: mainJobFilter?.weight_to
+        ? Number(mainJobFilter.weight_to)
+        : undefined,
+      volume_from: mainJobFilter?.volume_from
+        ? Number(mainJobFilter.volume_from)
+        : undefined,
+      volume_to: mainJobFilter?.volume_to
+        ? Number(mainJobFilter.volume_to)
+        : undefined,
     },
     skip: !userId || !isAdmin,
     onCompleted: (_data) => {
@@ -394,6 +418,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
       }
 
       setJobFilter(jobMainFilters);
+      console.log(jobMainFilters,'jobMainFilters')
+      setMainJobFilter(jobMainFilters);
       _jobFilter = jobMainFilters;
       if (displayName) setMainFilterDisplayNames(displayName);
       updateTags(updatedValues, _jobFilter);
@@ -447,6 +473,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     onOpen: onOpenFilter,
     onClose: onCloseFilter,
   } = useDisclosure();
+
   useEffect(() => {
     getJobStatuses();
     getJobCategories();
@@ -485,11 +512,13 @@ export default function JobIndex({}: // initialLoadOnly = false,
     queryPageSize,
     searchQuery,
     mainFilters,
+    mainJobFilter,
     rangeDate,
     withMedia,
     isAdmin,
     isCompany,
     isCustomer,
+    is_filter_ticked
   ]);
 
   const debouncedSearch = useMemo(
@@ -899,11 +928,12 @@ export default function JobIndex({}: // initialLoadOnly = false,
             <FilterJobsModal
               isOpen={isOpenFilter}
               onClose={onCloseFilter}
-              jobStatuses={jobStatuses}
+              // jobStatuses={jobStatuses}
               jobCategories={jobCategories}
               onFilterApply={(selectedFilters, filterDisplayName) => {
                 // Update the tags
                 updateTags(selectedFilters, jobFilter);
+                setMainJobFilter({ ...jobFilter });
 
                 setMainFilterDisplayNames(filterDisplayName);
                 setCookie(
