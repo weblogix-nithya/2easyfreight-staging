@@ -24,6 +24,8 @@ import {
   getAddressComponent,
 } from "../../utils/autocomplete";
 import { GenericAddressType } from "./genericAddressType";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHandHolding, faInfinity, faTruckRampBox, faWarning } from "@fortawesome/free-solid-svg-icons";
 
 export default function AddressesModal<T extends GenericAddressType>(props: {
   defaultAddress?: T;
@@ -164,10 +166,11 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{description || "Add address"}</ModalHeader>
+        <ModalHeader>{description || "Add addresses"}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Divider mb="24px" />
+ 
 
           <Flex mt={4} direction="column" gap="12px">
             <FormLabel>Search Address</FormLabel>

@@ -52,6 +52,9 @@ export default function CustomerAddressesTab(props: any) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [googleAddress, setGoogleAddress] = useState(null);
   const [suggestions, setSuggestions] = useState([]); // Store the fetched suggestions
+  // ADD (near other useState hooks)
+  const [addressQuery, setAddressQuery] = useState("");
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -60,16 +63,26 @@ export default function CustomerAddressesTab(props: any) {
     }, 300);
   }, []);
 
+  // ADD this effect
+  useEffect(() => {
+    if (isOpen) {
+      setAddressQuery("");
+      setAddressSuggestions([]);
+    }
+  }, [isOpen]);
+
+  // UPDATE this effect to use addressQuery/addressSuggestions
   useEffect(() => {
     const fetchAutoCompleteResults = async () => {
-      if (searchQuery.length >= 2) {
-        // Minimum length of 2 characters
-        const results = await fetchSuggestions(searchQuery); // Fetch suggestions for Australia
-        setSuggestions(results); // Set the suggestions to state
+      if (addressQuery.length >= 2) {
+        const results = await fetchSuggestions(addressQuery);
+        setAddressSuggestions(results);
+      } else {
+        setAddressSuggestions([]);
       }
     };
     fetchAutoCompleteResults();
-  }, [searchQuery]);
+  }, [addressQuery]);
 
   const columns = useMemo(
     () => [
@@ -119,11 +132,8 @@ export default function CustomerAddressesTab(props: any) {
   });
 
   useEffect(() => {
-    // onChangeSearchQuery.cancel();
-    // console.log("useEffect");
-
     if (googleAddress) {
-      updateCustomerAddress(googleAddress.value.place_id);
+      updateCustomerAddress(googleAddress); // <-- remove .value.place_id
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleAddress]);
@@ -211,12 +221,36 @@ export default function CustomerAddressesTab(props: any) {
   //     })
   //     .catch((error) => console.error(error));
   // }
-  const handleAddressSelect = async (placeId) => {
-    const data = await fetchPlaceDetails(placeId); // Fetch the full place details
-    if (data) {
-      setGoogleAddress(data); // Update the selected address state
-      updateCustomerAddress(data); // Update the address form fields with the selected address
-    }
+  const handleAddressSelect = async (placeId: string) => {
+    const data = await fetchPlaceDetails(placeId);
+    if (!data) return;
+
+    const components = data.addressComponents || [];
+    const pick = (type: string) => getAddressComponent(components, type) || "";
+
+    // Build line 1 exactly like the old geocode logic
+    const streetNumber = pick("street_number");
+    const route = pick("route");
+    const addressLine1 = [streetNumber, route].filter(Boolean).join(" ").trim();
+
+    setCustomerAddress((prev) => ({
+      ...prev,
+      // keep "name" parity with old code (formatted address)
+      name: data.formattedAddress || "",
+      address_line_1: addressLine1,
+      // include subpremise like old UI would (apt/suite/floor)
+      address_line_2: pick("subpremise"),
+      // locality first, fallback to admin level 2 (common Aus pattern)
+      address_city: pick("locality") || pick("administrative_area_level_2"),
+      address_state: pick("administrative_area_level_1"),
+      address_country: pick("country"),
+      address_postal_code: pick("postal_code"),
+      lat: data.location?.latitude ?? 0,
+      lng: data.location?.longitude ?? 0,
+    }));
+
+    setAddressQuery("");
+    setAddressSuggestions([]);
   };
 
   function updateCustomerAddress(data) {
@@ -239,7 +273,14 @@ export default function CustomerAddressesTab(props: any) {
       lat: data.location?.latitude || 0,
       lng: data.location?.longitude || 0,
     });
+    getCustomerAddresses();
   }
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery("");
+      setSuggestions([]);
+    }
+  }, [isOpen]);
 
   return (
     <>
@@ -267,95 +308,80 @@ export default function CustomerAddressesTab(props: any) {
                 <strong>Address Details</strong>
               </p>
 
-              <Flex alignItems="center" mb="16px">
+              <Box mb="16px" w="full">
                 <FormLabel
-                  display="flex"
-                  mb="0"
-                  mr="4px"
-                  width="200px"
+                  display="block"
                   fontSize="sm"
                   fontWeight="500"
                   color={textColor}
+                  mb="2"
                 >
                   Search address
                 </FormLabel>
-                <Input
-                  placeholder="Type location"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)} // Update searchQuery as user types
-                  size="lg"
-                />
-                <Flex direction="column">
-                  {suggestions.map((sugg) => {
-                    const fullLabel =
-                      `${sugg.mainText}, ${sugg.secondaryText}`.trim();
-                    return (
-                      <Button
-                        key={sugg.placeId}
-                        onClick={() => handleAddressSelect(sugg.placeId)} // Select this address
-                      >
-                        {fullLabel}
-                      </Button>
-                    );
-                  })}
-                </Flex>
 
-                {/* <GooglePlacesAutocomplete
-                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-                  autocompletionRequest={{
-                    componentRestrictions: {
-                      country: ["au"],
-                    },
-                  }}
-                  minLengthAutocomplete={2}
-                  selectProps={{
-                    // @ts-ignore
-                    googleAddress,
-                    onChange: setGoogleAddress,
-                    styles: {
-                      // @ts-ignore
-                      control: (provided) => ({
-                        ...provided,
-                        paddingLeft: "8px",
-                        height: "48px",
-                        backgroundColor: "white",
-                        border: "1px solid #e3e3e3",
-                        borderRadius: "8px",
-                      }),
-                      // @ts-ignore
-                      singleValue: (provided) => ({
-                        ...provided,
-                        paddingLeft: "8px",
-                        fontFamily: "Manrope",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                      }),
-                      // @ts-ignore
-                      option: (provided) => ({
-                        ...provided,
-                        fontFamily: "Manrope",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                      }),
-                      // @ts-ignore
-                      container: (provided) => ({
-                        ...provided,
-                        width: "100%",
-                      }),
-                      // @ts-ignore
-                      input: (provided) => ({
-                        ...provided,
-                        paddingLeft: "8px",
-                        minWidth: "100",
-                        width: "100%",
-                        fontFamily: "Manrope",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                      }),
-                    },
-                  }}
-                /> */}
-              </Flex>
+                {/* Input + dropdown */}
+                <Box position="relative" w="full" maxW="unset" minW={0}>
+                  <Input
+                    placeholder="Type location"
+                    value={addressQuery}
+                    onChange={(e) => setAddressQuery(e.target.value)}
+                    size="lg"
+                    w="full"
+                    maxW="unset"
+                    minW={0}
+                  />
+
+                  {!!addressSuggestions.length && (
+                    <Box
+                      position="absolute"
+                      top="100%"
+                      left="0"
+                      right="0"
+                      mt="2"
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.200"
+                      borderRadius="8px"
+                      boxShadow="md"
+                      zIndex="popover"
+                      maxH="260px"
+                      overflowY="auto"
+                      p="1"
+                    >
+                      {addressSuggestions?.map((sugg, index) => {
+                        const pred = sugg?.placePrediction;
+                        if (!pred) return null;
+
+                        const main =
+                          pred?.structuredFormat?.mainText?.text ?? "";
+                        const secondary =
+                          pred?.structuredFormat?.secondaryText?.text ?? "";
+                        const fallback = pred?.text?.text ?? "";
+                        const fullLabel =
+                          [main, secondary].filter(Boolean).join(", ") ||
+                          fallback;
+
+                        const placeId = pred?.placeId ?? `sugg-${index}`;
+
+                        return (
+                          <Button
+                            key={placeId}
+                            onClick={() => handleAddressSelect(pred.placeId)}
+                            variant="ghost"
+                            justifyContent="flex-start"
+                            w="full"
+                            whiteSpace="normal"
+                            fontSize="sm"
+                            py="2"
+                          >
+                            {fullLabel}
+                          </Button>
+                        );
+                      })}
+                    </Box>
+                  )}
+                </Box>
+              </Box>
 
               <Flex alignItems="center" mb="16px">
                 <FormLabel
@@ -630,7 +656,7 @@ export default function CustomerAddressesTab(props: any) {
                 </FormLabel>
                 <Textarea
                   isRequired={true}
-                  value={customerAddress.pick_up_notes}
+                  value={customerAddress.pick_up_notes || ""}
                   onChange={(e) =>
                     setCustomerAddress({
                       ...customerAddress,
@@ -675,7 +701,7 @@ export default function CustomerAddressesTab(props: any) {
           </Flex>
 
           {!loading &&
-            customerAddresses?.customerAddresses.data.length >= 0 && (
+            customerAddresses?.customerAddresses?.data?.length >= 0 && (
               <PaginationTable
                 columns={columns}
                 data={customerAddresses?.customerAddresses.data}

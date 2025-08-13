@@ -58,6 +58,7 @@ function CustomerEdit() {
     variables: {
       id: id,
     },
+    skip: !id,
     onCompleted: (data) => {
       if (data?.customer == null) {
         router.push("/admin/customers");
@@ -178,7 +179,7 @@ function CustomerEdit() {
                   </FormLabel>
                   <Textarea
                     name="admin_notes"
-                    value={customer.admin_notes}
+                    value={customer.admin_notes || ""}
                     onChange={(e) =>
                       setCustomer({
                         ...customer,
@@ -203,7 +204,7 @@ function CustomerEdit() {
                   <Textarea
                     fontSize="sm"
                     name="base_notes"
-                    value={customer.base_notes}
+                    value={customer.base_notes|| ""}
                     onChange={(e) =>
                       setCustomer({
                         ...customer,
