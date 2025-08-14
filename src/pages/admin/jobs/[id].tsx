@@ -121,9 +121,11 @@ function JobEdit() {
   const [_pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
+  // const { id } = router.query;
   const routeReady = router.isReady && typeof router.query.id === "string";
   const jobId = routeReady ? parseInt(router.query.id as string, 10) : null;
   const id = jobId;
+  // console.log(id, "ids");
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);
   const [tabId, setActiveTab] = useState(1);
@@ -295,7 +297,7 @@ function JobEdit() {
     },
     skip: !routeReady || !id,
     onCompleted: (data) => {
-      if (!isMounted.current) return; // ✅ don't set state after unmount
+      if (!isMounted.current) return; 
 
       if (!data?.job) {
         router.push("/admin/jobs");
@@ -450,7 +452,7 @@ function JobEdit() {
     },
   });
 
-  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+ const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     context: { noAuthRedirect: true },
     onCompleted: (data) => {
       if (!isMounted.current) return; // ✅ skip if unmounted
