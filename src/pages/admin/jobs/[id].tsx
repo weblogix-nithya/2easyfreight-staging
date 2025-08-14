@@ -1,27 +1,12 @@
 // Chakra imports
-import { gql, useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
   Flex,
   FormControl,
   Grid,
-  Input,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Text,
-  Textarea,
   useColorModeValue,
-  useDisclosure, 
   useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
@@ -120,24 +105,6 @@ export function useIsMounted() {
   return isMounted;
 }
 
-const GET_JOB_EMAIL_TEMPLATE_QUERY = gql`
-  query GetJobEmailTemplate($id: ID!, $reason: String!, $extra_details: String) {
-    getJobEmailTemplate(id: $id, reason: $reason, extra_details: $extra_details) {
-      subject
-      body
-    }
-  }
-`;
-
-const SEND_JOB_EMAIL = gql`
-  mutation SendJobEmail($id: ID!, $reason: String!, $extra_details: String, $subject: String, $body: String) {
-    sendJobEmail(id: $id, reason: $reason, extra_details: $extra_details, subject: $subject, body: $body) {
-      success
-      message
-    }
-  }
-`;
-
 function JobEdit() {
   const toast = useToast();
   const isMounted = useIsMounted();
@@ -154,9 +121,11 @@ function JobEdit() {
   const [_pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
+  // const { id } = router.query;
   const routeReady = router.isReady && typeof router.query.id === "string";
   const jobId = routeReady ? parseInt(router.query.id as string, 10) : null;
   const id = jobId;
+  // console.log(id, "ids");
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);
   const [tabId, setActiveTab] = useState(1);
@@ -220,118 +189,7 @@ function JobEdit() {
     cbm_rate: 0,
     minimum_charge: 0,
   });
-  const [getEmailTemplate] = useLazyQuery(GET_JOB_EMAIL_TEMPLATE_QUERY);
-  const [sendJobEmail] = useMutation(SEND_JOB_EMAIL);
-  const [selectedReason, setSelectedReason] = useState<string | null>(null);
-  const [isEmailSending, setIsEmailSending] = useState(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [previewEmailContent, setPreviewEmailContent] = useState<{
-    subject: string;
-    body: string;
-  } | null>(null);
 
-  const emailReasons = [
-    "Futile",
-    "Update CBM / Weight",
-    "Waiting Time",
-    "Late Delivery",
-    "Move Job Date"
-  ]
-
-  const handlePreviewEmail = async (reason: string) => {
-    setSelectedReason(reason);
-    try {
-      const { data } = await getEmailTemplate({
-        variables: {
-          id: job.id,
-          reason,
-          extra_details: "",
-        },
-        fetchPolicy: "no-cache",
-      });
-
-      if (data?.getJobEmailTemplate) {
-        setSubject(data.getJobEmailTemplate.subject || "");
-        setBody(data.getJobEmailTemplate.body || "");
-        onOpen();
-      } else {
-        toast({
-          title: "No email content found",
-          description: "The backend did not return a template.",
-          status: "warning",
-          duration: 4000,
-          isClosable: true,
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error fetching email template",
-        description: error.message,
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handleSendEmail = async () => {
-    if (!selectedReason) {
-      toast({
-        title: "No reason selected",
-        description: "Please select a reason from the Send Email dropdown.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    setIsEmailSending(true);
-    try {
-      console.log("Sending email with:", {
-        id: job.id,
-        reason: selectedReason,
-        extra_details: "",
-      });
-      const res = await sendJobEmail({
-        variables: {
-          id: job.id,
-          reason: selectedReason,
-          extra_details: "",
-          subject: subject,
-          body: body,
-        },
-      });
-      if (res.data.sendJobEmail.success) {
-        toast({
-          title: "Email sent successfully",
-          description: res.data.sendJobEmail.message,
-          status: "success",
-          duration: 4000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: "Email sending failed",
-          description: res.data.sendJobEmail.message,
-          status: "error",
-          duration: 4000,
-          isClosable: true,
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error sending email",
-        description: error.message,
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-    } finally {
-      setIsEmailSending(false);
-    }
-  };
   const tabs = [
     {
       id: 1,
@@ -439,7 +297,7 @@ function JobEdit() {
     },
     skip: !routeReady || !id,
     onCompleted: (data) => {
-      if (!isMounted.current) return; // ✅ don't set state after unmount
+      if (!isMounted.current) return; 
 
       if (!data?.job) {
         router.push("/admin/jobs");
@@ -594,7 +452,7 @@ function JobEdit() {
     },
   });
 
-  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+ const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     context: { noAuthRedirect: true },
     onCompleted: (data) => {
       if (!isMounted.current) return; // ✅ skip if unmounted
@@ -1874,27 +1732,6 @@ function JobEdit() {
                       </Button>
                     )}
 
-                    <Menu>
-                      <MenuButton 
-                        as={Button} 
-                        variant="primary"
-                        isDisabled={isEmailSending}
-                        mr="2"
-                      >
-                        {isEmailSending ? "Sending Email..." : "Send Email"}
-                      </MenuButton>
-                      <MenuList>
-                        {emailReasons.map((reason) => (
-                          <MenuItem
-                            key={reason}
-                            onClick={() => handlePreviewEmail(reason)}
-                          >
-                            {reason}
-                          </MenuItem>
-                        ))}
-                      </MenuList>                      
-                    </Menu>
-
                     <Button
                       hidden={!isAdmin}
                       variant="primary"
@@ -1995,26 +1832,7 @@ function JobEdit() {
             </Grid>
           )}
         </Grid>
-      </Box>      
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Email Preview</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Text fontWeight="bold" mb={2}>Subject:</Text>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} mb={4} />
-            <Text fontWeight="bold" mb={2}>Body:</Text>
-            <Textarea value={body} onChange={(e) => setBody(e.target.value)} minH="300px" whiteSpace="pre-line" />
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={() => {handleSendEmail(); onClose();}}>
-              Send Email
-            </Button>
-            <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      </Box>
     </AdminLayout>
   );
 }
