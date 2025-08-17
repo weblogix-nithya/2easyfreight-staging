@@ -41,7 +41,7 @@ import { australianStates, getMapIcon, jobTypes, today } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import moment from "moment";
-import React, {  useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { setAvailableDrivers } from "store/driversSlice";
@@ -244,13 +244,13 @@ export default function JobAllocationIndex() {
   // }, [debouncedCenterChangeHandler]);
 
   const debouncedCenterChangeHandler = useMemo(
-  () => debounce((data: any) => setCenter(data), 300),
-  [setCenter]
-);
+    () => debounce((data: any) => setCenter(data), 300),
+    [setCenter],
+  );
 
-useEffect(() => {
-  return () => debouncedCenterChangeHandler.cancel?.();
-}, [debouncedCenterChangeHandler]);
+  useEffect(() => {
+    return () => debouncedCenterChangeHandler.cancel?.();
+  }, [debouncedCenterChangeHandler]);
 
   const [_getRoute, {}] = useLazyQuery(GET_ROUTE_QUERY, {
     variables: {
@@ -891,7 +891,7 @@ useEffect(() => {
               zoom={zoom}
               markers={markers}
               drivers={visibleDrivers}
-               onCenterChanged={debouncedCenterChangeHandler}  
+              onCenterChanged={debouncedCenterChangeHandler}
               onZoomChanged={(data: any) => setZoom(data)}
               onMarkerClick={(data: any) => onMarkerClick(data)}
               onDriverClick={(data: any) => onDriverClick(data)}
@@ -900,6 +900,9 @@ useEffect(() => {
                   ? true
                   : false
               }
+              // options={{
+              //   mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID, // 👈 dynamically load from env
+              // }}
             />
           </GridItem>
         </Grid>
