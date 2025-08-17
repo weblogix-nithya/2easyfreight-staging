@@ -1,4 +1,4 @@
-import { Avatar, HStack, Text, Box } from "@chakra-ui/react";
+import { Avatar, Box } from "@chakra-ui/react";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Driver } from "graphql/driver";
@@ -18,7 +18,7 @@ const AvailableDriverCard = ({ driver }: AvailableDriverCardProps) => {
       return false;
     }
   }
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [_imageUrl, setImageUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (driver?.media_url) {

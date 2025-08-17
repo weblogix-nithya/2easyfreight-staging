@@ -47,11 +47,16 @@ import { formatCurrency, formatFloat } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 function InvoiceEdit() {
+  const generatingRef = useRef(false);
+  const lastUrlRef = useRef<string | null>(null);
+
+  const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
   let menuBg = useColorModeValue("white", "navy.800");
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
@@ -69,7 +74,7 @@ function InvoiceEdit() {
   const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
   );
-  const [isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
+  const [_isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
@@ -124,7 +129,7 @@ function InvoiceEdit() {
     skip: !invoice?.job_id,
     onCompleted: (data) => {
       // console.log(data,'d')
-           // jobDestinations without is_pickup
+      // jobDestinations without is_pickup
       let _jobDestinations = data.job.job_destinations;
 
       setJobDestinations(_jobDestinations);
@@ -224,7 +229,7 @@ function InvoiceEdit() {
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, { }] = useMutation(
+  const [handleUpdateApproveInvoice, {}] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
@@ -317,7 +322,6 @@ function InvoiceEdit() {
           setIsHandleUpdateInvoiceLineItemsLoading(false);
           handleGenerateInvoicePdf();
           setIsInvoicePdfgenerate(false);
-
         }, 5000);
       },
       onError: (error) => {
@@ -325,7 +329,7 @@ function InvoiceEdit() {
       },
     });
 
-  const [_handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [_handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -343,7 +347,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -360,7 +364,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleGenerateInvoicePdf, { }] = useMutation(
+  const [handleGenerateInvoicePdf, {}] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -393,7 +397,7 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleDeleteInvoiceLineItem, { }] = useMutation(
+  const [handleDeleteInvoiceLineItem, {}] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -505,10 +509,12 @@ function InvoiceEdit() {
                       mb="0"
                       ms="10px"
                       className="!h-[39px]"
-                      onClick={() => {
+                      onClick={async () => {
+                        lastUrlRef.current = invoice?.job?.invoice_url ?? null; // remember previous URL
+                        generatingRef.current = true; // mark we triggered a generation
+                        await handleGenerateInvoicePdf(); // your existing mutation/call
                         setIsInvoicePdfUpdating(true);
                         setIsInvoicePdfgenerate(true);
-                        handleGenerateInvoicePdf();
                       }}
                       isLoading={invoiceLoading}
                       hidden={isCustomer}
@@ -663,9 +669,12 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
-                    <Box pl={6}>Delivery :
+                    <Box pl={6}>
+                      Delivery :
                       {jobDestinations
-                        .filter((destination) => destination.is_pickup === false)
+                        .filter(
+                          (destination) => destination.is_pickup === false,
+                        )
                         .map((destination) => destination.address_city)
                         .join(", ")}
                     </Box>
@@ -818,7 +827,8 @@ function InvoiceEdit() {
                                   let items = [...invoiceLineItems];
                                   let item = { ...invoiceLineItems[index] };
                                   item[e.target.name] = e.target.value || 0;
-                                  item.unit_amount = parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
+                                  item.unit_amount =
+                                    parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
                                   item.line_amount = (
                                     (item.quantity || 0) * item.unit_amount
                                   ).toFixed(2);
@@ -841,7 +851,6 @@ function InvoiceEdit() {
                                 isLoaded={!invoiceLoading}
                                 w="75%"
                               >
-
                                 {formatCurrency(
                                   invoiceLineItem.unit_amount ?? 0,
                                   invoiceLineItem.currency,
@@ -1057,69 +1066,43 @@ function InvoiceEdit() {
                 )}
 
               {invoice.job && invoice.job.invoice_url != null && (
-                // <Link
-                //   href={invoice.job.invoice_url}
-                //   isExternal
-                //   className="w-[49%]"
-                // >
-                //   <Button
-                //     variant="secondary"
-                //     className="w-[100%]"
-                //     isLoading={invoiceLoading || isInvoicePdfUpdating}
-                //     isDisabled={isInvoicePdfUpdating}
-                //   >
-                //     Download PDF
-                //   </Button>
-                // </Link>
-                 <Button
-                        mx="5px"
-                        variant="secondary"
-                        isLoading={isInvoicePdfgenerate}
-                        isDisabled={invoiceLoading}
-                        // hidden={isCustomer}
-                        onClick={() => {
-                          // setIsInvoicePdfgenerate(true);
-                          if (isInvoicePdfUpdating) {
-                            toast({
-                              title: "Waiting for the updated PDF...",
-                              status: "info",
-                              duration: 5000,
-                              isClosable: true,
-                            });
+                <Button
+                  mx="5px"
+                  variant="secondary"
+                  isLoading={isInvoicePdfgenerate}
+                  isDisabled={invoiceLoading}
+                  // hidden={isCustomer}
+                  onClick={async () => {
+                    try {
+                      // If a generation just happened, give backend a moment
+                      if (generatingRef.current) {
+                        await sleep(3500); // adjust if needed (2–5s)
+                      }
 
-                            setTimeout(async () => {
-                              await getInvoice(); // Refresh quote to get latest PDF
-                              setIsInvoicePdfgenerate(false); // Reset flag
+                      // Always refetch once to get the freshest URL
+                      const { data } = await getInvoice();
 
-                              toast({
-                                title:
-                                  "Invoice PDF is refreshed. Try Downloading now...",
-                                status: "success",
-                                duration: 3000,
-                                isClosable: true,
-                              });
+                      // Extract URL from the query result
+                      const freshUrl = data?.invoice?.job?.invoice_url ?? null;
 
-                              // if (quote?.quote_url) {
-                              //   window.open(
-                              //     quote.quote_url,
-                              //     "_blank",
-                              //     "noopener,noreferrer",
-                              //   );
-                              // }
-                            }, 10000); // Wait 10 sec
-                          } else {
-                            if (invoice.job.invoice_url) {
-                              window.open(
-                               invoice.job.invoice_url,
-                                "_blank",
-                                "noopener,noreferrer",
-                              );
-                            }
-                          }
-                        }}
-                      >
-                        Download PDF
-                      </Button>
+                      // Decide which URL to open
+                      const urlToOpen =
+                        freshUrl ||
+                        invoice?.job?.invoice_url || // fallback to prop
+                        lastUrlRef.current || // fallback to cached
+                        null;
+
+                      if (urlToOpen) {
+                        window.open(urlToOpen, "_blank", "noopener,noreferrer");
+                      }
+                    } finally {
+                      // Reset the "generating" flag
+                      generatingRef.current = false;
+                    }
+                  }}
+                >
+                  Download PDF
+                </Button>
               )}
               {invoice.invoice_status_id != undefined &&
                 invoice.invoice_status_id != "1" && (

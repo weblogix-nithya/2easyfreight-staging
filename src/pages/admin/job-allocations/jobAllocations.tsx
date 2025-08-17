@@ -41,7 +41,7 @@ import { australianStates, getMapIcon, jobTypes, today } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import moment from "moment";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {  useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { setAvailableDrivers } from "store/driversSlice";
@@ -61,7 +61,7 @@ export default function JobAllocationIndex() {
   );
   const [date, setDate] = useState(today);
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(100);
+  const [queryPageSize, _setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
@@ -74,7 +74,7 @@ export default function JobAllocationIndex() {
   // const [selectedDrivers, setSelectedDrivers] = useState([]);
   const [_selectedJob, setSelectedJob] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
-  const [selectedRouteId, setSelectedRouteId] = useState(null);
+  const [selectedRouteId, _setSelectedRouteId] = useState(null);
   const [selectedDriverId, setSelectedDriverId] = useState(null);
   const [drivers, setDrivers] = useState([]);
   const [selectedJobIdRouting, setSelectedJobIdRouting] = useState(null);
@@ -228,15 +228,31 @@ export default function JobAllocationIndex() {
   const [center, setCenter] = useState(null);
   const [markers, setMarkers] = useState([]);
 
-  const centerChangeHandler = (data: any) => {
-    setCenter(data);
-  };
-  const debouncedCenterChangeHandler = useCallback(
-    debounce(centerChangeHandler, 300),
-    [],
-  );
+  // const centerChangeHandler = (data: any) => {
+  //   setCenter(data);
+  // };
+  // const debouncedCenterChangeHandler = useMemo(
+  //   () => debounce(centerChangeHandler, 300),
+  //   [centerChangeHandler],
+  // );
 
-  const [getRoute, {}] = useLazyQuery(GET_ROUTE_QUERY, {
+  // // cleanup to avoid memory leaks
+  // useEffect(() => {
+  //   return () => {
+  //     debouncedCenterChangeHandler.cancel?.();
+  //   };
+  // }, [debouncedCenterChangeHandler]);
+
+  const debouncedCenterChangeHandler = useMemo(
+  () => debounce((data: any) => setCenter(data), 300),
+  [setCenter]
+);
+
+useEffect(() => {
+  return () => debouncedCenterChangeHandler.cancel?.();
+}, [debouncedCenterChangeHandler]);
+
+  const [_getRoute, {}] = useLazyQuery(GET_ROUTE_QUERY, {
     variables: {
       id: selectedRouteId,
     },
@@ -344,8 +360,8 @@ export default function JobAllocationIndex() {
   }
 
   const {
-    loading,
-    error,
+    // loading,
+    // error,
     data: jobs,
     refetch: getJobs,
   } = useQuery(GET_JOBS_QUERY, {
@@ -361,7 +377,7 @@ export default function JobAllocationIndex() {
       pick_up_state: australianState,
       // driver_id: null,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       // Removed auto route on load for now
       // if (data.jobs.data[0]) {
       //   data.jobs.data.every((job: any) => {
@@ -385,7 +401,7 @@ export default function JobAllocationIndex() {
     });
     // }
     getJobs();
-  }, [onChangeSearchQuery, state, rightSideBarJob, australianState]);
+  }, [onChangeSearchQuery, state, rightSideBarJob, australianState, getJobs]);
 
   return (
     <AdminLayout>
@@ -875,9 +891,7 @@ export default function JobAllocationIndex() {
               zoom={zoom}
               markers={markers}
               drivers={visibleDrivers}
-              onCenterChanged={(data: any) =>
-                debouncedCenterChangeHandler(data)
-              }
+               onCenterChanged={debouncedCenterChangeHandler}  
               onZoomChanged={(data: any) => setZoom(data)}
               onMarkerClick={(data: any) => onMarkerClick(data)}
               onDriverClick={(data: any) => onDriverClick(data)}
