@@ -316,8 +316,10 @@ export default function JobIndex({}: // initialLoadOnly = false,
             to_at: formatDate(rangeDate[1], false),
           }
         : undefined,
-        has_job_category_ids:1, // mainJobFilter?.has_job_category_ids?.map((o: any) => o.value),
-
+      // has_job_category_ids:[1],
+      has_job_category_ids: mainJobFilter?.has_job_category_ids?.length
+        ? mainJobFilter.has_job_category_ids.map((o:any) => o.value)
+        : [1, 2, 3, 4, 5, 6],
       states: mainJobFilter?.states?.map((o: any) => o.value),
       job_date_at: mainJobFilter?.job_date_at,
       suburbs: mainJobFilter?.suburbs?.map((o: any) => o.value),
@@ -418,7 +420,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       }
 
       setJobFilter(jobMainFilters);
-      console.log(jobMainFilters,'jobMainFilters')
+      console.log(jobMainFilters, "jobMainFilters");
       setMainJobFilter(jobMainFilters);
       _jobFilter = jobMainFilters;
       if (displayName) setMainFilterDisplayNames(displayName);
@@ -518,7 +520,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     isAdmin,
     isCompany,
     isCustomer,
-    is_filter_ticked
+    is_filter_ticked,
   ]);
 
   const debouncedSearch = useMemo(

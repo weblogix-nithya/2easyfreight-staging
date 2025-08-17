@@ -19,6 +19,7 @@ import {
   Tooltip,
   useColorModeValue,
   // useToast,
+  // useToast,
 } from "@chakra-ui/react";
 import { faBoltLightning } from "@fortawesome/free-solid-svg-icons";
 import { faChevronRight } from "@fortawesome/pro-regular-svg-icons";
@@ -40,7 +41,7 @@ import { australianStates, getMapIcon, jobTypes, today } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import moment from "moment";
-import React, { useEffect, useMemo, useState } from "react";
+import React, {  useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { setAvailableDrivers } from "store/driversSlice";
@@ -70,7 +71,7 @@ export default function JobAllocationIndex() {
   const [_selectedVehicleClasses, setSelectedVehicleClasses] = useState([]);
   const [selectedVehicleClassIds, setSelectedVehicleClassIds] = useState([]);
   const [driverOptions, setDriverOptions] = useState([]);
-  const [selectedDrivers, setSelectedDrivers] = useState([]);
+  // const [selectedDrivers, setSelectedDrivers] = useState([]);
   const [_selectedJob, setSelectedJob] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [selectedRouteId, _setSelectedRouteId] = useState(null);
@@ -79,8 +80,12 @@ export default function JobAllocationIndex() {
   const [selectedJobIdRouting, setSelectedJobIdRouting] = useState(null);
   const [selectedRouteIdRouting, setSelectedRouteIdRouting] = useState(null);
   const [pollingSpeed, setPollingSpeed] = useState(60000);
-  const [isInitLoad, setIsInitLoad] = useState(true);
+  // const [isInitLoad, setIsInitLoad] = useState(true);
+  const [selectedDriverIds, setSelectedDriverIds] = useState<number[]>([]);
+  const [hasUserChosenDrivers, setHasUserChosenDrivers] = useState(false);
 
+  // const toast = useToast();
+  // const textColor = useColorModeValue("secondaryGray.900", "white");
   const dispatch = useDispatch();
 
   useQuery(GET_VEHICLE_CLASSES_QUERY, {
@@ -119,64 +124,98 @@ export default function JobAllocationIndex() {
     pollInterval: pollingSpeed,
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      setDrivers([]);
-      data.drivers.data.map((driver: any) => {
-        setDrivers((drivers) => [
-          ...drivers,
-          {
-            lat: driver.lat,
-            lng: driver.lng,
-            icon: driver.media_url,
-            data: driver,
-          },
-        ]);
+      // setDrivers([]);
+      // data.drivers.data.map((driver: any) => {
+      //   setDrivers((drivers) => [
+      //     ...drivers,
+      //     {
+      //       lat: driver.lat,
+      //       lng: driver.lng,
+      //       icon: driver.media_url,
+      //       data: driver,
+      //     },
+      //   ]);
 
-        // Find the index of the selected driver in the selectedDrivers array
-        const selectedIndex = selectedDrivers.findIndex(
-          (selectedDriver) =>
-            parseInt(selectedDriver.data.id) === parseInt(driver.id),
-        );
+      //   // Find the index of the selected driver in the selectedDrivers array
+      //   const selectedIndex = selectedDrivers.findIndex(
+      //     (selectedDriver) =>
+      //       parseInt(selectedDriver.data.id) === parseInt(driver.id),
+      //   );
 
-        // If a matching selected driver is found
-        if (selectedIndex !== -1) {
-          // Update the data of the selected driver
-          selectedDrivers[selectedIndex] = {
-            ...selectedDrivers[selectedIndex], // Keep existing properties
-            lat: driver.lat,
-            lng: driver.lng,
-            icon: driver.media_url,
-            data: driver, // Update with new properties from the driver object
-          };
+      //   // If a matching selected driver is found
+      //   if (selectedIndex !== -1) {
+      //     // Update the data of the selected driver
+      //     selectedDrivers[selectedIndex] = {
+      //       ...selectedDrivers[selectedIndex], // Keep existing properties
+      //       lat: driver.lat,
+      //       lng: driver.lng,
+      //       icon: driver.media_url,
+      //       data: driver, // Update with new properties from the driver object
+      //     };
 
-          // Update the state with the modified selectedDrivers array
-          setSelectedDrivers([...selectedDrivers]);
-        }
+      //     // Update the state with the modified selectedDrivers array
+      //     setSelectedDrivers([...selectedDrivers]);
+      //   }
 
-        if (isInitLoad) {
-          setSelectedDrivers((selectedDrivers) => [
-            ...selectedDrivers,
-            {
-              lat: driver.lat,
-              lng: driver.lng,
-              icon: driver.media_url,
-              data: driver,
-            },
-          ]);
-          setDriverOptions((driverOptions) => [
-            ...driverOptions,
-            {
-              value: parseInt(driver.id),
-              label: driver.full_name,
-              data: driver,
-            },
-          ]);
-          setIsInitLoad(false);
-        }
-      });
+      //   if (isInitLoad) {
+      //     setSelectedDrivers((selectedDrivers) => [
+      //       ...selectedDrivers,
+      //       {
+      //         lat: driver.lat,
+      //         lng: driver.lng,
+      //         icon: driver.media_url,
+      //         data: driver,
+      //       },
+      //     ]);
+      //     setDriverOptions((driverOptions) => [
+      //       ...driverOptions,
+      //       {
+      //         value: parseInt(driver.id),
+      //         label: driver.full_name,
+      //         data: driver,
+      //       },
+      //     ]);
+      //     setIsInitLoad(false);
+      //   }
+      // });
+      const nextDrivers = data.drivers.data.map((driver: any) => ({
+        lat: driver.lat,
+        lng: driver.lng,
+        icon: driver.media_url,
+        data: driver,
+      }));
+      setDrivers(nextDrivers);
+
+      const nextOptions = data.drivers.data.map((driver: any) => ({
+        value: parseInt(driver.id, 10),
+        label: driver.full_name,
+        data: driver,
+      }));
+      setDriverOptions(nextOptions);
+      // setSelectedDrivers((prev) => {
+      //   if (!hasUserChosenDrivers) return nextDrivers;
+      //   const selectedIds = new Set(
+      //     prev.map((d) => parseInt(d.data.id as string, 10)),
+      //   );
+      //   return nextDrivers.filter((d) =>
+      //     selectedIds.has(parseInt(d.data.id as string, 10)),
+      //   );
+      // });
 
       dispatch(setAvailableDrivers(data.drivers.data));
     },
   });
+
+  const visibleDrivers = useMemo(() => {
+    if (!drivers.length) return [];
+    if (!hasUserChosenDrivers || selectedDriverIds.length === 0) {
+      // initial (or cleared) -> show ALL drivers
+      return drivers;
+    }
+    const chosen = new Set(selectedDriverIds);
+    // d.data.id might be string; coerce to number
+    return drivers.filter((d) => chosen.has(Number(d.data.id)));
+  }, [drivers, hasUserChosenDrivers, selectedDriverIds]);
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -192,24 +231,28 @@ export default function JobAllocationIndex() {
   // const centerChangeHandler = (data: any) => {
   //   setCenter(data);
   // };
-  // const debouncedCenterChangeHandler = useCallback(
-  //   debounce(centerChangeHandler, 300),
-  //   [],
+  // const debouncedCenterChangeHandler = useMemo(
+  //   () => debounce(centerChangeHandler, 300),
+  //   [centerChangeHandler],
   // );
 
-  const debouncedCenterChangeHandler = useMemo(() => 
-    debounce((data: any) => {
-      setCenter(data);
-    }, 300),
-  [setCenter]);
+  // // cleanup to avoid memory leaks
+  // useEffect(() => {
+  //   return () => {
+  //     debouncedCenterChangeHandler.cancel?.();
+  //   };
+  // }, [debouncedCenterChangeHandler]);
 
-  useEffect(() => {
-    return () => {
-      debouncedCenterChangeHandler.cancel?.(); // if using lodash.debounce
-    };
-  }, [debouncedCenterChangeHandler]);
-  
-  const [_getRoute, { }] = useLazyQuery(GET_ROUTE_QUERY, {
+  const debouncedCenterChangeHandler = useMemo(
+  () => debounce((data: any) => setCenter(data), 300),
+  [setCenter]
+);
+
+useEffect(() => {
+  return () => debouncedCenterChangeHandler.cancel?.();
+}, [debouncedCenterChangeHandler]);
+
+  const [_getRoute, {}] = useLazyQuery(GET_ROUTE_QUERY, {
     variables: {
       id: selectedRouteId,
     },
@@ -221,7 +264,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getJob, { }] = useLazyQuery(GET_JOB_QUERY, {
+  const [getJob, {}] = useLazyQuery(GET_JOB_QUERY, {
     variables: {
       id: selectedJobId,
     },
@@ -234,7 +277,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getDriverCurrentRoute, { }] = useLazyQuery(
+  const [getDriverCurrentRoute, {}] = useLazyQuery(
     GET_DRIVER_CURRENT_ROUTE_QUERY,
     {
       variables: {
@@ -317,6 +360,8 @@ export default function JobAllocationIndex() {
   }
 
   const {
+    // loading,
+    // error,
     data: jobs,
     refetch: getJobs,
   } = useQuery(GET_JOBS_QUERY, {
@@ -356,26 +401,33 @@ export default function JobAllocationIndex() {
     });
     // }
     getJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChangeSearchQuery, state, rightSideBarJob, australianState]);
+  }, [onChangeSearchQuery, state, rightSideBarJob, australianState, getJobs]);
 
   return (
     <AdminLayout>
       <RightSideBar />
-      <Box pt={{ base: "130px", md: "97px", xl: "97px" }}>
+      <Box
+        pt={{ base: "130px", md: "97px", xl: "97px" }}
+        w="full"
+        overflowX="hidden"
+      >
         <Grid
           templateAreas={`"header header" "nav main"`}
-          gridTemplateRows={"auto 1fr 30px"}
+          gridTemplateRows={"auto 1fr"}
           gridTemplateColumns={{ base: "35% 1fr", md: "400px 1fr" }}
           // h="90vh"
+          h="calc(100vh - 120px)"
           gap="1px"
           color="blackAlpha.700"
           fontWeight="bold"
           className="mk-job-allocation-wrap overflow-hidden"
+          w="full"
+          maxW="100%"
+          minW={0}
         >
           {/* Allocation filter row */}
-          <GridItem area={"header"}>
-            <Flex alignItems="center" className="py-4">
+          <GridItem area={"header"} minW={0}>
+            <Flex alignItems="center" className="py-5" w="full">
               <h1 className="ml-6">Delivery Allocation</h1>
               <Spacer />
               {/* mailto:it@2easyfreight.com */}
@@ -432,7 +484,7 @@ export default function JobAllocationIndex() {
               <Spacer />
               {/* Vehicle and driver selector */}
               <Center>
-                <Box p="2" width="250px">
+                <Box p="2" width="250px" minW={0}>
                   <Select
                     isMulti={true}
                     placeholder="All vehicle types"
@@ -474,40 +526,52 @@ export default function JobAllocationIndex() {
                   ></Select>
                 </Box>
 
-                <Box p="2" width="350px">
+                <Box p="2" width="350px" minW={0}>
                   <Select
                     isMulti={true}
                     placeholder="All available drivers"
-                    defaultValue={[]}
+                    value={
+                      hasUserChosenDrivers
+                        ? driverOptions.filter((opt) =>
+                            selectedDriverIds.includes(opt.value),
+                          )
+                        : [] // no chips initially, but map shows all
+                    }
                     options={driverOptions
-                      .filter((driverOption) =>
+                      .filter((opt) =>
                         selectedVehicleClassIds.includes(
-                          driverOption.data.vehicle_class_id,
+                          opt.data.vehicle_class_id,
                         ),
                       )
-                      .map((driverOption) => ({
-                        ...driverOption,
-                        label: (
-                          <AvailableDriverCard driver={driverOption.data} />
-                        ),
+                      .map((opt) => ({
+                        ...opt,
+                        label: <AvailableDriverCard driver={opt.data} />,
                       }))}
                     onChange={(e) => {
-                      if (e === null || e.length === 0) {
-                        setSelectedDrivers(drivers);
+                      if (!e || e.length === 0) {
+                        setHasUserChosenDrivers(false); // back to showing ALL on map
+                        setSelectedDriverIds([]);
                         return;
                       }
-                      setSelectedDrivers([]);
-                      e.map((driverOption) => {
-                        let selectedDriver = drivers.find(
-                          (driver) =>
-                            parseInt(driver.data.id) === driverOption.value,
-                        );
-                        setSelectedDrivers((selectedDrivers) => [
-                          ...selectedDrivers,
-                          selectedDriver,
-                        ]);
-                      });
+                      setHasUserChosenDrivers(true);
+                      setSelectedDriverIds(
+                        e.map((opt: any) => Number(opt.value)),
+                      );
                     }}
+                    // setHasUserChosenDrivers(true);
+
+                    // setSelectedDrivers([]);
+                    // e.map((driverOption) => {
+                    //   let selectedDriver = drivers.find(
+                    //     (driver) =>
+                    //       parseInt(driver.data.id) === driverOption.value,
+                    //   );
+                    //   setSelectedDrivers((selectedDrivers) => [
+                    //     ...selectedDrivers,
+                    //     selectedDriver,
+                    //   ]);
+                    // });
+                    // }}
                     className="select mb-0"
                     classNamePrefix="two-easy-select"
                     chakraStyles={{}}
@@ -539,9 +603,16 @@ export default function JobAllocationIndex() {
           <GridItem
             area={"nav"}
             className="job-list-column h-full overflow-auto pt-4 px-6 border-t"
-            sx={{ maxWidth: "400px", height: "calc(100vh - 186px)" }}
+            sx={{
+              maxWidth: "400px",
+              height: "calc(100vh - 186px)",
+              overflowY: "auto",
+              overflowX: "hidden",
+            }}
+            // minW={0}
+            //  height="100vh"
           >
-            <Flex className=" flex-col">
+            <Flex className=" flex-col" minW={0}>
               <Flex className="relative">
                 <SearchBar
                   onChangeSearchQuery={onChangeSearchQuery}
@@ -564,9 +635,9 @@ export default function JobAllocationIndex() {
                 />
               </Flex>
               {customerName ||
-                pickupAddress ||
-                pickupAddress ||
-                australianState ? (
+              pickupAddress ||
+              pickupAddress ||
+              australianState ? (
                 <Flex className="pt-4 flex-wrap align-center">
                   <p className="text-sm mr-1">Filters: </p>
 
@@ -811,16 +882,16 @@ export default function JobAllocationIndex() {
           <GridItem
             bg="green.300"
             area={"main"}
-            sx={{ height: "calc(100vh - 186px)" }}
+            sx={{ height: "calc(100vh - 200px)" }}
+            minW={0} // ← add this
+            overflow="hidden"
           >
             <Map
               center={center}
               zoom={zoom}
               markers={markers}
-              drivers={selectedDrivers}
-              onCenterChanged={(data: any) =>
-                debouncedCenterChangeHandler(data)
-              }
+              drivers={visibleDrivers}
+               onCenterChanged={debouncedCenterChangeHandler}  
               onZoomChanged={(data: any) => setZoom(data)}
               onMarkerClick={(data: any) => onMarkerClick(data)}
               onDriverClick={(data: any) => onDriverClick(data)}

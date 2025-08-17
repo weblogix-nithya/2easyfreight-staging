@@ -37,7 +37,7 @@ import {
   faUserLock,
 } from "@fortawesome/free-solid-svg-icons";
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
-import { faTimes} from "@fortawesome/pro-solid-svg-icons";
+import { faTimes } from "@fortawesome/pro-solid-svg-icons";
 // External library imports
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
@@ -136,28 +136,28 @@ function CompanyEdit() {
     updated_at: new Date().toISOString(),
   });
 
-  const {
-    loading: companyLoading,
-    refetch: getCompany,
-  } = useQuery(GET_COMPANY_QUERY, {
-    variables: {
-      id: id,
+  const { loading: companyLoading, refetch: getCompany } = useQuery(
+    GET_COMPANY_QUERY,
+    {
+      variables: {
+        id: id,
+      },
+      skip: !id,
+      onCompleted: (data) => {
+        if (data?.company == null) {
+          router.push("/admin/companies");
+        }
+        setCompany({ ...company, ...data?.company });
+        setInitialCompany({ ...data?.company });
+        setRateCardUrl(data?.company.rate_card_url);
+        setLogoUrl(data?.company.logo_url);
+      },
+      onError(error) {
+        // console.log("onError");
+        console.log(error);
+      },
     },
-    skip: !id,
-    onCompleted: (data) => {
-      if (data?.company == null) {
-        router.push("/admin/companies");
-      }
-      setCompany({ ...company, ...data?.company });
-      setInitialCompany({ ...data?.company });
-      setRateCardUrl(data?.company.rate_card_url);
-      setLogoUrl(data?.company.logo_url);
-    },
-    onError(error) {
-      // console.log("onError");
-      console.log(error);
-    },
-  });
+  );
   const hasCompanyChanges = () => {
     // Skip comparison if company data hasn't been loaded yet
     if (!initialCompany.id || !company.id) return false;
@@ -815,10 +815,11 @@ function CompanyEdit() {
     {
       variables: {
         input: {
-          id: selectCustomerId,
+          id: Number(selectCustomerId),
           company_id: null,
         },
       },
+
       onCompleted: () => {
         toast({
           title: "Customer removed",
@@ -1247,7 +1248,7 @@ function CompanyEdit() {
 
                         <Textarea
                           name="admin_notes"
-                          value={company.admin_notes ||""}
+                          value={company.admin_notes || ""}
                           onChange={(e) =>
                             setCompany({
                               ...company,
@@ -1276,7 +1277,7 @@ function CompanyEdit() {
                         <Flex className="flex-col w-full max-w-md">
                           <Textarea
                             name="base_notes"
-                            value={company.base_notes ||""}
+                            value={company.base_notes || ""}
                             onChange={(e) =>
                               setCompany({
                                 ...company,
