@@ -1122,6 +1122,40 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
+                          Weight (kg/cubic)
+                        </FormLabel>
+                        <Input
+                          isRequired
+                          type="number"
+                          name="weight_per_cubic"
+                          value={company.weight_per_cubic}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              [e.target.name]: e.target.value ? parseInt(e.target.value, 10) : ""
+                            })
+                          }
+                          placeholder=""
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          ms={{ base: "0px", md: "0px" }}
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
                           Company Logo
                         </FormLabel>
                         <Flex
@@ -1753,7 +1787,7 @@ function CompanyEdit() {
                                 )}
                                 options={
                                   (groupedSeafreights as Record<string, any[]>)[
-                                    selectedState
+                                  selectedState
                                   ] || []
                                 }
                                 onChange={handleRegionChange}
