@@ -908,6 +908,7 @@ export const getColumns = (
   withMedia: boolean,
   dynamicTableUsers?: DynamicTableUser[],
 ) => {
+  console.log("dynamicTableUsers", dynamicTableUsers, "isAdmin", isAdmin, "isCustomer", isCustomer, "withMedia", withMedia)
   if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
     return [
       {
