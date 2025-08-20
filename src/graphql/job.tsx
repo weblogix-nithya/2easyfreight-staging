@@ -219,8 +219,8 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
   query GroupedPaginatedJobs(
     $query: String
     $page: Int!
+    $per_page: Int
     $orderBy: [OrderByClause!]
-    $orderByRelationship: [OrderByRelationshipInput!]
     $today: DateTime
     $driver_id: ID
     $customer_id: ID
@@ -251,8 +251,8 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
     groupedPaginatedJobs(
       query: $query
       page: $page
+      per_page: $per_page
       orderBy: $orderBy
-      orderByRelationship: $orderByRelationship
       today: $today
       driver_id: $driver_id
       customer_id: $customer_id

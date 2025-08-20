@@ -89,7 +89,7 @@ const JobStatusDateFilter = ({
         >
           <Flex align="center" fontSize="sm" color="gray.600" mt={1}>
             <InfoOutlineIcon mr={1} />
-            Show images for &quot;Pickup From&quot; and &quot;Delivery Address&quot;
+            Show images for &quot;Pickup Address and Name&quot; and &quot;Delivery Address and Name&quot;
           </Flex>
         </Checkbox>
 

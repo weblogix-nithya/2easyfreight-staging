@@ -707,123 +707,143 @@ export const AdminNotesCell = ({ row }: any) => {
 export const DeliveryCell = ({ row }: any) => {
   return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
 };
-// JobTableColumns.tsx
 
-export const columnsWithoutMedia = [
-  {
-    id: "pick_up_destination.address_formatted",
-    Header: "Pickup From",
-    Cell: PickupAddressWithTimewithoutMediaCell, // Cell without media
+const MEDIA_CELL: Record<
+  string, 
+  { with: any; without: any }
+> = {
+  "pick_up_destination.address_formatted,pick_up_destination.address_business_name": {
+    with: PickupAddressWithTimeCell,
+    without: PickupAddressWithTimewithoutMediaCell,
   },
-  {
-    id: "job_destinations.address",
-    Header: "Delivery Address",
-    Cell: JobDestinationWithBusinessNamewithoutMediaCell, // Cell without media
+  "job_destinations.address,job_destinations.address_business_name": {
+    with: JobDestinationWithBusinessNameCell,
+    without: JobDestinationWithBusinessNamewithoutMediaCell,
   },
-];
+};
 
-export const columnsWithMedia = [
-  {
-    id: "pick_up_destination.address_formatted",
-    Header: "Pickup From",
-    Cell: PickupAddressWithTimeCell, // Cell with media
-  },
-  {
-    id: "job_destinations.address",
-    Header: "Delivery Address",
-    Cell: JobDestinationWithBusinessNameCell, // Cell with media
-  },
-];
+// Replace the Cell for specific columns based on withMedia flag
+function applyMediaCells(cols: any[], withMedia: boolean): any[] {
+  return cols.map((col) => {
+    const media = MEDIA_CELL[col.id];
+    if (!media) return col;
+    return {
+      ...col,
+      Cell: withMedia ? media.with : media.without,
+    };
+  });
+}
+
+// de-dupe helper (keeps first occurrence)
+function uniqueById(cols: any[]): any[] {
+  const seen = new Set<string>();
+  return cols.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
+}
+
+// export const columnsWithoutMedia = [
+//   {
+//     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+//     Header: "Pickup Address and Name",
+//     Cell: PickupAddressWithTimewithoutMediaCell, // Cell without media
+//   },
+//   {
+//     id: "job_destinations.address,job_destinations.address_business_name",
+//     Header: "Delivery Address and Names",
+//     Cell: JobDestinationWithBusinessNamewithoutMediaCell, // Cell without media
+//   },
+// ];
+
+// export const columnsWithMedia = [
+//   {
+//     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+//     Header: "Pickup Address and Name",
+//     Cell: PickupAddressWithTimeCell, // Cell with media
+//   },
+//   {
+//     id: "job_destinations.address,job_destinations.address_business_name",
+//     Header: "Delivery Address and Name",
+//     Cell: JobDestinationWithBusinessNameCell, // Cell with media
+//   },
+// ];
 
 export const tableColumn = [
   {
     id: "name",
     Header: "Delivery ID",
-    // accessor: "row?.original?.job?.name" as const,
     Cell: DeliveryCell,
     // width: "100px",
   },
   {
     id: "company.name",
     Header: "Booked By",
-    // accessor: "company.name" as const,
     Cell: BookedByCell, // Use the new cell component
     // CellExport: BookedByCellExport,
   },
   {
     id: "reference_no",
     Header: "Customer Reference",
-    // accessor: "reference_no" as const,
     Cell: CustomerReferenceCell,
   },
   {
     id: "job_category.name",
     Header: "category",
-    // accessor: "job_category.name" as const,
     Cell: CategoryCell,
   },
   {
     id: "job_type.name",
     Header: "Type",
-    // accessor: "job_type.name" as const,
     Cell: JobTypeCell, // Add this line
     // width: "100px",
   },
   {
     id: "job_status.name",
     Header: "Status",
-    // accessor: "job_status.name" as const,
     Cell: StatusCell, // Add this line
     // width: "100px",
   },
   {
     id: "ready_at",
     Header: "Date",
-    // accessor: "ready_at" as const,
     Cell: ReadyAtCell, // Add this line
     // type: "date",
   },
-  // {
-  //   id: "pick_up_destination.address_formatted",
-  //   Header: "Pickup From",
-  //   // accessor: "pick_up_address" as const,
-  //   Cell: PickupAddressCell, // Add this line
-  //   // width: "150px",
-  // },
   {
-    id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-    Header: "Pickup Address and Name ",
-    // accessor:
-    //   "pick_up_destination.address_formatted,pick_up_destination.address_business_name" as const,
-    // width: "200px",
-    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
-    CellExport: PickupAddressWithTimeCellExport,
+    id: "pick_up_destination.address_formatted",
+    Header: "Pickup From",
+    Cell: PickupAddressCell, // Add this line
+    // width: "150px",
   },
+  // {
+  //   id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+  //   Header: "Pickup Address and Name ",
+  //   // width: "200px",
+  //   Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
+  //   CellExport: PickupAddressWithTimeCellExport,
+  // },
   {
     id: "pick_up_destination.address_business_name",
     Header: "Pickup Business Name",
-    // accessor: "pick_up_destination.address_business_name" as const,
     Cell: PickupBusinessNameCell, // Add this line
   },
-  // {
-  //   id: "job_destinations.address",
-  //   Header: "Delivery Address",
-  //   width: "100px",
-  //   Cell: JobDestinationsCell,
-  //   CellExport: JobDestinationsCellExport,
-  // },
+  {
+    id: "job_destinations.address",
+    Header: "Delivery Address", 
+    width: "100px",
+    Cell: JobDestinationsCell,
+    CellExport: JobDestinationsCellExport,
+  },
   {
     id: "job_destinations.address_business_name",
     Header: "Delivery Business Name",
     Cell: JobDestinationBusinessNameCell,
     CellExport: JobDestinationBusinessNameCellExport,
   },
-  {
-    id: "job_destinations.address,job_destinations.address_business_name",
-    Header: "Delivery Address and Name",
-    Cell: JobDestinationWithBusinessNamewithoutMediaCell,
-    CellExport: JobDestinationWithBusinessNameCellExport,
-  },
+  // {
+  //   id: "job_destinations.address,job_destinations.address_business_name",
+  //   Header: "Delivery Address and Name",
+  //   Cell: JobDestinationWithBusinessNamewithoutMediaCell,
+  //   CellExport: JobDestinationWithBusinessNameCellExport,
+  // },
   {
     id: "job_category.name,ready_at,drop_at",
     Header: "Ready By / Drop by",
@@ -833,14 +853,12 @@ export const tableColumn = [
   {
     id: "timeslot",
     Header: "Timeslot",
-    // accessor: "timeslot" as const,
     Cell: TimeslotCell, // Add this line
     // width: "50px",
   },
   {
     id: "last_free_at",
     Header: "Last Free Day",
-    // accessor: "last_free_at" as const,
     Cell: LastFreeAtCell, // Add this line
     // type: "date",
   },
@@ -877,7 +895,6 @@ export const tableColumn = [
   {
     id: "extras",
     Header: "Extras",
-    // accessor: "extras" as const,
     Cell: ItemsExtrasCell,
     // width: "100px",
   },
@@ -889,7 +906,6 @@ export const tableColumn = [
   {
     id: "driver.full_name",
     Header: "Drivers",
-    // accessor: "row?.original?.job?.driver.full_name" as const,
     Cell: DriverCell,
     enableSorting: true,
   },
@@ -906,45 +922,36 @@ export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
   withMedia: boolean,
-  dynamicTableUsers?: DynamicTableUser[],
+  dynamicTableUsers?: DynamicTableUser[], // required by outputDynamicTable
 ) => {
-  console.log("dynamicTableUsers", dynamicTableUsers, "isAdmin", isAdmin, "isCustomer", isCustomer, "withMedia", withMedia)
-  if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
-    return [
-      {
-        id: "selection",
-        // The header can use the table's getToggleAllRowsSelectedProps method
-        // to render a checkbox
-        Header: ({ getToggleAllRowsSelectedProps }: any) => (
-          <div>
-            <IndeterminateCheckbox
-              {...getToggleAllRowsSelectedProps()}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
-              }}
-            />
-          </div>
-        ),
-        // The cell can use the individual row's getToggleRowSelectedProps method
-        // to render a checkbox
-        Cell: ({ row }: any) => {
-          return (
-            <div
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent the row click from triggering the checkbox action
-              }}
-            >
-              <IndeterminateCheckbox
-                {...row.getToggleRowSelectedProps()}
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
-                }}
-              />
-            </div>
-          );
-        },
-      },
-      ...tableColumn,
+  // 1) Selection checkbox column
+  const base: any[] = [
+    {
+      id: "selection",
+      Header: ({ getToggleAllRowsSelectedProps }: any) => (
+        <div>
+          <IndeterminateCheckbox
+            {...getToggleAllRowsSelectedProps()}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      ),
+      Cell: ({ row }: any) => (
+        <div>
+          <IndeterminateCheckbox
+            {...row.getToggleRowSelectedProps()}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  // 2) If no config yet, show your default tableColumn only
+  if (!dynamicTableUsers || dynamicTableUsers.length === 0) {
+    const cols = uniqueById([
+      ...base,
+      ...tableColumn, // your static defaults
       {
         id: "actions",
         Header: "Actions",
@@ -953,71 +960,37 @@ export const getColumns = (
         isEdit: isAdmin,
         isTracking: isCustomer,
       },
-    ];
+    ]);
+    // Swap Cells for the special two if they exist in tableColumn
+    return applyMediaCells(cols, withMedia);
   }
 
-  const dynamicColumns = outputDynamicTable(dynamicTableUsers, tableColumn);
-
-  var columns: any[] = [
-    {
-      id: "selection",
-      // The header can use the table's getToggleAllRowsSelectedProps method
-      // to render a checkbox
-      Header: ({ getToggleAllRowsSelectedProps }: any) => (
-        <div>
-          <IndeterminateCheckbox
-            {...getToggleAllRowsSelectedProps()}
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
-            }}
-          />
-        </div>
-      ),
-      // The cell can use the individual row's getToggleRowSelectedProps method
-      // to render a checkbox
-      Cell: ({ row }: any) => {
-        // console.log("Rendering row checkbox", row.getToggleRowSelectedProps());
-        return (
-          <div>
-            <IndeterminateCheckbox
-              {...row.getToggleRowSelectedProps()}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
-              }}
-            />
-          </div>
-        );
-      },
-    },
+  // 3) Build from dynamic selection
+  // NOTE: outputDynamicTable should only include columns that are active:true.
+  let columns = [
+    ...base,
+    ...outputDynamicTable(dynamicTableUsers, tableColumn),
   ];
 
-  // Add dynamic columns and ensure no duplicates
-  dynamicColumns.forEach((col: any) => {
-    if (!columns.some((existingColumn) => existingColumn.id === col.id)) {
-      columns.push(col);
-    }
-  });
+  // 4) Swap only the Cell for the 2 special fields based on withMedia
+  columns = applyMediaCells(columns, withMedia);
 
-  const columnsToAdd = withMedia ? columnsWithMedia : columnsWithoutMedia;
-  columnsToAdd.forEach((col: any) => {
-    if (!columns.some((existingColumn) => existingColumn.id === col.id)) {
-      columns.push(col);
-    }
-  });
-
-  if (!columns.some((col) => col.id === "actions")) {
-    columns.push({
+  // 5) Ensure Actions at the end and de-dupe
+  columns = uniqueById([
+    ...columns,
+    {
       id: "actions",
       Header: "Actions",
-      accessor: "id",
+      accessor: "id" as const,
       isView: isCustomer,
       isEdit: isAdmin,
       isTracking: isCustomer,
-    });
-  }
+    },
+  ]);
 
   return columns;
 };
+
 
 export const getBulkAssignColumns = (
   isAdmin: boolean,

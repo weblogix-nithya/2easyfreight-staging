@@ -219,7 +219,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       skip: !userId,
       notifyOnNetworkStatusChange: true,
       onCompleted: (data) => {
-        console.log("dynamicTableData =>", data.dynamicTableUsers.data);
+        // console.log("dynamicTableData =>", data.dynamicTableUsers.data);
         setDynamicTableUsers(
           data.dynamicTableUsers.data.filter(
             (item: DynamicTableUser) => item.is_active == true,
@@ -333,13 +333,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
     [is_filter_ticked, mainJobFilter, baseGroupedVars],
   );
 
-  console.log(
-    is_filter_ticked, "is_filter_ticked",
-    mainJobFilter, "mainJobFilter",
-    filters, "filters",
-    jobMainFilters, "jobmainfilters", "tik",
-  );
-
   const {
     data: groupedJobs,
     loading: loadingGroupedJobs,
@@ -348,8 +341,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
     variables: groupedVars, 
     skip: !userId || !isAdmin,
     fetchPolicy: "network-only",
-    onCompleted: (data) => {
-      console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
+    onCompleted: (_data) => {
+      // console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
     },
   });
 
@@ -457,13 +450,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       path: "*",
     });
     dispatch(setJobMainFilters(updatedJobFilter));
-    console.log(
-      updatedJobFilter,
-      "updatedJobFilter",
-      updatedValues,
-      "updatedValues",
-      "tok",
-    );
+
     setJobFilter(updatedJobFilter);
     setMainJobFilter(updatedJobFilter);
     setSelectedFilters(updatedValues);
