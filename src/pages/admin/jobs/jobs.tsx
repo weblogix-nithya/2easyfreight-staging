@@ -345,30 +345,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
     loading: loadingGroupedJobs,
     refetch: refetchGroupedJobs,
   } = useQuery(GROUPED_PAGINATED_JOBS_QUERY, {
-    variables: groupedVars, // <— here
-    // variables: {
-    //   page: queryPageIndex + 1,
-    //   per_page: queryPageSize,
-    //   query: searchQuery || "",
-    //   job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
-    //   company_id: isCompany ? parseInt(companyId) : undefined,
-    //   customer_id:
-    //     isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
-    //   orderByRelationship: [
-    //     {
-    //       column: "id",
-    //       order: "DESC",
-    //       table_name: "jobs",
-    //     },
-    //   ],
-    //   between_at: rangeDate?.[0]
-    //     ? {
-    //         from_at: formatDate(rangeDate[0], true),
-    //         to_at: formatDate(rangeDate[1], false),
-    //       }
-    //     : undefined,
-    // },
+    variables: groupedVars, 
     skip: !userId || !isAdmin,
+    fetchPolicy: "network-only",
     onCompleted: (data) => {
       console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
     },
@@ -377,16 +356,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const _jobs = groupedJobs?.groupedPaginatedJobs;
   const loading = loadingGroupedJobs;
   const refetchJobs = refetchGroupedJobs;
-
-  // useEffect(() => {
-  //   if (groupedJobs?.groupedPaginatedJobs?.data?.length) {
-  //     getJobStatuses();
-  //     getJobCategories();
-  //     getAvailableDrivers();
-  //     getDynamicTableUsers();
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [groupedJobs?.groupedPaginatedJobs?.data?.length]);
 
   const {
     loading: companyJobsLoading,

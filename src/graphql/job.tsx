@@ -217,23 +217,67 @@ export const GET_JOBS_QUERY = gql`
 
 export const GROUPED_PAGINATED_JOBS_QUERY = gql`
   query GroupedPaginatedJobs(
-    $page: Int
-    $per_page: Int
     $query: String
-    $job_status_ids: [Int]
-    $company_id: ID
+    $page: Int!
     $orderBy: [OrderByClause!]
     $orderByRelationship: [OrderByRelationshipInput!]
+    $today: DateTime
+    $driver_id: ID
+    $customer_id: ID
+    $company_id: ID
+    $pickup_address: String
+    $delivery_address: String
+    $customer_name: String
+    $pick_up_state: String
+    $job_status_ids: [Int]
+    $job_type_id: Int
+    $has_customer_issue: Boolean
+    $has_driver_issue: Boolean
+    $has_report_issue: Boolean
+    $states: [String]
+    $suburbs: [String]
+    $address_business_name: [String]
+    $has_company_ids: [ID]
+    $has_job_category_ids: [ID]
+    $job_date_at: DateTime
+    $job_status_id: [ID]
+    $is_tailgate_required: Boolean
+    $weight_from: Int
+    $weight_to: Int
+    $volume_from: Int
+    $volume_to: Int
     $between_at: JobBetweenInput
   ) {
     groupedPaginatedJobs(
-      page: $page
-      per_page: $per_page
       query: $query
-      job_status_ids: $job_status_ids
-      company_id: $company_id
+      page: $page
       orderBy: $orderBy
       orderByRelationship: $orderByRelationship
+      today: $today
+      driver_id: $driver_id
+      customer_id: $customer_id
+      company_id: $company_id
+      pickup_address: $pickup_address
+      delivery_address: $delivery_address
+      customer_name: $customer_name
+      pick_up_state: $pick_up_state
+      job_status_ids: $job_status_ids
+      job_type_id: $job_type_id
+      has_customer_issue: $has_customer_issue
+      has_driver_issue: $has_driver_issue
+      has_report_issue: $has_report_issue
+      states: $states
+      suburbs: $suburbs
+      address_business_name: $address_business_name
+      has_company_ids: $has_company_ids
+      has_job_category_ids: $has_job_category_ids
+      job_date_at: $job_date_at
+      job_status_id: $job_status_id
+      is_tailgate_required: $is_tailgate_required
+      weight_from: $weight_from
+      weight_to: $weight_to
+      volume_from: $volume_from
+      volume_to: $volume_to
       between_at: $between_at
     ) {
       current_page
