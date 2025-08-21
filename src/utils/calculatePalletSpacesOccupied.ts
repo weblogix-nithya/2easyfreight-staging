@@ -21,6 +21,7 @@ interface Placement {
     orientation: Orientation;
 }
 
+
 /**
  * Calculate final CBM considering:
  *  - Raw CBM
@@ -158,7 +159,7 @@ function hasConflict(
             position.y + orientation.vertical <= existing.y ||
             existing.y + existingOrient.vertical <= position.y;
 
-        if (!noOverlap) return true; // ❗ Conflict
+        if (!noOverlap) return true; // 
     }
 
     return false;
