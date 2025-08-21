@@ -38,6 +38,20 @@ import {
   useTable,
 } from "react-table";
 
+// Non-toggle column ids
+const EXCLUDED_IDS = new Set([
+  "actions",
+  "admin_notes",
+  "timeslot",
+  "job_destinations.address",
+]);
+
+// Click landed on a control? then don't toggle the row.
+const isInteractive = (el: HTMLElement | null): boolean =>
+  !!el?.closest(
+    'a,button,[role="button"],input,textarea,select,[contenteditable="true"],[data-no-row-toggle]',
+  );
+
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 const getStatusStyle = (status: string) => {
@@ -54,7 +68,7 @@ const getStatusStyle = (status: string) => {
 type PaginationTableProps<T extends object> = {
   columns: Column<T>[];
   data: T[];
-  total: number;  
+  total: number;
   options?: Omit<TableOptions<T>, "data" | "columns">;
   plugins?: PluginHook<T>[];
   path?: string;
@@ -153,6 +167,28 @@ PaginationTableProps<T>) => {
     ...plugins,
     useRowSelect,
   );
+
+  const optimisticSelRef = React.useRef<Map<string, boolean>>(new Map());
+  const [, force] = React.useState(0);
+  const forceUpdate = () => force((x) => x + 1);
+
+  useEffect(() => {
+    if (optimisticSelRef.current.size) {
+      optimisticSelRef.current.clear();
+      // no need to force here; next render will show real state anyway
+    }
+  }, [selectedFlatRows]);
+  function getOptimisticSelected(row: any) {
+    const v = optimisticSelRef.current.get(row.id);
+    return typeof v === "boolean" ? v : row.isSelected;
+  }
+
+  function toggleOptimisticRow(row: any) {
+    const next = !getOptimisticSelected(row);
+    optimisticSelRef.current.set(row.id, next); // flip instantly
+    forceUpdate(); // paint now
+    row.toggleRowSelected(next); // real react-table state
+  }
 
   // useEffect(() => {
   //   console.log("Page rows changed:", pageRows.map((r) => r.original?.job?.name));
@@ -334,6 +370,16 @@ PaginationTableProps<T>) => {
                   {...row.getRowProps()}
                   key={`data-row-${row.id || idx}`}
                   style={getStatusStyle(status)}
+                  cursor={showRowSelection ? "pointer" : "default"}
+                  onClick={(e) => {
+                    if (!showRowSelection) return;
+                    const target = e.target as HTMLElement;
+                    if (isInteractive(target)) return;
+                    const td = target.closest("td");
+                    const colId = td?.getAttribute("data-column-id") || "";
+                    if (EXCLUDED_IDS.has(colId)) return;
+                    toggleOptimisticRow(row); // instant
+                  }}
                   // className="css-en-xlrwr4"
                   // onClick={
                   //   isChecked ? () => row.toggleRowSelected() : undefined
@@ -341,10 +387,56 @@ PaginationTableProps<T>) => {
                 >
                   {row?.cells?.map((cell, index) => {
                     let data;
+                    if (cell.column.id === "selection") {
+                      return (
+                        <Td
+                          {...cell.getCellProps({
+                            "data-column-id": "selection",
+                          })}
+                          key={`selection-${index}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!showRowSelection) return;
+                            toggleOptimisticRow(row);
+                          }}
+                          cursor="pointer"
+                        >
+                          <Box pointerEvents="none">
+                            {/* Render a visual checkbox using optimistic selected state */}
+                            <HStack>
+                              <Box
+                                boxSize="16px"
+                                border="1px solid"
+                                borderColor="gray.300"
+                                borderRadius="2px"
+                                bg={
+                                  getOptimisticSelected(row)
+                                    ? "blue.500"
+                                    : "white"
+                                }
+                                position="relative"
+                              >
+                                {getOptimisticSelected(row) && (
+                                  <Box
+                                    position="absolute"
+                                    inset="2px"
+                                    bg="white"
+                                    clipPath="polygon(14% 44%, 0 59%, 44% 100%, 100% 36%, 86% 22%, 44% 64%)"
+                                  />
+                                )}
+                              </Box>
+                              {/* Optional: label */}
+                            </HStack>
+                          </Box>
+                        </Td>
+                      );
+                    }
+
                     if (cell.column.Header === "Actions") {
                       data = (
                         <Td
                           key={`action-${index}`}
+                          data-column-id="actions"
                           // paddingLeft={restyleTable && 1}
                           // paddingInlineStart={restyleTable && 1}
                           // paddingRight={restyleTable && 2}
@@ -358,6 +450,8 @@ PaginationTableProps<T>) => {
                                   href={cell.value}
                                   target="_blank"
                                   fontWeight="700"
+                                  data-no-row-toggle
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   <Button
                                     // bg={boxBg}
@@ -387,9 +481,11 @@ PaginationTableProps<T>) => {
                                     cell.row.original.job.id
                                   }`}
                                   fontWeight="700"
+                                  data-no-row-toggle
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   <Button
-                                     bg="white"
+                                    bg="white"
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
@@ -413,6 +509,8 @@ PaginationTableProps<T>) => {
                                     cell.row.original.job.id
                                   }`}
                                   fontWeight="700"
+                                  data-no-row-toggle
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   <Button
                                     // bg={boxBg}
@@ -440,6 +538,8 @@ PaginationTableProps<T>) => {
                                     cell.row.original.job.id
                                   }`}
                                   fontWeight="700"
+                                  data-no-row-toggle
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   <Button
                                     // bg={boxBg}
@@ -488,7 +588,9 @@ PaginationTableProps<T>) => {
                     } else if (cell.column.Header === "Instructions") {
                       data = (
                         <Td
-                          {...cell.getCellProps()}
+                          {...cell.getCellProps({
+                            "data-column-id": cell.column.id,
+                          })}
                           key={`instructions-${index}`}
                           paddingLeft={restyleTable && 1}
                           paddingInlineStart={restyleTable && 1}
@@ -522,6 +624,8 @@ PaginationTableProps<T>) => {
                               icon={faMessageLines}
                               className="!text-[var(--chakra-colors-black-400)] hover:!text-[var(--chakra-colors-primary-400)]"
                               size="lg"
+                              data-no-row-toggle
+                              onClick={(e) => e.stopPropagation()}
                             />
                           </Tooltip>
                         </Td>
@@ -529,7 +633,9 @@ PaginationTableProps<T>) => {
                     } else {
                       data = (
                         <Td
-                          {...cell.getCellProps()}
+                          {...cell.getCellProps({
+                            "data-column-id": cell.column.id,
+                          })}
                           key={`default-${index}`}
                           paddingLeft={restyleTable && 1}
                           paddingInlineStart={restyleTable && 1}

@@ -6,7 +6,7 @@ import {
   Divider,
   Flex,
   FormLabel,
-  Input,
+  // Input,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -24,7 +24,7 @@ import {
   filterDisplayNames as defaultFilterDisplayNames,
 } from "components/jobs/Filters";
 import { GET_COMPANYS_QUERY } from "graphql/company";
-import { formatDateTimeToDB } from "helpers/helper";
+// import { formatDateTimeToDB } from "helpers/helper";
 import debounce from "lodash.debounce";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -323,7 +323,7 @@ export default function FilterJobsModal({
                 }}
               />
             </Box>
-            <Box w={"full"}>
+            {/* <Box w={"full"}>
               <FormLabel>Date</FormLabel>
 
               <Input
@@ -349,7 +349,7 @@ export default function FilterJobsModal({
                   });
                 }}
               />
-            </Box>
+            </Box> */}
             {/* <Box w={"full"}>
               <FormLabel>Status</FormLabel>
               <Select

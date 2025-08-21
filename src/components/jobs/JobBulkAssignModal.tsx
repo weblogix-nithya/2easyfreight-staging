@@ -63,7 +63,7 @@ export default function JobBulkAssignModal({
     selectedJobs?.findIndex(
       (dynamicTableUser: any) => dynamicTableUser.id == id,
     );
-  console.log(selectedJobs, "sssss");
+  // console.log(selectedJobs, "sssss");
   const activeIndex = activeId ? getIndex(activeId) : -1;
   const totals = selectedJobs.reduce(
     (acc, job) => {

@@ -1,9 +1,9 @@
-import { useMutation } from "@apollo/client";
-import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
+// import { useMutation } from "@apollo/client";
+// import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
   Flex,
   Icon,
-  IconButton,
+  // IconButton,
   Link,
   Popover,
   PopoverArrow,
@@ -13,12 +13,12 @@ import {
   PopoverHeader,
   PopoverTrigger,
   Text,
-  Textarea,
-  useToast,
+  // Textarea,
+  // useToast,
 } from "@chakra-ui/react";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
-import { UPDATE_JOB_MUTATION } from "graphql/job";
+// import { UPDATE_JOB_MUTATION } from "graphql/job";
 import {
   formatAddress,
   formatDate,
@@ -27,9 +27,10 @@ import {
   outputDynamicTable,
 } from "helpers/helper";
 import Image from "next/image";
-import React, { useState } from "react";
+import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
+import React from "react";
 import { MdMenu } from "react-icons/md";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
@@ -533,9 +534,6 @@ export const StatusCell = ({ row }: any) => {
   );
 };
 
-export const TimeslotCell = ({ row }: any) => {
-  return <Text maxW="100px">{row?.original?.job?.timeslot || "-"}</Text>;
-};
 export const ReadyAtCell = ({ row }: any) => {
   return (
     <Text maxW="150px" minW="100px">
@@ -596,116 +594,45 @@ export const CategoryCell = ({ row }: any) => {
   );
 };
 
+export const DeliveryCell = ({ row }: any) => {
+  return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
+};
+
 export const AdminNotesCell = ({ row }: any) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [notes, setNotes] = useState(row.original.job.admin_notes ?? "");
-  const [displayNotes, setDisplayNotes] = useState(
-    row.original.job.admin_notes ?? "",
+  const [display, setDisplay] = React.useState(
+    row?.original?.job?.admin_notes ?? ""
   );
-  const toast = useToast();
-  const isAdmin = useSelector((state: RootState) => state.user.isAdmin); // ✅ check if user is admin
-
-  const [updateAdminNotes] = useMutation(UPDATE_JOB_MUTATION, {
-    onCompleted: () => {
-      setDisplayNotes(notes);
-      toast({
-        title: "Notes updated",
-        status: "success",
-        duration: 2000,
-      });
-      setIsEditing(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to update",
-        description: error.message,
-        status: "error",
-        duration: 3000,
-      });
-    },
-  });
-
-  const handleSave = () => {
-    updateAdminNotes({
-      variables: {
-        input: {
-          id: parseInt(row.original.job.id),
-          admin_notes: notes,
-          customer_id: row.original.job.customer.id,
-          company_id: row.original.job.company.id,
-          job_type_id: row.original.job.job_type.id,
-        },
-      },
-    });
-  };
 
   return (
-    <Flex gap={2} alignItems="center">
-      <Text maxW="200px" noOfLines={2}>
-        {displayNotes || "-"}
-      </Text>
-
-      {/* ✅ Only allow editing if user is admin */}
-      {isAdmin && (
-        <Popover
-          isOpen={isEditing}
-          onClose={() => {
-            setNotes(displayNotes);
-            setIsEditing(false);
-          }}
-        >
-          <PopoverTrigger>
-            <IconButton
-              aria-label="Edit notes"
-              icon={<EditIcon />}
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsEditing(true)}
-            />
-          </PopoverTrigger>
-          <PopoverContent p={4}>
-            <PopoverArrow />
-            <PopoverCloseButton />
-            <Flex direction="column" gap={2}>
-              <Textarea
-                name="admin_notes"
-                className="mb-4 max-w-md"
-                value={notes}
-                onChange={(e: any) => setNotes(e.target.value)}
-                size="sm"
-                rows={4}
-                resize="none"
-                mb={2}
-              />
-              <Flex gap={2} justifyContent="flex-end">
-                <IconButton
-                  aria-label="Save notes"
-                  icon={<CheckIcon />}
-                  size="sm"
-                  colorScheme="green"
-                  onClick={handleSave}
-                />
-                <IconButton
-                  aria-label="Cancel editing"
-                  icon={<CloseIcon />}
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => {
-                    setNotes(displayNotes);
-                    setIsEditing(false);
-                  }}
-                />
-              </Flex>
-            </Flex>
-          </PopoverContent>
-        </Popover>
-      )}
+    <Flex gap={2} align="center">
+      <Text maxW="200px" noOfLines={2}>{display || "-"}</Text>
+      <EditableFieldPopover
+        row={row}
+        field="admin_notes"
+        multiline
+        triggerAriaLabel="Edit admin notes"
+        onSaved={setDisplay}
+      />
     </Flex>
   );
 };
 
-export const DeliveryCell = ({ row }: any) => {
-  return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
+export const TimeslotCell = ({ row }: any) => {
+  const [display, setDisplay] = React.useState(
+    row?.original?.job?.timeslot ?? ""
+  );
+
+  return (
+    <Flex gap={2} align="center">
+      <Text maxW="140px" noOfLines={1}>{display || "-"}</Text>
+      <EditableFieldPopover
+        row={row}
+        field="timeslot"
+        triggerAriaLabel="Edit timeslot"
+        onSaved={setDisplay}
+      />
+    </Flex>
+  );
 };
 
 const MEDIA_CELL: Record<
