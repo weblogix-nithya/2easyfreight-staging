@@ -1,5 +1,5 @@
 import { InfoOutlineIcon } from "@chakra-ui/icons";
-import { Box, Checkbox, Flex, Text } from "@chakra-ui/react";
+import { Box, Checkbox, Flex, Spinner, Text } from "@chakra-ui/react";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { Select } from "chakra-react-select";
 import React, { useCallback } from "react";
@@ -18,6 +18,7 @@ interface Props {
   selectedStatus: StatusOption | null;
   withMedia: boolean;
   handleToggleWithMedia: (e: React.ChangeEvent<HTMLInputElement>) => void; // Function to handle checkbox toggle
+  isMediaBusy?: boolean; // Optional prop to indicate if media is busy
 }
 
 const JobStatusDateFilter = ({
@@ -28,6 +29,7 @@ const JobStatusDateFilter = ({
   selectedStatus,
   withMedia,
   handleToggleWithMedia,
+  isMediaBusy,
 }: Props) => {
   const handleRangeChange = useCallback(
     (range: any) => {
@@ -80,19 +82,24 @@ const JobStatusDateFilter = ({
         />
       </Box>
       <Box px={2} py={2}>
-        <Checkbox
-          id="withMediaCheckbox"
-          name="withMediaCheckbox"
-          isChecked={withMedia}
-          onChange={handleToggleWithMedia}
-          className="cursor-pointer"
-        >
-          <Flex align="center" fontSize="sm" color="gray.600" mt={1}>
-            <InfoOutlineIcon mr={1} />
-            Show images for &quot;Pickup Address and Name&quot; and &quot;Delivery Address and Name&quot;
-          </Flex>
-        </Checkbox>
-
+        <Flex align="center" gap={2}>
+          {isMediaBusy && <Spinner size="xs" thickness="2px" />}
+          <Checkbox
+            id="withMediaCheckbox"
+            name="withMediaCheckbox"
+            isChecked={withMedia}
+            onChange={handleToggleWithMedia}
+            className="cursor-pointer"
+          >
+            <Flex align="center" fontSize="sm" color="gray.600" mt={1}>
+              <InfoOutlineIcon mr={1} />
+              <Text>
+                Show images for <strong>Pickup Address and Name</strong> and{" "}
+                <strong>Delivery Address and Name</strong>
+              </Text>
+            </Flex>
+          </Checkbox>
+        </Flex>
         <Text fontSize="xs" color="gray.500" mt={1} pl={6}>
           Hint: Loading images may take a few seconds depending on network
           speed.
