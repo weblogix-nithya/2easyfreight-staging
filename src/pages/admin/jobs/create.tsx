@@ -257,10 +257,9 @@ function JobPage() {
   // only store the weight
 
   const { refetch: getCompany } = useQuery(GET_COMPANY_QUERY, {
-    skip: true,
+    skip: true, // don't auto-run, we'll call manually
     onCompleted: (data) => {
       if (data?.company?.weight_per_cubic != null) {
-        // console.log("Fetched company weight:", data.company.weight_per_cubic);
         setCompanyWeight(data.company.weight_per_cubic);
       }
     },
@@ -1488,10 +1487,9 @@ function JobPage() {
                         });
 
                         if (e.value) {
+
                           setCompanyWeight(null); // Reset before fetching
                           getCompany({ id: String(e.value) }).then((res) => {
-                            // console.log("Company fetch response:", res.data.company);
-
                             setCompanyWeight(res.data.company.weight_per_cubic);
                           });
                           getCompanyRates({ company_id: String(e.value) });
