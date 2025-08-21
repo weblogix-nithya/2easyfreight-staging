@@ -21,6 +21,64 @@ interface Placement {
     orientation: Orientation;
 }
 
+
+/**
+ * Calculate final CBM considering:
+ *  - Raw CBM
+ *  - Pallet-based CBM
+ *  - Weight-based CBM (if company weight is given)
+ */
+export function calculateFinalWeightCBM(
+    job_category_id: any,
+    jobItems: any[],
+    companyWeight: number
+): { totalCBM: number; totalWeight: number } {
+    const rawCBM = jobItems.reduce(
+        (total, item) => total + (item.volume || 0),
+        0
+    );
+    const totalWeight = jobItems.reduce(
+        (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+        0
+    );
+    let finalWeightCBM = rawCBM;
+    if (job_category_id == 1) {
+        const palletData = jobItems.map((item) => ({
+            quantity: item.quantity,
+            dimension_width: item.dimension_width,
+            dimension_depth: item.dimension_height,
+            dimension_height: item.dimension_depth,
+        }));
+
+        const PALLET_CBM = 1.728;
+        const palletSpacesUsed = calculatePalletSpacesOccupiedFromData(palletData);
+        const palletCBM = palletSpacesUsed * PALLET_CBM;
+        const finalCBM = Math.max(rawCBM, palletCBM);
+
+        finalWeightCBM = finalCBM;
+        // console.log("Company weight:", companyWeight);
+        if (totalWeight > 0 && companyWeight) {
+            const weightCBM = totalWeight / companyWeight;
+            // console.log("Calculating weight-based CBM", weightCBM);
+            finalWeightCBM = Math.max(finalCBM, weightCBM);
+        }
+    }
+    // console.log("Final CBM:", finalWeightCBM);
+    // console.log("Total Weight:", totalWeight);
+
+    return {
+        totalCBM: finalWeightCBM ? finalWeightCBM : 0,
+        totalWeight: totalWeight ? totalWeight : 0
+    };
+}
+
+
+/**
+ * Calculate pallet spaces occupied from job item dimensions & quantities.
+ * @param data Array of items with quantity & dimensions (in meters)
+ * @returns Number of pallet spaces occupied
+ */
+
 export function calculatePalletSpacesOccupiedFromData(data: any[]): number {
     const boxes: Box[] = [];
     let boxId = 1;
@@ -101,7 +159,7 @@ function hasConflict(
             position.y + orientation.vertical <= existing.y ||
             existing.y + existingOrient.vertical <= position.y;
 
-        if (!noOverlap) return true; // ❗ Conflict
+        if (!noOverlap) return true; // 
     }
 
     return false;

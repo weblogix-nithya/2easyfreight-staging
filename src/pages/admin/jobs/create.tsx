@@ -77,7 +77,7 @@ import {
 } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-import { calculatePalletSpacesOccupiedFromData } from "utils/calculatePalletSpacesOccupied";
+import { calculateFinalWeightCBM } from "utils/calculatePalletSpacesOccupied";
 
 function JobPage() {
   const toast = useToast();
@@ -647,11 +647,11 @@ function JobPage() {
 
         await new Promise<void>((resolve, _reject) => {
           reader.onerror = () => {
-            console.log("file reading has failed");
+            // console.log("file reading has failed");
             resolve(); // skip and continue
           };
           reader.onabort = () => {
-            console.log("file reading was aborted");
+            // console.log("file reading was aborted");
             resolve(); // skip and continue
           };
           reader.onload = () => {
@@ -694,7 +694,7 @@ function JobPage() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: () => {
       /*toast({
         title: "Media updated",
@@ -906,63 +906,37 @@ function JobPage() {
     _jobItems[index] = value;
     setJobItems(_jobItems);
     // recalculateTempCalculations(_jobItems);
-    const totalWeight = _jobItems.reduce(
-      (sum: any, item: { weight: any }) => sum + item.weight,
-      0,
-    );
-    const totalCbm = _jobItems.reduce(
-      (sum: any, item: { volume: any }) => sum + item.volume,
-      0,
-    );
+    // const totalWeight = _jobItems.reduce(
+    //   (sum: any, item: { weight: any }) => sum + item.weight,
+    //   0,
+    // );
+    // const totalCbm = _jobItems.reduce(
+    //   (sum: any, item: { volume: any }) => sum + item.volume,
+    //   0,
+    // );
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
     setQuoteCalculationRes({
       ...quoteCalculationRes,
       total_weight: totalWeight,
-      cbm_auto: totalCbm,
+      cbm_auto: totalCBM,
     });
   };
 
   useEffect(() => {
     // Recalculate cbm_auto and total_weight whenever jobItems change
     const calculateTotals = () => {
-      const rawCBM = jobItems.reduce(
-        (total, item) => total + item.volume || 0,
-        0,
-      );
-      const totalWeight = jobItems.reduce(
-        (total, item) => total + (item.quantity || 0) * (item.weight || 0),
-        0,
-      );
-      // const totalWeight = jobItems.reduce(
-      //   (total, item) => total + (item.weight || 0),
-      //   0,
-      // );
 
-
-      const palletData = jobItems.map((item) => ({
-        quantity: item.quantity,
-        dimension_width: item.dimension_width,
-        dimension_depth: item.dimension_height,
-        dimension_height: item.dimension_depth,
-      }));
-
-      const PALLET_CBM = 1.728;
-      const palletSpacesUsed = calculatePalletSpacesOccupiedFromData(palletData);
-      const palletCBM = palletSpacesUsed * PALLET_CBM;
-      const finalCBM = Math.max(rawCBM, palletCBM);
-      const weightCBM = totalWeight / companyWeight; // Assuming 250kg per CBM for weight calculation
-      const finalWeightCBM = Math.max(finalCBM, weightCBM);
-      // console.log(totalWeight, "totalWeight", companyWeight, "companyWeight");
-      // console.log("rawCBM", rawCBM, "palletCBM", palletCBM, "finalCBM", finalCBM, "weightCBM", weightCBM);
+      const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
 
       setTempcalculation({
-        cbm_auto: parseFloat(finalWeightCBM.toFixed(2)), // Rounded to 2 decimal points
+        cbm_auto: parseFloat(totalCBM.toFixed(2)), // Rounded to 2 decimal points
         total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
       });
     };
 
     calculateTotals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobItems]);
+  }, [companyWeight, job.job_category_id, jobItems]);
 
   const addToJobItems = () => {
     let nextId = jobItems[jobItems.length - 1].id + 1;
@@ -1513,7 +1487,11 @@ function JobPage() {
                         });
 
                         if (e.value) {
-                          getCompany({ id: String(e.value) });
+
+                          setCompanyWeight(null); // Reset before fetching
+                          getCompany({ id: String(e.value) }).then((res) => {
+                            setCompanyWeight(res.data.company.weight_per_cubic);
+                          });
                           getCompanyRates({ company_id: String(e.value) });
                         }
                       }}
@@ -1554,7 +1532,7 @@ function JobPage() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (_e) => {}
+                      (_e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1569,7 +1547,7 @@ function JobPage() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (_e) => {}
+                      (_e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,

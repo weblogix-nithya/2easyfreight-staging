@@ -1,8 +1,13 @@
 import { useQuery } from "@apollo/client";
 import {
   Box,
+  Button,
+  Flex,
   SimpleGrid,
   Spinner,
+  Tag,
+  TagCloseButton,
+  TagLabel,
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -40,7 +45,7 @@ import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import dynamic from "next/dynamic";
 import { destroyCookie, parseCookies, setCookie } from "nookies";
-import React, { Suspense, useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { downloadExcel } from "react-export-table-to-excel";
 // import { FaFileExcel } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -51,7 +56,7 @@ import {
 } from "store/jobFilterSlice";
 import { RootState } from "store/store";
 
-import JobFiltersTagRow from "./job-components/JobFiltersTagRow";
+// import JobFiltersTagRow from "./job-components/JobFiltersTagRow";
 import JobHeader from "./job-components/JobHeader";
 
 const JobStatusDateFilter = dynamic(
@@ -171,6 +176,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const _cookies = parseCookies();
   const dispatch = useDispatch();
   const [withMedia, setWithMedia] = useState(false);
+  const [isMediaBusy, setIsMediaBusy] = useState(false);
+  const hideTimerRef = useRef<number | null>(null);
   const [_jobStatuses, setJobStatuses] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [selectedJobs, setSelectedJobs] = useState([]);
@@ -193,12 +200,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const [companyColumns, setCompanyColumns] = useState([]); // State for company columns
 
   const handleToggleWithMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWithMedia(e.target.checked); // Update state when checkbox is toggled
+    setIsMediaBusy(true);
+    setWithMedia(e.target.checked);
   };
-  // const columns = useMemo(
-  //   () => getColumns(isAdmin, isCustomer, withMedia, dynamicTableUsers),
-  //   [isCustomer, isAdmin, dynamicTableUsers, withMedia],
-  // );
 
   const { refetch: getDynamicTableUsers, data: dynamicTableData } = useQuery(
     GET_DYNAMIC_TABLE_USERS_QUERY,
@@ -214,6 +218,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       skip: !userId,
       notifyOnNetworkStatusChange: true,
       onCompleted: (data) => {
+        // console.log("dynamicTableData =>", data.dynamicTableUsers.data);
         setDynamicTableUsers(
           data.dynamicTableUsers.data.filter(
             (item: DynamicTableUser) => item.is_active == true,
@@ -231,6 +236,17 @@ export default function JobIndex({}: // initialLoadOnly = false,
       dynamicTableData?.dynamicTableUsers?.data || [],
     );
   }, [dynamicTableData, isAdmin, isCustomer, withMedia]);
+
+  useEffect(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = window.setTimeout(() => {
+      setIsMediaBusy(false);
+      hideTimerRef.current = null;
+    }, 2000); // keep spinner visible ~300ms
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, [adminColumns]);
 
   // const companyColumns = getCompanyColumns(isAdmin, isCustomer, withMedia);
   useEffect(() => {
@@ -290,12 +306,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
     ];
   }, [sorting]);
 
-  const {
-    data: groupedJobs,
-    loading: loadingGroupedJobs,
-    refetch: refetchGroupedJobs,
-  } = useQuery(GROUPED_PAGINATED_JOBS_QUERY, {
-    variables: {
+  const baseGroupedVars = React.useCallback(
+    () => ({
       page: queryPageIndex + 1,
       per_page: queryPageSize,
       query: searchQuery || "",
@@ -303,46 +315,43 @@ export default function JobIndex({}: // initialLoadOnly = false,
       company_id: isCompany ? parseInt(companyId) : undefined,
       customer_id:
         isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
-      orderByRelationship: [
-        {
-          column: "id",
-          order: "DESC",
-          table_name: "jobs",
-        },
-      ],
       between_at: rangeDate?.[0]
         ? {
             from_at: formatDate(rangeDate[0], true),
             to_at: formatDate(rangeDate[1], false),
           }
         : undefined,
-      // has_job_category_ids:[1],
-      has_job_category_ids: mainJobFilter?.has_job_category_ids?.length
-        ? mainJobFilter.has_job_category_ids.map((o:any) => o.value)
-        : [1, 2, 3, 4, 5, 6],
-      states: mainJobFilter?.states?.map((o: any) => o.value),
-      job_date_at: mainJobFilter?.job_date_at,
-      suburbs: mainJobFilter?.suburbs?.map((o: any) => o.value),
-      address_business_name: mainJobFilter?.address_business_name?.map(
-        (o: any) => o.value,
-      ),
-      has_company_ids: mainJobFilter?.has_company_ids?.map((o: any) => o.value),
-      is_tailgate_required: mainJobFilter?.is_tailgate_required ?? undefined,
+    }), // eslint-disable-line react-hooks/exhaustive-deps
+    [
+      queryPageIndex,
+      queryPageSize,
+      searchQuery,
+      isCompany,
+      companyId,
+      isCustomer,
+      isCompanyAdmin,
+      customerId,
+      rangeDate,
+      mainJobFilter?.job_status_ids
+    ],
+  );
 
-      weight_from: mainJobFilter?.weight_from
-        ? Number(mainJobFilter.weight_from)
-        : undefined,
-      weight_to: mainJobFilter?.weight_to
-        ? Number(mainJobFilter.weight_to)
-        : undefined,
-      volume_from: mainJobFilter?.volume_from
-        ? Number(mainJobFilter.volume_from)
-        : undefined,
-      volume_to: mainJobFilter?.volume_to
-        ? Number(mainJobFilter.volume_to)
-        : undefined,
-    },
+  const groupedVars = React.useMemo(
+    () =>
+      is_filter_ticked === "1"
+        ? { ...baseGroupedVars(), ...(mainJobFilter ?? {}) }
+        : baseGroupedVars(),
+    [is_filter_ticked, mainJobFilter, baseGroupedVars],
+  );
+
+  const {
+    data: groupedJobs,
+    loading: loadingGroupedJobs,
+    refetch: refetchGroupedJobs,
+  } = useQuery(GROUPED_PAGINATED_JOBS_QUERY, {
+    variables: groupedVars,
     skip: !userId || !isAdmin,
+    fetchPolicy: "network-only",
     onCompleted: (_data) => {
       // console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
     },
@@ -351,16 +360,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const _jobs = groupedJobs?.groupedPaginatedJobs;
   const loading = loadingGroupedJobs;
   const refetchJobs = refetchGroupedJobs;
-
-  // useEffect(() => {
-  //   if (groupedJobs?.groupedPaginatedJobs?.data?.length) {
-  //     getJobStatuses();
-  //     getJobCategories();
-  //     getAvailableDrivers();
-  //     getDynamicTableUsers();
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [groupedJobs?.groupedPaginatedJobs?.data?.length]);
 
   const {
     loading: companyJobsLoading,
@@ -420,8 +419,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
       }
 
       setJobFilter(jobMainFilters);
-      console.log(jobMainFilters, "jobMainFilters");
-      setMainJobFilter(jobMainFilters);
       _jobFilter = jobMainFilters;
       if (displayName) setMainFilterDisplayNames(displayName);
       updateTags(updatedValues, _jobFilter);
@@ -460,7 +457,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       );
     }
     setCookie(null, `jobMainFilters`, JSON.stringify(updatedJobFilter), {
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 24 * 60 * 60,
       path: "*",
     });
     dispatch(setJobMainFilters(updatedJobFilter));
@@ -475,7 +472,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
     onOpen: onOpenFilter,
     onClose: onCloseFilter,
   } = useDisclosure();
-
   useEffect(() => {
     getJobStatuses();
     getJobCategories();
@@ -502,25 +498,37 @@ export default function JobIndex({}: // initialLoadOnly = false,
   //   }, 300);
   // }, []);
 
+  // useEffect(() => {
+  //   if (isAdmin) {
+  //     refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
+  //   } else if (isCompany || isCustomer) {
+  //     getCompanyJobs(); // GET_JOBS_QUERY
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [
+  //   queryPageIndex,
+  //   queryPageSize,
+  //   searchQuery,
+  //   mainFilters,
+  //   rangeDate,
+  //   withMedia,
+  //   isAdmin,
+  //   isCompany,
+  //   isCustomer,
+  // ]);
+
   useEffect(() => {
     if (isAdmin) {
-      refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
+      refetchGroupedJobs(groupedVars); // <— pass latest vars
     } else if (isCompany || isCustomer) {
-      getCompanyJobs(); // GET_JOBS_QUERY
+      getCompanyJobs(); // (you can do the same pattern with a companyVars memo if needed)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    queryPageIndex,
-    queryPageSize,
-    searchQuery,
-    mainFilters,
-    mainJobFilter,
-    rangeDate,
-    withMedia,
+    groupedVars, // <— single source captures page, size, search, dates, AND is_filter_ticked/mainJobFilter
     isAdmin,
     isCompany,
     isCustomer,
-    is_filter_ticked,
   ]);
 
   const debouncedSearch = useMemo(
@@ -677,7 +685,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   useEffect(() => {
     refetchJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rangeDate]);
+  }, [rangeDate, is_filter_ticked]);
 
   return (
     <AdminLayout>
@@ -689,78 +697,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
           columns={{ sm: 1 }}
           spacing={{ base: "20px", xl: "20px" }}
         >
-          {/* <Flex
-            minWidth="max-content"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <h1>Delivery Jobs</h1>
-
-            {isAdmin && (
-              <Button variant="no-effects" onClick={onOpenSetting}>
-                <SettingsIcon className="mr-2" />
-                Settings
-              </Button>
-            )}
-          </Flex>
-          <Flex minWidth="max-content" justifyContent="space-between">
-            <Flex>
-              <SearchBar
-                onChangeSearchQuery={debouncedSearch}
-                placeholder="Search delivery jobs"
-                background={menuBg}
-                me="10px"
-              />
-              {isAdmin && (
-                <>
-                  <Button
-                    variant="no-effects"
-                    onClick={onOpenFilter}
-                    className="text-[var(--chakra-colors-primary-400)]"
-                  >
-                    Filters
-                    <FullChevronDown className="ml-2" />
-                  </Button>
-                  <Checkbox
-                    onChange={(e) => {
-                      if (!e.target.checked) {
-                        destroyCookie(null, "jobMainFilters", { path: "*" });
-                        destroyCookie(null, "displayName", { path: "*" });
-                        handleResetAll();
-                      }
-                      setCookie(
-                        null,
-                        "is_filter_ticked",
-                        e.target.checked ? "1" : "0",
-                        {
-                          maxAge: 30 * 24 * 60 * 60,
-                          path: "*",
-                        },
-                      );
-                      dispatch(setIsFilterTicked(e.target.checked ? "1" : "0"));
-                    }}
-                    isChecked={is_filter_ticked == "1" ? true : false}
-                  ></Checkbox>
-                </>
-              )}
-            </Flex>
-
-            <Flex>
-              <Link href="/admin/jobs/create">
-                <Button variant="primary" className="mr-2">
-                  {isCompany ? "New booking" : "Create job"}
-                </Button>
-              </Link>
-              <Button
-                leftIcon={<FaFileExcel />}
-                variant="primary"
-                onClick={handleExport}
-              >
-                Export Xls
-              </Button>
-            </Flex>
-          </Flex> */}
-
           <JobHeader
             isAdmin={isAdmin}
             isCompany={isCompany}
@@ -783,7 +719,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
             }}
           />
 
-          {/* <Flex alignItems="left" flexWrap={"wrap"}>
+          <Flex alignItems="left" flexWrap={"wrap"}>
             {Object.keys(mainFilters).map((filterKey) => {
               if (mainFilters[filterKey]) {
                 return (
@@ -826,8 +762,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
             >
               Clear all
             </Button>
-          </Flex> */}
-          <JobFiltersTagRow
+          </Flex>
+          {/* <JobFiltersTagRow
             mainFilters={mainFilters}
             mainFilterDisplayNames={mainFilterDisplayNames}
             onClearAll={handleResetAll}
@@ -836,7 +772,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               delete newSelectedFilters[key];
               updateTags(newSelectedFilters, jobFilter);
             }}
-          />
+          /> */}
 
           <JobStatusDateFilter
             statusOptions={statusOptions}
@@ -846,6 +782,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
             setRangeDate={setRangeDate}
             withMedia={withMedia}
             handleToggleWithMedia={handleToggleWithMedia}
+            isMediaBusy={isMediaBusy}
           />
 
           {(isAdmin && loading) || (!isAdmin && companyJobsLoading) ? (
@@ -935,7 +872,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
               onFilterApply={(selectedFilters, filterDisplayName) => {
                 // Update the tags
                 updateTags(selectedFilters, jobFilter);
-                setMainJobFilter({ ...jobFilter });
 
                 setMainFilterDisplayNames(filterDisplayName);
                 setCookie(
