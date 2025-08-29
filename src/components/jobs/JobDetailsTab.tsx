@@ -981,11 +981,11 @@ const JobDetailsTab = ({
                         </Radio>
                       </Stack>
                     </RadioGroup>
-                  </GridItem>
+                  </GridItem>c
                 </SimpleGrid>
               </Flex>
 
-              {job.job_category_id == 1 && job.is_inbound_connect == true && (
+              {(job.job_category_id == 1 || job.job_category_id == 2) && job.is_inbound_connect == true && (
                 <Box>
                   <CustomInputField
                     isSelect={true}
@@ -1123,10 +1123,6 @@ const JobDetailsTab = ({
             <Box>
               {/* Right side content goes here */}
               <GridItem pr={4}>
-                {/* {(job.job_category_id == 1 ||
-                                job.job_category_id == 2) &&
-                                (job.transport_location === "VIC" ||
-                                  job.transport_location === "QLD") && ( */}
                 <Flex
                   height="100%"
                   justifyContent="center"
