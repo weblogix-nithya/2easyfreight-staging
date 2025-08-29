@@ -493,11 +493,11 @@ function JobPage() {
       const jobDestination1 =
         jobDestinations.length > 0
           ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+              state: jobDestinations[0]?.address_state,
+              suburb: jobDestinations[0]?.address_city,
+              postcode: jobDestinations[0]?.address_postal_code,
+              address: jobDestinations[0]?.address,
+            }
           : null;
 
       const filteredCompanyRates = companyRates?.filter(
@@ -513,16 +513,16 @@ function JobPage() {
         state_code: refinedData.state_code || refinedData.pick_up_stateCode,
         service_choice: refinedData.service_choice,
         company_rates:
-          (job.job_category_id == 1 &&
+          ((job.job_category_id == 1 || job.job_category_id == 2) &&
             refinedData.pick_up_stateCode === "QLD") ||
-            refinedData.pick_up_stateCode === "VIC"
+          refinedData.pick_up_stateCode === "VIC"
             ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              minimum_charge: rate.minimum_charge,
-            }))
+                company_id: rate.company_id,
+                seafreight_id: rate.seafreight_id,
+                area: rate.area,
+                cbm_rate: rate.cbm_rate,
+                minimum_charge: rate.minimum_charge,
+              }))
             : [],
         job_pickup_address: {
           state: pickUpDestination?.address_state,
@@ -533,11 +533,11 @@ function JobPage() {
         job_destination_address:
           jobDestinations.length > 0
             ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+                state: jobDestinations[0]?.address_state,
+                suburb: jobDestinations[0]?.address_city,
+                postcode: jobDestinations[0]?.address_postal_code,
+                address: jobDestinations[0]?.address,
+              }
             : {},
         pickup_time: {
           ready_by: readyAt,
@@ -694,7 +694,7 @@ function JobPage() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: () => {
       /*toast({
         title: "Media updated",
@@ -812,8 +812,8 @@ function JobPage() {
       _jobDestinations[0]?.address_state == "Victoria"
         ? "VIC"
         : jobDestinations[0]?.address_state == "Queensland"
-          ? "QLD"
-          : "";
+        ? "QLD"
+        : "";
     const filtereddepotOption = depotOptions.filter(
       (option) => option.state_code == currentstate,
     );
@@ -914,7 +914,11 @@ function JobPage() {
     //   (sum: any, item: { volume: any }) => sum + item.volume,
     //   0,
     // );
-    const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+      job.job_category_id,
+      jobItems,
+      companyWeight,
+    );
     setQuoteCalculationRes({
       ...quoteCalculationRes,
       total_weight: totalWeight,
@@ -925,8 +929,11 @@ function JobPage() {
   useEffect(() => {
     // Recalculate cbm_auto and total_weight whenever jobItems change
     const calculateTotals = () => {
-
-      const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
+      const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+        job.job_category_id,
+        jobItems,
+        companyWeight,
+      );
 
       setTempcalculation({
         cbm_auto: parseFloat(totalCBM.toFixed(2)), // Rounded to 2 decimal points
@@ -1141,7 +1148,7 @@ function JobPage() {
     // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
     if (
       job.is_inbound_connect === true &&
-      job.job_category_id === 1 &&
+      (job.job_category_id == 1 || job.job_category_id == 2) &&
       (!job.timeslot_depots || job.timeslot_depots === "")
     ) {
       toast({
@@ -1242,11 +1249,11 @@ function JobPage() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-          state: jobDestinations[0]?.address_state,
-          suburb: jobDestinations[0]?.address_city,
-          postcode: jobDestinations[0]?.address_postal_code,
-          address: jobDestinations[0]?.address,
-        }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -1262,15 +1269,16 @@ function JobPage() {
       state_code: refinedData.state_code || refinedData.pick_up_stateCode,
       service_choice: refinedData.service_choice,
       company_rates:
-        (job.job_category_id == 1 && refinedData.pick_up_stateCode === "QLD") ||
-          refinedData.pick_up_stateCode === "VIC"
+        ((job.job_category_id == 1 || job.job_category_id == 2) &&
+          refinedData.pick_up_stateCode === "QLD") ||
+        refinedData.pick_up_stateCode === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-            company_id: rate.company_id,
-            seafreight_id: rate.seafreight_id,
-            area: rate.area,
-            cbm_rate: rate.cbm_rate,
-            minimum_charge: rate.minimum_charge,
-          }))
+              company_id: rate.company_id,
+              seafreight_id: rate.seafreight_id,
+              area: rate.area,
+              cbm_rate: rate.cbm_rate,
+              minimum_charge: rate.minimum_charge,
+            }))
           : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
@@ -1281,11 +1289,11 @@ function JobPage() {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+              state: jobDestinations[0]?.address_state,
+              suburb: jobDestinations[0]?.address_city,
+              postcode: jobDestinations[0]?.address_postal_code,
+              address: jobDestinations[0]?.address,
+            }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -1375,6 +1383,7 @@ function JobPage() {
                     )}
                     placeholder=""
                     onChange={(e) => {
+                      console.log(job.job_category_id, "job.job_category_id");
                       const selectedCategory = e.value;
                       const selectedCategoryName = jobCategories.find(
                         (job_category) =>
@@ -1487,7 +1496,6 @@ function JobPage() {
                         });
 
                         if (e.value) {
-
                           setCompanyWeight(null); // Reset before fetching
                           getCompany({ id: String(e.value) }).then((res) => {
                             setCompanyWeight(res.data.company.weight_per_cubic);
@@ -1532,7 +1540,7 @@ function JobPage() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (_e) => { }
+                      (_e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1547,7 +1555,7 @@ function JobPage() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (_e) => { }
+                      (_e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1614,11 +1622,11 @@ function JobPage() {
                       setIsSameDayJob(today === selected);
                       setIsTomorrowJob(
                         new Date(selected).toDateString() ===
-                        new Date(
-                          new Date(today).setDate(
-                            new Date(today).getDate() + 1,
-                          ),
-                        ).toDateString(),
+                          new Date(
+                            new Date(today).setDate(
+                              new Date(today).getDate() + 1,
+                            ),
+                          ).toDateString(),
                       );
                     }}
                   />
@@ -1854,8 +1862,8 @@ function JobPage() {
                             pickUpDestination.address_state == "Victoria"
                               ? "VIC"
                               : pickUpDestination.address_state == "Queensland"
-                                ? "QLD"
-                                : "";
+                              ? "QLD"
+                              : "";
                           const filtereddepotOption = depotOptions.filter(
                             (option) => option.state_code == currentPickupstate,
                           );
@@ -2147,13 +2155,15 @@ function JobPage() {
                                     ? "VIC"
                                     : jobDestinations[0].address_state ==
                                       "Queensland"
-                                      ? "QLD"
-                                      : "";
+                                    ? "QLD"
+                                    : "";
                                 const filtereddepotOp = depotOptions.filter(
                                   (option) =>
                                     option.state_code == curretstatecode,
                                 );
                                 setFilteredDepotOptions(filtereddepotOp);
+                                console.log(filtereddepotOp, "filtereddepotOp")
+                                console.log(job.job_category_id, "job.job_category_id")
                               }}
                             >
                               <Stack direction="row">
@@ -2165,8 +2175,9 @@ function JobPage() {
                             </RadioGroup>
                           </Flex>
 
-                          {job.job_category_id === 1 &&
-                            job.is_inbound_connect === true && (
+                          {((job.job_category_id == 1 ||
+                            job.job_category_id == 2) &&
+                            job.is_inbound_connect === true) && (
                               <Box>
                                 <CustomInputField
                                   isSelect={true}
@@ -2175,7 +2186,8 @@ function JobPage() {
                                   value={
                                     filtereddepotOptions.find(
                                       (option) =>
-                                        option.value === job.timeslot_depots,
+                                        option.value.toString() ===
+                                        job.timeslot_depots?.toString(),
                                     ) || null
                                   }
                                   placeholder="Select a depot"

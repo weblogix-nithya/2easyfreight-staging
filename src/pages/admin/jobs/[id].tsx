@@ -1477,8 +1477,8 @@ function JobEdit() {
       state: refinedData.state || selectedstate?.label,
       state_code: refinedData.state_code || selectedstate?.value,
       company_rates:
-        (job.job_category_id == 1 && selectedstate?.value === "QLD") ||
-          selectedstate?.value === "VIC"
+        ((job.job_category_id == 1 || job.job_category_id == 2) && (selectedstate?.value === "QLD" ||
+          selectedstate?.value === "VIC"))
           ? filteredCompanyRates.map((rate) => ({
             company_id: rate.company_id,
             seafreight_id: rate.seafreight_id,
@@ -1626,7 +1626,7 @@ function JobEdit() {
     // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
     if (
       job.is_inbound_connect &&
-      job.job_category_id == 1 &&
+      (job.job_category_id == 1 || job.job_category_id == 2) &&
       (!job.timeslot_depots ||
         job.timeslot_depots == null ||
         job.timeslot_depots === "")
