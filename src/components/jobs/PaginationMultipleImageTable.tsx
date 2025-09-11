@@ -67,12 +67,17 @@ const PaginationMultipleImageTable = <T extends object>({
   onLinkEvent,
   path,
 }: PaginationTableProps<T>) => {
-  const textColor = useColorModeValue("secondaryGray.900", "white");
-  const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
   const textColorLink = useColorModeValue("blue.600", "blue");
-  const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
-  const iconColor = useColorModeValue("brand.500", "white");
   const router = useRouter();
+
+  const tableColumns = React.useMemo<Column<T>[]>(
+    () => columns ?? [],
+    [columns],
+  );
+  const tableData = React.useMemo<T[]>(
+    () => (Array.isArray(data) ? data : []),
+    [data],
+  );
 
   const {
     getTableProps,
@@ -84,10 +89,21 @@ const PaginationMultipleImageTable = <T extends object>({
     canNextPage,
     nextPage,
     previousPage,
-    setPageSize,
+    // setPageSize,
     state: { pageIndex, pageSize },
-  } = useTable<T>({ ...options, columns, data }, usePagination, ...plugins);
+  } = useTable<T>(
+    {
+      // columns,
+      // data,
+      ...(options ?? {}),
+      columns: tableColumns,
+      data: tableData,
+    } as TableOptions<T>,
+    usePagination,
+    ...(plugins ?? []),
+  );
 
+  console.log("tableData", tableData);
   useEffect(() => {
     if (isServerSide && setQueryPageIndex && setQueryPageSize) {
       setQueryPageIndex(pageIndex);
@@ -334,7 +350,7 @@ const PaginationMultipleImageTable = <T extends object>({
                               ),
                             )}
                         </Grid>
-                        {(!cell.value || cell.value.length == 0) && (
+                        {(!cell.value || cell.value.length === 0) && (
                           <Flex
                             alignItems="center"
                             justifyContent="center"
@@ -344,13 +360,7 @@ const PaginationMultipleImageTable = <T extends object>({
                             borderRadius="4px"
                             mr="4"
                           >
-                            <Image
-                              src="/images/no-image.png"
-                              alt="No Image"
-                              width="100%"
-                              height="100%"
-                              objectFit="cover"
-                            />
+                           <Text>No Image</Text>
                           </Flex>
                         )}
                       </Td>
@@ -373,7 +383,7 @@ const PaginationMultipleImageTable = <T extends object>({
       <HStack w="full" justify="space-between">
         <Text>
           Showing {pageIndex * pageSize + 1} to {(pageIndex + 1) * pageSize} of{" "}
-          {data.length} entries
+          {data?.length} entries
         </Text>
         <ButtonGroup isAttached variant="outline">
           <IconButton

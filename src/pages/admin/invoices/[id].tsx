@@ -9,7 +9,7 @@ import {
   FormLabel,
   Grid,
   Input,
-  Link,
+  // Link,
   SimpleGrid,
   Skeleton,
   Table,
@@ -41,21 +41,26 @@ import {
   UPDATE_INVOICE_LINE_ITEM_MUTATION,
 } from "graphql/invoiceLineItem";
 import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
-import { defaultJob, GET_JOB_QUERY } from "graphql/job";
+import { GET_JOB_QUERY } from "graphql/job";
 import { defaultJobDestination } from "graphql/jobDestination";
 import { formatCurrency, formatFloat } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 function InvoiceEdit() {
+  const generatingRef = useRef(false);
+  const lastUrlRef = useRef<string | null>(null);
+
+  const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
   let menuBg = useColorModeValue("white", "navy.800");
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [invoice, setInvoice] = useState(defaultInvoice);
   const [invoiceStatuses, setInvoiceStatuses] = useState([]);
   const [invoiceLineItems, setInvoiceLineItems] = useState([]);
@@ -64,14 +69,14 @@ function InvoiceEdit() {
     isHandleUpdateInvoiceLineItemsLoading,
     setIsHandleUpdateInvoiceLineItemsLoading,
   ] = useState(false);
-  const [job, setJob] = useState(defaultJob);
+  // const [job, setJob] = useState(defaultJob);
   const [jobDestinations, setJobDestinations] = useState([]);
   const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
   );
-  const [isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
+  const [_isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const isCompany = useSelector((state: RootState) => state.user.isCompany);
+  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const customerId = useSelector((state: RootState) => state.user.customerId);
   const companyId = useSelector((state: RootState) => state.user.companyId);
@@ -80,10 +85,11 @@ function InvoiceEdit() {
   const { id } = router.query;
 
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(50);
+  const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isInvoicePdfgenerate, setIsInvoicePdfgenerate] = useState(false);
 
-  const [paymentTerm, setPaymentTerm] = useState(null);
+  // const [paymentTerm, setPaymentTerm] = useState(null);
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -94,8 +100,8 @@ function InvoiceEdit() {
 
   const {
     loading,
-    error,
-    data: invoiceLineItemsData,
+    // error,
+    // data: invoiceLineItemsData,
     refetch: getInvoiceLineItems,
   } = useQuery(GET_INVOICE_LINE_ITEMS_QUERY, {
     variables: {
@@ -106,15 +112,16 @@ function InvoiceEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    skip: !id,
     onCompleted: (data) => {
       setInvoiceLineItems(data.invoiceLineItems.data);
     },
   });
 
   const {
-    loading: jobLoading,
+    // loading: jobLoading,
     data: jobData, // Renamed 'data' to 'jobData'
-    refetch: getJob,
+    // refetch: getJob,
   } = useQuery(GET_JOB_QUERY, {
     variables: {
       id: invoice.job_id,
@@ -122,7 +129,7 @@ function InvoiceEdit() {
     skip: !invoice?.job_id,
     onCompleted: (data) => {
       // console.log(data,'d')
-           // jobDestinations without is_pickup
+      // jobDestinations without is_pickup
       let _jobDestinations = data.job.job_destinations;
 
       setJobDestinations(_jobDestinations);
@@ -135,7 +142,7 @@ function InvoiceEdit() {
       );
       // console.log(pickUpDestination, 'pjd')
     },
-    onError(error) {
+    onError(_error) {
       // console.log("onError");
       // console.log(error);
     },
@@ -162,12 +169,13 @@ function InvoiceEdit() {
 
   const {
     loading: invoiceLoading,
-    data: invoiceData,
+    // data: invoiceData,
     refetch: getInvoice,
   } = useQuery(GET_INVOICE_QUERY, {
     variables: {
       id: id,
     },
+    skip: !id,
     onCompleted: (data) => {
       if (data?.invoice == null) {
         router.push("/admin/invoices");
@@ -230,7 +238,7 @@ function InvoiceEdit() {
           invoice_status_id: 6,
         },
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Invoice Approved",
           status: "success",
@@ -260,7 +268,7 @@ function InvoiceEdit() {
           total: invoice.total,
         },
       },
-      onCompleted: async (data) => {
+      onCompleted: async (_data) => {
         toast({
           title: "Invoice updated",
           status: "success",
@@ -269,7 +277,7 @@ function InvoiceEdit() {
         });
 
         toast({
-          title: "Regenerating invoice PDF, please wait 1min to update",
+          title: "Regenerating invoice PDF, please wait 10 seconds to update",
           status: "info",
           duration: 3000,
           isClosable: true,
@@ -277,6 +285,7 @@ function InvoiceEdit() {
         });
 
         setIsInvoicePdfUpdating(true);
+        setIsInvoicePdfgenerate(true);
         setIsHandleUpdateInvoiceLineItemsLoading(true);
 
         for (let invoiceLineItem of invoiceLineItems) {
@@ -312,6 +321,7 @@ function InvoiceEdit() {
           getInvoiceLineItems();
           setIsHandleUpdateInvoiceLineItemsLoading(false);
           handleGenerateInvoicePdf();
+          setIsInvoicePdfgenerate(false);
         }, 5000);
       },
       onError: (error) => {
@@ -319,11 +329,11 @@ function InvoiceEdit() {
       },
     });
 
-  const [handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [_handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Invoice deleted",
         status: "success",
@@ -341,7 +351,7 @@ function InvoiceEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Invoice sent",
         status: "success",
@@ -360,9 +370,9 @@ function InvoiceEdit() {
       variables: {
         id: id,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
-          title: "Invoice generating. Please wait 1min to update",
+          title: "Invoice generating. Please wait 10 seconds to update",
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -371,7 +381,6 @@ function InvoiceEdit() {
         shouldSendInvoice = invoiceStatusId == "2" ? false : shouldSendInvoice;
         setTimeout(() => {
           getInvoice();
-          setIsInvoicePdfUpdating(false);
           if (
             shouldSendInvoice &&
             invoice.invoice_status_id != undefined &&
@@ -380,7 +389,7 @@ function InvoiceEdit() {
           ) {
             handleSendInvoice();
           }
-        }, 60000);
+        }, 10000);
       },
       onError: (error) => {
         showGraphQLErrorToast(error);
@@ -394,7 +403,7 @@ function InvoiceEdit() {
       variables: {
         id: deleteInvoiceLineItemId,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Line Item deleted",
           status: "success",
@@ -422,6 +431,7 @@ function InvoiceEdit() {
       sub_total: invoiceTotal,
       total: invoiceTotal * 1.1,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoiceLineItems]);
 
   useEffect(() => {
@@ -435,6 +445,7 @@ function InvoiceEdit() {
     ) {
       router.push("/admin/invoices");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoice]);
 
   return (
@@ -498,9 +509,12 @@ function InvoiceEdit() {
                       mb="0"
                       ms="10px"
                       className="!h-[39px]"
-                      onClick={() => {
+                      onClick={async () => {
+                        lastUrlRef.current = invoice?.job?.invoice_url ?? null; // remember previous URL
+                        generatingRef.current = true; // mark we triggered a generation
+                        await handleGenerateInvoicePdf(); // your existing mutation/call
                         setIsInvoicePdfUpdating(true);
-                        handleGenerateInvoicePdf();
+                        setIsInvoicePdfgenerate(true);
                       }}
                       isLoading={invoiceLoading}
                       hidden={isCustomer}
@@ -655,9 +669,12 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
-                    <Box pl={6}>Delivery :
+                    <Box pl={6}>
+                      Delivery :
                       {jobDestinations
-                        .filter((destination) => destination.is_pickup === false)
+                        .filter(
+                          (destination) => destination.is_pickup === false,
+                        )
                         .map((destination) => destination.address_city)
                         .join(", ")}
                     </Box>
@@ -810,7 +827,8 @@ function InvoiceEdit() {
                                   let items = [...invoiceLineItems];
                                   let item = { ...invoiceLineItems[index] };
                                   item[e.target.name] = e.target.value || 0;
-                                  item.unit_amount = parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
+                                  item.unit_amount =
+                                    parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
                                   item.line_amount = (
                                     (item.quantity || 0) * item.unit_amount
                                   ).toFixed(2);
@@ -833,7 +851,6 @@ function InvoiceEdit() {
                                 isLoaded={!invoiceLoading}
                                 w="75%"
                               >
-
                                 {formatCurrency(
                                   invoiceLineItem.unit_amount ?? 0,
                                   invoiceLineItem.currency,
@@ -976,8 +993,34 @@ function InvoiceEdit() {
           Add Item
         </Button>
 
-        <Box className="w-full mt-4">
-          <Box className="max-w-[400px] ml-auto">
+        {/* Wrap the two columns in a parent Flex and close it properly */}
+        <Flex className="w-full mt-4 gap-6" justifyContent="space-between">
+          {/* Left Column: Total Weight and CBM */}
+          <Box className="w-1/2 max-w-[400px]">
+            <Flex flexDirection="column">
+              <Flex justifyContent="space-between" className="py-2">
+                <p className="text-sm ">
+                  <span className="text-sm !font-bold px-1">Total Weight: </span>
+                  {jobData?.job?.job_items?.reduce(
+                    (total: number, item: { weight: number }) => total + (item.weight || 0),
+                    0
+                  ).toFixed(2)}
+                </p>
+              </Flex>
+              <Flex justifyContent="space-between" className="py-2">
+                <p className="text-sm text-left">
+                  <span className="text-sm !font-bold px-1">CBM: </span>
+                  {jobData?.job?.job_items?.reduce(
+                    (total: number, item: { volume: number }) => total + (item.volume || 0),
+                    0
+                  ).toFixed(2)}
+                </p>
+              </Flex>
+            </Flex>
+          </Box>
+
+          {/* Right Column: Invoice Info */}
+          <Box className="w-1/2 max-w-[400px] ml-auto">
             <Flex flexDirection="column" className="ml-auto">
               <Flex
                 justifyContent="space-between"
@@ -1049,20 +1092,43 @@ function InvoiceEdit() {
                 )}
 
               {invoice.job && invoice.job.invoice_url != null && (
-                <Link
-                  href={invoice.job.invoice_url}
-                  isExternal
-                  className="w-[49%]"
+                <Button
+                  mx="5px"
+                  variant="secondary"
+                  // isLoading={isInvoicePdfgenerate}
+                  isDisabled={invoiceLoading}
+                  // hidden={isCustomer}
+                  onClick={async () => {
+                    try {
+                      // If a generation just happened, give backend a moment
+                      if (generatingRef.current) {
+                        await sleep(3500); // adjust if needed (2–5s)
+                      }
+
+                      // Always refetch once to get the freshest URL
+                      const { data } = await getInvoice();
+
+                      // Extract URL from the query result
+                      const freshUrl = data?.invoice?.job?.invoice_url ?? null;
+
+                      // Decide which URL to open
+                      const urlToOpen =
+                        freshUrl ||
+                        invoice?.job?.invoice_url || // fallback to prop
+                        lastUrlRef.current || // fallback to cached
+                        null;
+
+                      if (urlToOpen) {
+                        window.open(urlToOpen, "_blank", "noopener,noreferrer");
+                      }
+                    } finally {
+                      // Reset the "generating" flag
+                      generatingRef.current = false;
+                    }
+                  }}
                 >
-                  <Button
-                    variant="secondary"
-                    className="w-[100%]"
-                    isLoading={invoiceLoading || isInvoicePdfUpdating}
-                    isDisabled={isInvoicePdfUpdating}
-                  >
-                    Download PDF
-                  </Button>
-                </Link>
+                  Download PDF
+                </Button>
               )}
               {invoice.invoice_status_id != undefined &&
                 invoice.invoice_status_id != "1" && (
@@ -1077,8 +1143,7 @@ function InvoiceEdit() {
                 )}
             </Flex>
           </Box>
-        </Box>
-
+        </Flex>
         <Divider className="my-10" />
       </Box>
     </AdminLayout>

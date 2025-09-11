@@ -24,6 +24,7 @@ export default function Default(props: {
   suffixText?: string;
   type?: string;
   name?: string;
+  min?: string;
   showLabel?: boolean;
   value?: string | number | any;
   defaultValue?: string | number | any;
@@ -50,6 +51,7 @@ export default function Default(props: {
     value,
     defaultValue,
     name,
+    min,
     type,
     maxWidth,
     minWidth = "10%",
@@ -72,7 +74,7 @@ export default function Default(props: {
   const textColorPrimary = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   // RandomId
-  const [randomIdSection, setRandomIdSection] = useState(
+  const [randomIdSection, _setRandomIdSection] = useState(
     (id ? id : name) + Math.random().toString(36).substring(7),
   );
 
@@ -135,7 +137,16 @@ export default function Default(props: {
               value={value}
               defaultValue={defaultValue}
               onChange={onChange}
-              onClick={type == "date" ? undefined : onClick}
+              min={min}
+              // onClick={type == "date" ? undefined : onClick}
+              onClick={
+                type === "date"
+                  ? (e) => {
+                      e.preventDefault();
+                      e.currentTarget.showPicker?.();
+                    }
+                  : onClick
+              }
               ms={{ base: "0px", md: "0px" }}
               mb="0"
               size="lg"

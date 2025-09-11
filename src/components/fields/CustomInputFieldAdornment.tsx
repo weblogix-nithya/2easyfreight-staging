@@ -75,7 +75,7 @@ export default function Default(props: {
 
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("navy.700", "white");
-  const textColorSecondary = useColorModeValue("#888888", "#888888");
+   const textColorSecondary = useColorModeValue("#888888", "#888888");
   // RandomId
   const [_randomIdSection, _setRandomIdSection] = useState(
     (id ? id : name) + Math.random().toString(36).substring(7)

@@ -60,6 +60,7 @@ export default function StatementGenerateModal({
       setSelectedCompany({ value: companyId, label: "" });
       setSelectedCustomer([customerId]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCustomer, companyId, customerId]);
 
   const onChangeSearchCompany = useMemo(() => {

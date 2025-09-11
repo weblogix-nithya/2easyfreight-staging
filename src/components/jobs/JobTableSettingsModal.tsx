@@ -41,19 +41,19 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
     DynamicTableUser[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const getIndex = (id: UniqueIdentifier) =>
     dynamicTableUsers?.findIndex(
       (dynamicTableUser: DynamicTableUser) => dynamicTableUser.id == id,
     );
-  const getPosition = (id: UniqueIdentifier) => getIndex(id) + 1;
+  // const getPosition = (id: UniqueIdentifier) => getIndex(id) + 1;
   const activeIndex = activeId ? getIndex(activeId) : -1;
 
   useEffect(() => {
     if (isOpen == true) {
       getDynamicTableUsers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const { refetch: getDynamicTableUsers } = useQuery(
@@ -67,7 +67,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         orderByOrder: "ASC",
         user_id: userId,
       },
-          skip: !isOpen, // Skip initial query when modal is closed
+      skip: !userId && !isOpen,
       notifyOnNetworkStatusChange: true,
       fetchPolicy:  "network-only",
       onCompleted: (data) => {
@@ -77,19 +77,21 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
       },
     },
   );
-
-    // Prefetch data when component mounts
-    useEffect(() => {
-      getDynamicTableUsers();
-    }, []);
   
-    // Refresh data when modal opens if needed
-    useEffect(() => {
-      if (isOpen) {
-        setIsLoading(true);
-        getDynamicTableUsers();
-      }
-    }, [isOpen]);
+    // // Prefetch data when component mounts
+    // useEffect(() => {
+    //   getDynamicTableUsers();
+    //   // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, []);
+  
+    // // Refresh data when modal opens if needed
+    // useEffect(() => {
+    //   if (isOpen) {
+    //     setIsLoading(true);
+    //     getDynamicTableUsers();
+    //   }
+    //   // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [isOpen]);
 
   const sortedDynamicTableUsers = dynamicTableUsers.map((item, index) => {
     return {
@@ -105,7 +107,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
       variables: {
         input: sortedDynamicTableUsers,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "User table settings updated",
           status: "success",
@@ -127,7 +129,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
       isOpen={isOpen}
       onClose={onClose}
       size="lg"
-      motionPreset="none" 
+      motionPreset="none"
     >
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
       <ModalContent>
@@ -229,10 +231,10 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
                   </div>
                   <Divider mt="1" />
                 </Box>
-              ))
-            }
-             </>
-            )} 
+                ))
+              }
+               </>
+              )} 
           </VStack>
         </ModalBody>
         <ModalFooter justifyContent={"center"}>

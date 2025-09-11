@@ -23,7 +23,7 @@ export default function Project(props: {
   const { title, ranking, link, image, ...rest } = props;
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
-  const textColorSecondary = "gray.400";
+   const textColorSecondary = "gray.400";
   const brandColor = useColorModeValue("brand.500", "white");
   const bg = useColorModeValue("white", "navy.700");
   return (

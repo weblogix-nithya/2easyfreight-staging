@@ -22,9 +22,9 @@ import {
   // useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+import { faGear } from "@fortawesome/free-solid-svg-icons";
 // FontAwesome Imports
-import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
-import { faGear } from "@fortawesome/pro-solid-svg-icons";
+// import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 // Component Imports
@@ -51,7 +51,7 @@ function VendorEdit() {
   const toast = useToast();
   let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
-  // const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [vendor, setVendor] = useState(defaultVendor);
   const [originalVendor, setOriginalVendor] = useState(defaultVendor); // Track the original vendor data
 
@@ -64,7 +64,7 @@ function VendorEdit() {
   const {
     loading: vendorLoading,
     data: vendorData,
-    refetch: getVendor,
+    // refetch: getVendor,
   } = useQuery(GET_VENDOR_QUERY, {
     variables: {
       id: id,
@@ -122,7 +122,7 @@ function VendorEdit() {
         // Remove vendor_service if it exists in the object
       },
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Vendor updated",
         status: "success",
@@ -150,11 +150,11 @@ function VendorEdit() {
 //     // handleUpdateVendor(); // Invoke the mutation function
 //   }
 
-  const [handleDeleteVendor, { }] = useMutation(DELETE_VENDOR_MUTATION, {
+  const [_handleDeleteVendor, { }] = useMutation(DELETE_VENDOR_MUTATION, {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Vendor deleted",
         status: "success",
@@ -169,9 +169,9 @@ function VendorEdit() {
   });
   const [temporaryMedia, setTemporaryMedia] = useState([]);
 
-  const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(100);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [_queryPageIndex, setQueryPageIndex] = useState(0);
+  // const [queryPageSize, setQueryPageSize] = useState(100);
+  const [_searchQuery, setSearchQuery] = useState("");
 
   const attachmentColumns = useMemo(
     () => [
@@ -211,70 +211,70 @@ function VendorEdit() {
     }, 300);
   }, []);
 
-  const [availableCustomersOptions, setAvailableCustomersOptions] = useState(
-    [],
-  );
-  const [searchAvailableCustomerQuery, setSearchAvailableCustomerQuery] =
+  // // const [availableCustomersOptions, setAvailableCustomersOptions] = useState(
+  //   [],
+  // );
+  const [_searchAvailableCustomerQuery, _setSearchAvailableCustomerQuery] =
     useState("");
 
-  const [selectCustomerId, setSelectCustomerId] = useState(null);
+  // const [selectCustomerId, setSelectCustomerId] = useState(null);
 
-  const onChangeSearchAvailableCustomerQuery = useMemo(() => {
-    return debounce((e) => {
-      setSearchAvailableCustomerQuery(e);
-    }, 300);
-  }, []);
+  // const onChangeSearchAvailableCustomerQuery = useMemo(() => {
+  //   return debounce((e) => {
+  //     setSearchAvailableCustomerQuery(e);
+  //   }, 300);
+  // }, []);
 
-  const columns = useMemo(
-    () => [
-      {
-        Header: "First Name",
-        accessor: "first_name" as const,
-      },
-      {
-        Header: "Last Name",
-        accessor: "last_name" as const,
-      },
-      {
-        Header: "Phone Number",
-        accessor: "phone_no" as const,
-      },
-      {
-        Header: "Vendor Role",
-        accessor: "is_vendor_admin" as const,
-        trueLabel: "Admin",
-        falseLabel: "User",
-        type: "boolean",
-      },
-      {
-        Header: "Send POD",
-        accessor: "is_pod_sendable" as const,
-        trueLabel: "Yes",
-        falseLabel: "No",
-        type: "boolean",
-      },
-      {
-        Header: "Send Invoice",
-        accessor: "is_invoice_sendable" as const,
-        trueLabel: "Yes",
-        falseLabel: "No",
-        type: "boolean",
-      },
-      {
-        Header: "Email",
-        accessor: "email" as const,
-      },
-      {
-        Header: "Actions",
-        accessor: "id" as const,
-        isDelete: true,
-        isView: true,
-        isEdit: false,
-        deleteIcon: faUserMinus,
-      },
-    ],
-    [],
-  );
+  // const columns = useMemo(
+  //   () => [
+  //     {
+  //       Header: "First Name",
+  //       accessor: "first_name" as const,
+  //     },
+  //     {
+  //       Header: "Last Name",
+  //       accessor: "last_name" as const,
+  //     },
+  //     {
+  //       Header: "Phone Number",
+  //       accessor: "phone_no" as const,
+  //     },
+  //     {
+  //       Header: "Vendor Role",
+  //       accessor: "is_vendor_admin" as const,
+  //       trueLabel: "Admin",
+  //       falseLabel: "User",
+  //       type: "boolean",
+  //     },
+  //     {
+  //       Header: "Send POD",
+  //       accessor: "is_pod_sendable" as const,
+  //       trueLabel: "Yes",
+  //       falseLabel: "No",
+  //       type: "boolean",
+  //     },
+  //     {
+  //       Header: "Send Invoice",
+  //       accessor: "is_invoice_sendable" as const,
+  //       trueLabel: "Yes",
+  //       falseLabel: "No",
+  //       type: "boolean",
+  //     },
+  //     {
+  //       Header: "Email",
+  //       accessor: "email" as const,
+  //     },
+  //     {
+  //       Header: "Actions",
+  //       accessor: "id" as const,
+  //       isDelete: true,
+  //       isView: true,
+  //       isEdit: false,
+  //       deleteIcon: faUserMinus,
+  //     },
+  //   ],
+  //   [],
+  // );
 
   const {
     loading: vendorServicesLoading,
@@ -300,6 +300,7 @@ function VendorEdit() {
         vendor_service_id: String(vendorData.vendor.vendor_service_id), // Convert to string
       }));
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorData]);
   
   

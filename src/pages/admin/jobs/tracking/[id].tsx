@@ -13,9 +13,9 @@ import {
   GridItem,
   IconButton,
   Text,
-  Tooltip,
+  Tooltip
 } from "@chakra-ui/react";
-import { faBoltLightning } from "@fortawesome/pro-solid-svg-icons";
+import { faBoltLightning } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { TrackingMap } from "components/map/TrackingMap";
 import RsbJobIndicatorCircle from "components/sidebar/components/RsbJobIndicatorCircle";
@@ -30,7 +30,7 @@ import {
 import debounce from "lodash.debounce";
 import moment from "moment";
 import { useRouter } from "next/router";
-import React, { useCallback, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import AdminLayout from "../../../../layouts/admin";
 
@@ -46,18 +46,29 @@ export default function TrackingJob() {
   const [drivers, setDrivers] = useState([]);
   const [pollingSpeed, setPollingSpeed] = useState(60000);
 
-  const centerChangeHandler = (data: any) => {
-    setCenter(data);
-  };
-  const debouncedCenterChangeHandler = useCallback(
-    debounce(centerChangeHandler, 300),
-    [],
-  );
+  // const centerChangeHandler = (data: any) => {
+  //   setCenter(data);
+  // };
+  // const debouncedCenterChangeHandler = useCallback(
+  //   debounce(centerChangeHandler, 300),
+  //   [],
+  // );
+  const debouncedCenterChangeHandler = useMemo(() => {
+    return debounce((data: any) => {
+      setCenter(data);
+    }, 300);
+  }, [setCenter]);
+
+  useEffect(() => {
+    return () => {
+      debouncedCenterChangeHandler.cancel?.(); // if using lodash.debounce
+    };
+  }, [debouncedCenterChangeHandler]);
 
   const {
     loading: jobLoading,
     data: jobData,
-    refetch: getJob,
+    refetch: _getJob,
   } = useQuery(GET_JOB_QUERY, {
     variables: {
       id: jobId,
@@ -71,7 +82,8 @@ export default function TrackingJob() {
           first: 20,
           orderByColumn: "id",
           orderByOrder: "ASC",
-          today: moment(localDate).utc().format("YYYY-MM-DD HH:mm:ss"),
+          // today: moment(localDate).utc().format("YYYY-MM-DD HH:mm:ss"),
+          today: moment(localDate).utc().format("YYYY-MM-DD") + " 14:00:00",
           driver_id: Number(data?.job?.driver_id),
         },
       });
@@ -84,7 +96,7 @@ export default function TrackingJob() {
 
   const [
     getDriverCurrentRoutes,
-    { data: routes, loading: loadingDriverCurrentRoutes },
+    { data: _routes, loading: loadingDriverCurrentRoutes },
   ] = useLazyQuery(GET_DRIVER_CURRENT_ROUTE_QUERY, {
     pollInterval: pollingSpeed,
     notifyOnNetworkStatusChange: true,
@@ -321,16 +333,15 @@ export default function TrackingJob() {
                                                     <strong>
                                                       Pick up notes:{" "}
                                                     </strong>
-                                                    {`${
-                                                      routePoint.job_destination
+                                                    {`${routePoint.job_destination
                                                         .pick_up_notes
                                                         ? routePoint
-                                                            .job_destination
-                                                            .pick_up_notes
+                                                          .job_destination
+                                                          .pick_up_notes
                                                         : routePoint
-                                                            .job_destination
-                                                            .notes ?? "N/A"
-                                                    }`}
+                                                          .job_destination
+                                                          .notes ?? "N/A"
+                                                      }`}
                                                   </p>
                                                 </div>
                                               </AccordionPanel>

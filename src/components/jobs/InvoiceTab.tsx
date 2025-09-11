@@ -1,12 +1,14 @@
 import {
   Box,
   Button,
+  Center,
   Divider,
   Flex,
   GridItem,
   Link,
   SimpleGrid,
   Skeleton,
+  Spinner,
   Table,
   Tbody,
   Td,
@@ -18,7 +20,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { formatCurrency } from "helpers/helper";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
@@ -28,13 +30,20 @@ export default function InvoiceTab(props: { jobObject: any }) {
   const toast = useToast();
 
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const isCompany = useSelector((state: RootState) => state.user.isCompany);
+  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const textColor = useColorModeValue("navy.700", "white");
-  let menuBg = useColorModeValue("white", "navy.800");
+  // let menuBg = useColorModeValue("white", "navy.800");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = React.useState<any>(jobObject);
-  const router = useRouter();
+  // const router = useRouter();
+  const job_collection = jobObject.job_destinations?.find(
+    (dest: any) => dest.is_pickup,
+  )?.address_city;
+  const job_delivery = jobObject.job_destinations?.find(
+    (dest: any) => !dest.is_pickup,
+  )?.address_city;
+
   useEffect(() => {
     let _customer = null;
 
@@ -66,32 +75,50 @@ export default function InvoiceTab(props: { jobObject: any }) {
         customer: _customer ? _customer : jobObject.customer_invoice?.customer,
       },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobObject]);
+
   return (
     <Box mt={5}>
       {/* Invoice */}
       <Box mb={10} mt={10} width="">
-        <Flex mb={1}>
-          <Text fontWeight="800!" ms="2px" mr={10} mt={0} textColor={textColor}>
-            Customer
-          </Text>
-          <SimpleGrid columns={{ sm: 1 }} ml={10}>
-            <GridItem>
-              <Text fontWeight="800!" fontSize="sm" color={"blue.500"}>
-                {job.customer_invoice?.customer?.full_name}
-              </Text>
-            </GridItem>
-            <GridItem>
-              <Text
-                fontSize="xs"
-                fontWeight="400"
-                mt={1}
-                textColor={textColorSecodary}
-              >
-                {job.customer_invoice?.customer?.company?.name}
-              </Text>
-            </GridItem>
-          </SimpleGrid>
+        <Flex mb={1} align="flex-start">
+          <Box>
+            <SimpleGrid columns={{ sm: 1 }} ml={5}>
+              <GridItem>
+                <Text
+                  fontWeight="800!"
+                  ms="2px"
+                  mr={5}
+                  mt={0}
+                  textColor={textColor}
+                >
+                  Customer
+                </Text>
+                <Text fontWeight="800!" fontSize="sm" color={"blue.500"}>
+                  {job?.customer_invoice?.customer?.full_name}
+                </Text>
+              </GridItem>
+              <GridItem>
+                <Text
+                  fontSize="xs"
+                  fontWeight="400"
+                  mt={1}
+                  textColor={textColorSecodary}
+                >
+                  {job?.customer_invoice?.customer?.company?.name}
+                </Text>
+              </GridItem>
+            </SimpleGrid>
+          </Box>
+          <Box ml="600px" textAlign="start">
+            <Text fontSize="sm" fontWeight="800" color="gray.600">
+              Collection: {job_collection}
+            </Text>
+            <Text fontSize="sm" fontWeight="800" color="gray.600">
+              Delivery: {job_delivery}
+            </Text>
+          </Box>
         </Flex>
       </Box>
       <Divider />
@@ -115,26 +142,67 @@ export default function InvoiceTab(props: { jobObject: any }) {
               </Tr>
             </Thead>
             <Tbody>
-              {job.customer_invoice?.invoice_line_items?.map(
-                (item: any, index: number) => {
-                  return (
+              {!job?.customer_invoice?.invoice_line_items ? (
+                // Show spinner while data is not loaded
+                <Tr>
+                  <Td colSpan={5}>
+                    <Center py={4}>
+                      <Spinner size="lg" />
+                    </Center>
+                  </Td>
+                </Tr>
+              ) : (
+                job?.customer_invoice?.invoice_line_items?.map(
+                  (item: any, index: number) => (
                     <Tr key={"row-" + index}>
                       <Td>{item.name}</Td>
-                      <Td>{formatCurrency(item.unit_amount, item.currecy)}</Td>
+                      <Td>{formatCurrency(item.unit_amount, item.currency)}</Td>
                       <Td>{item.quantity}</Td>
                       <Td colSpan={2} textAlign="end">
                         {formatCurrency(item.line_amount, item.currency)}
                       </Td>
                     </Tr>
-                  );
-                },
+                  ),
+                )
               )}
             </Tbody>
           </Table>
         </Flex>
 
-        <Flex alignItems="center" justifyContent="flex-end" mt={1}>
-          <Box className="w-full mt-4">
+        <Flex className="w-full mt-4 gap-6" justifyContent="space-between">
+          {/* Left Column: Total Weight and CBM */}
+          <Box className="w-1/2 max-w-[400px]">
+            <Flex flexDirection="column">
+              <Flex justifyContent="space-between" className="py-4 ">
+                <p className="text-sm ">
+                  <span className="text-sm !font-bold px-1">
+                    Total Weight:{" "}
+                  </span>
+                  {job?.job_items
+                    ?.reduce(
+                      (total: number, item: { weight: number }) =>
+                        total + (item.weight || 0),
+                      0,
+                    )
+                    .toFixed(2)}
+                </p>
+              </Flex>
+
+              <Flex justifyContent="space-between" className="py-2">
+                <p className="text-sm text-left">
+                  <span className="text-sm !font-bold px-1">CBM: </span>
+                  {job?.job_items
+                    ?.reduce(
+                      (total: number, item: { volume: number }) =>
+                        total + (item.volume || 0),
+                      0,
+                    )
+                    .toFixed(2)}
+                </p>
+              </Flex>
+            </Flex>
+          </Box>
+          <Box className="w-1/2 mt-4">
             <Box className="max-w-[400px] ml-auto">
               <Flex flexDirection="column" className="ml-auto">
                 <Flex
@@ -146,7 +214,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
                   </Skeleton>
                   <Skeleton isLoaded={job.customer_invoice} w="50%">
                     <p className="text-sm text-right">
-                      {job.customer_invoice?.sub_total
+                      {job?.customer_invoice?.sub_total
                         ? formatCurrency(
                             job.customer_invoice?.sub_total,
                             job.customer_invoice?.currency,

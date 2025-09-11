@@ -20,9 +20,9 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+import { faEllipsis } from "@fortawesome/free-solid-svg-icons";
 import { faGripLines } from "@fortawesome/pro-light-svg-icons";
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
-import { faEllipsis } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
@@ -64,15 +64,15 @@ import RightSideBarJob from "./RightSideBarJob";
 function RightSideBar() {
   const rightSideBarJobRef = useRef(null);
   const textColor = useColorModeValue("secondaryGray.900", "white");
-  let variantChange = "0.2s linear";
-  let shadow = useColorModeValue(
-    "14px 17px 40px 4px rgba(112, 144, 176, 0.08)",
-    "unset",
-  );
-  let sidebarBg = useColorModeValue("white", "navy.800");
-  let sidebarMargins = "0px";
+  // let variantChange = "0.2s linear";
+  // let shadow = useColorModeValue(
+  //   "14px 17px 40px 4px rgba(112, 144, 176, 0.08)",
+  //   "unset",
+  // );
+  // let sidebarBg = useColorModeValue("white", "navy.800");
+  // let sidebarMargins = "0px";
   let sidebarBackgroundColor = useColorModeValue("white", "navy.800");
-  let menuColor = useColorModeValue("gray.400", "white");
+  // let menuColor = useColorModeValue("gray.400", "white");
   const toast = useToast();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -91,7 +91,7 @@ function RightSideBar() {
   const isShowRightSideBar = useSelector(
     (state: RootState) => state.rightSideBar.isShow,
   );
-  const rightSideBarData = useSelector(
+  const _rightSideBarData = useSelector(
     (state: RootState) => state.rightSideBar.data,
   );
   const rightSideBarJob = useSelector(
@@ -123,6 +123,7 @@ function RightSideBar() {
     } else {
       onClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isShowRightSideBar, onClose, onOpen, rightSideBarRoute]);
 
   function onCloseComplete() {
@@ -171,10 +172,10 @@ function RightSideBar() {
     },
   });
 
-  const [handleUpdateRoutePointSortId, { data }] = useMutation(
+  const [handleUpdateRoutePointSortId, { }] = useMutation(
     UPDATE_ROUTE_POINT_SORT_ID_MUTATION,
     {
-      onCompleted: (data: any) => {
+      onCompleted: (_data: any) => {
         toast({
           title: "Route Point updated",
           status: "success",
@@ -188,8 +189,8 @@ function RightSideBar() {
     },
   );
 
-  const [updateRoute, {}] = useMutation(UPDATE_ROUTE_MUTATION, {
-    onCompleted: (data: any) => {
+  const [updateRoute, { }] = useMutation(UPDATE_ROUTE_MUTATION, {
+    onCompleted: (_data: any) => {
       toast({
         title: "Route updated",
         status: "success",
@@ -320,7 +321,7 @@ function RightSideBar() {
                         setDriver(driver);
                         setRoute({ ...route, driver_id: e.value });
                       }}
-                      // components={driverDropdownOptions}
+                    // components={driverDropdownOptions}
                     ></Select>
                   </Box>
                 </Flex>
@@ -340,7 +341,7 @@ function RightSideBar() {
                             style={{
                               color:
                                 route.current_volume >
-                                driver.no_max_capacity * 0.9
+                                  driver.no_max_capacity * 0.9
                                   ? "red"
                                   : "black",
                             }}
@@ -358,7 +359,7 @@ function RightSideBar() {
                             style={{
                               color:
                                 route.current_weight >
-                                driver.no_max_capacity * 0.9
+                                  driver.no_max_capacity * 0.9
                                   ? "red"
                                   : "black",
                             }}
@@ -406,7 +407,7 @@ function RightSideBar() {
 
                 <DragDropContext onDragEnd={onDragEnd}>
                   <Droppable droppableId="droppable">
-                    {(provided: any, snapshot: any) => (
+                    {(provided: any, _snapshot: any) => (
                       <div
                         {...provided.droppableProps}
                         ref={provided.innerRef}
@@ -420,7 +421,7 @@ function RightSideBar() {
                               draggableId={routePoint.id}
                               index={index}
                             >
-                              {(provided: any, snapshot: any) => (
+                              {(provided: any, _snapshot: any) => (
                                 <Box
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
@@ -500,7 +501,7 @@ function RightSideBar() {
                                         {/* TODO: Disable repositioning order if Job is complete */}
                                         {/* Drag handle, hide if complete */}
                                         {routePoint.route_point_status_id !=
-                                        3 ? (
+                                          3 ? (
                                           <div {...provided.dragHandleProps}>
                                             <FontAwesomeIcon
                                               icon={faGripLines}

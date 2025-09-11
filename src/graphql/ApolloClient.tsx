@@ -11,7 +11,6 @@ import { useMemo } from "react";
 
 export let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
 
-// Add this new function to handle cookie clearing
 const clearAllCookies = () => {
   const cookieNames = [
     "access_token",
@@ -23,67 +22,88 @@ const clearAllCookies = () => {
     "is_admin",
     "is_company_admin",
     "user_id",
-    "state"
+    "state",
   ];
 
-  const paths = ["/", "/admin", "/admin/jobs", "*"];
+  // const paths = ["/", "/admin", "/admin/jobs", "*"];
 
-  cookieNames.forEach(name => {
-    paths.forEach(path => {
-      destroyCookie(null, name, { path });
-    });
+  // cookieNames.forEach(name => {
+  //   paths.forEach(path => {
+  //   destroyCookie(null, name, { path });
+  // });
+
+  
+  cookieNames.forEach((name) => {
+    destroyCookie(null, name, { path: "/" });
   });
+
+  // Optional: clear localStorage/sessionStorage if you use them
+  localStorage.clear();
+  sessionStorage.clear();
 };
 
 const createLink = (opts: HttpOptions = {}) => {
   return createUploadLink({
     uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
-    credentials: 'include',
+    credentials: "include",
     fetchOptions: {
-      credentials: 'include'
+      credentials: "include",
     },
-    ...opts
+    ...opts,
   });
 };
 
-function createApolloClient() {
-  const uploadLink = createLink();
-
-  const errorLink = new ApolloLink((operation, forward) => {
-    return forward(operation).map((response) => {
-      const { errors, data } = response;
-      const networkError = (response as any).networkError;
-      const graphQLErrors = errors;
-
-      if (networkError?.message?.includes('401') ||
-          graphQLErrors?.some((error: { message: string }) => error.message.includes('Unauthenticated'))) {
-        // Clear all cookies across all paths
-        clearAllCookies();
-        
-        // Clear Apollo cache
-        apolloClient?.clearStore().then(() => {
-          window.location.href = '/auth/login';
-        });
-      }
-
-      return response;
-    });
+function createApolloClient(token: string = "") {
+  // const uploadLink = createLink();
+  const uploadLink = createUploadLink({
+    uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
+    credentials: "include",
+    fetchOptions: { credentials: "include" },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
-  
+
+const errorLink = new ApolloLink((operation, forward) => {
+  return forward(operation).map((response) => {
+    const { errors } = response;
+    const networkError = (response as any).networkError;
+    const graphQLErrors = errors;
+
+    if (
+      networkError?.message?.includes("401") ||
+      graphQLErrors?.some((error: { message: string }) =>
+        error.message.toLowerCase().includes("unauthenticated")
+      )
+    ) {
+      // Redirect to login page and pass the current URL as `redirectTo`
+      const redirectTo = window.location.pathname + window.location.search;
+      
+      clearAllCookies(); // Clear cookies upon unauthentication
+
+      apolloClient?.clearStore().then(() => {
+        window.location.href = `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`;
+      });
+    }
+
+    return response;  // Return the response
+  });
+});
+
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
     link: from([errorLink, uploadLink]),
     cache: new InMemoryCache({ addTypename: false }),
     defaultOptions: {
       watchQuery: {
-        errorPolicy: 'all'
-      }
-    }
+        errorPolicy: "all",
+      },
+    },
   });
 }
 
 export function initializeApollo(initialState = {}) {
-  const _apolloClient = apolloClient ?? createApolloClient();
+  const cookies = parseCookies();
+  const token = cookies.access_token || "";
+  const _apolloClient = apolloClient ?? createApolloClient(token);
 
   // If your page has Next.js data fetching methods that use Apollo Client, the initial state
   // gets hydrated here
@@ -109,7 +129,7 @@ export function useApollo(initialState: NormalizedCacheObject) {
 
 export const setAuthToken = () => {
   const cookies = parseCookies();
-  const token = cookies.access_token ? cookies.access_token : "";
+  const token = cookies.access_token || "";
 
   const options: HttpOptions = {
     headers: {

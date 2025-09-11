@@ -18,11 +18,11 @@ export default function Upload(props: {
   total?: number;
   [x: string]: any;
 }) {
-  const { used, total, ...rest } = props;
+  const { _used, _total, ...rest } = props;
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
   const brandColor = useColorModeValue("brand.500", "white");
-  const textColorSecondary = "gray.400";
+   const textColorSecondary = "gray.400";
   return (
     <Card {...rest} mb="20px" alignItems="center" p="20px">
       <Flex h="100%" flexDirection={{ base: "column", "2xl": "row" }}>

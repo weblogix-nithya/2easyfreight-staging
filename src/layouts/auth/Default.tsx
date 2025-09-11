@@ -19,7 +19,7 @@ function AuthIllustration(props: {
   illustrationBackground: string;
 }) {
   const authBg = useColorModeValue("white", "navy.900");
-  const { children, illustrationBackground } = props;
+  const { children } = props;
   // Chakra color mode
   return (
     <Flex
