@@ -1820,7 +1820,7 @@ function JobEdit() {
     },
     [tabId, getJob, toast],
   );
-  const handlePreviewEmail = async (reason: string) => {
+    const handlePreviewEmail = async (reason: string) => {
     setSelectedReason(reason);
     try {
       const { data } = await getEmailTemplate({

@@ -127,7 +127,8 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
     (destination: any) => destination?.is_pickup === false,
   );
   const showDeliveryTime =
-    row?.original?.job?.job_status.id == 6 || row?.original?.job?.job_status.id == 7;
+    row?.original?.job?.job_status.id == 6 ||
+    row?.original?.job?.job_status.id == 7;
 
   // Only get media if not in status 6 or 7
   const normalMedia =
@@ -152,7 +153,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
-            <Link key={`${index+1}`} href={media.downloadable_url} isExternal>
+            <Link key={`${index + 1}`} href={media.downloadable_url} isExternal>
               <Image
                 src={media.downloadable_url}
                 alt={media.name || "Delivery evidence"}
@@ -161,7 +162,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
                 style={{
                   objectFit: "cover",
                   borderRadius: "4px",
-                  width: "50px", 
+                  width: "50px",
                   height: "50px",
                 }}
               />
@@ -186,9 +187,11 @@ export const PickupAddressWithTimebulkCell = ({ row }: any) => {
   );
 
   return (
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}\n ${pickupDest?.address_business_name || "-"}`}
-      </Text>
+    <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
+        pickupDest?.address_postal_code
+      }\n ${pickupDest?.address_business_name || "-"}`}
+    </Text>
   );
 };
 export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
@@ -197,9 +200,11 @@ export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
   );
 
   return (
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}\n ${pickupDest?.address_business_name || "-"}`}
-      </Text>
+    <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
+        pickupDest?.address_postal_code
+      }\n ${pickupDest?.address_business_name || "-"}`}
+    </Text>
   );
 };
 export const PickupAddressWithTimeCell = ({ row }: any) => {
@@ -239,7 +244,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
                 style={{
                   objectFit: "cover",
                   borderRadius: "4px",
-                  width: "50px", 
+                  width: "50px",
                   height: "50px",
                 }}
               />
@@ -298,7 +303,8 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
     (destination: any) => destination?.is_pickup === false,
   );
   const showDeliveryTime =
-    row?.original?.job?.job_status.id == 6 || row?.original?.job?.job_status.id == 7;
+    row?.original?.job?.job_status.id == 6 ||
+    row?.original?.job?.job_status.id == 7;
 
   return (
     <>
@@ -340,13 +346,18 @@ export const ReadyDropByCellExport = ({ row }: any) =>
     D: ${formatTime(row?.original?.job?.drop_at)}`;
 
 export const NotesCell = ({ row }: any) => {
-  const [display, setDisplay] = React.useState(
-    row?.original?.job?.customer_notes ?? ""
-  );
+  const current = row?.original?.job?.customer_notes ?? "";
+  const [display, setDisplay] = React.useState(current);
+
+  React.useEffect(() => {
+    setDisplay(current);
+  }, [current]);
 
   return (
     <Flex gap={2} align="center">
-      <Text maxW="200px" noOfLines={3}>{display || "-"}</Text>
+      <Text maxW="200px" noOfLines={3}>
+        {display || "-"}
+      </Text>
       <EditableFieldPopover
         row={row}
         field="customer_notes"
@@ -539,8 +550,8 @@ export const StatusCell = ({ row }: any) => {
 export const ReadyAtCell = ({ row }: any) => {
   return (
     <Text maxW="150px" minW="100px">
-      {row?.original?.job?.drop_at || "-"} 
-       {/* it wa ready_at date initially, as client asked for jobdrop_at, changed it to drop_at */}
+      {row?.original?.job?.drop_at || "-"}
+      {/* it wa ready_at date initially, as client asked for jobdrop_at, changed it to drop_at */}
     </Text>
   );
 };
@@ -602,13 +613,18 @@ export const DeliveryCell = ({ row }: any) => {
 };
 
 export const AdminNotesCell = ({ row }: any) => {
-  const [display, setDisplay] = React.useState(
-    row?.original?.job?.admin_notes ?? ""
-  );
+  const current = row?.original?.job?.admin_notes ?? "";
+  const [display, setDisplay] = React.useState(current);
+
+  React.useEffect(() => {
+    setDisplay(current);
+  }, [current]);
 
   return (
     <Flex gap={2} align="center">
-      <Text maxW="200px" noOfLines={2}>{display || "-"}</Text>
+      <Text maxW="200px" noOfLines={2}>
+        {display || "-"}
+      </Text>
       <EditableFieldPopover
         row={row}
         field="admin_notes"
@@ -620,32 +636,28 @@ export const AdminNotesCell = ({ row }: any) => {
   );
 };
 
-export const TimeslotCell = ({ row }: any) => {
-  const [display, setDisplay] = React.useState(
-    row?.original?.job?.timeslot ?? ""
-  );
-
+export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
-      <Text maxW="140px" noOfLines={1}>{display || "-"}</Text>
+      <Text maxW="140px" noOfLines={1}>
+        {row?.original?.job?.timeslot || "-"}
+      </Text>
       <EditableFieldPopover
         row={row}
         field="timeslot"
         triggerAriaLabel="Edit timeslot"
-        onSaved={setDisplay}
+        refetchJobs={refetchJobs}
       />
     </Flex>
   );
 };
 
-const MEDIA_CELL: Record<
-  string, 
-  { with: any; without: any }
-> = {
-  "pick_up_destination.address_formatted,pick_up_destination.address_business_name": {
-    with: PickupAddressWithTimeCell,
-    without: PickupAddressWithTimewithoutMediaCell,
-  },
+const MEDIA_CELL: Record<string, { with: any; without: any }> = {
+  "pick_up_destination.address_formatted,pick_up_destination.address_business_name":
+    {
+      with: PickupAddressWithTimeCell,
+      without: PickupAddressWithTimewithoutMediaCell,
+    },
   "job_destinations.address,job_destinations.address_business_name": {
     with: JobDestinationWithBusinessNameCell,
     without: JobDestinationWithBusinessNamewithoutMediaCell,
@@ -670,9 +682,7 @@ function uniqueById(cols: any[]): any[] {
   return cols.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
 }
 
-
-
-export const tableColumn = [
+export const tableColumn = (refetchJobs: () => void) => [
   {
     id: "name",
     Header: "Delivery ID",
@@ -733,7 +743,7 @@ export const tableColumn = [
   },
   {
     id: "job_destinations.address",
-    Header: "Delivery Address", 
+    Header: "Delivery Address",
     width: "100px",
     Cell: JobDestinationsCell,
     CellExport: JobDestinationsCellExport,
@@ -759,8 +769,9 @@ export const tableColumn = [
   {
     id: "timeslot",
     Header: "Timeslot",
-    Cell: TimeslotCell, // Add this line
-    // width: "50px",
+    Cell: ({ row }: any) => (
+      <TimeslotCell row={row} refetchJobs={refetchJobs} />
+    ),
   },
   {
     id: "last_free_at",
@@ -828,7 +839,8 @@ export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
   withMedia: boolean,
-  dynamicTableUsers?: DynamicTableUser[], // required by outputDynamicTable
+  refetchJobs?: () => void,
+  dynamicTableUsers?: DynamicTableUser[],
 ) => {
   // 1) Selection checkbox column
   const base: any[] = [
@@ -857,7 +869,7 @@ export const getColumns = (
   if (!dynamicTableUsers || dynamicTableUsers.length === 0) {
     const cols = uniqueById([
       ...base,
-      ...tableColumn, // your static defaults
+      ...tableColumn(refetchJobs), // your static defaults
       {
         id: "actions",
         Header: "Actions",
@@ -875,7 +887,7 @@ export const getColumns = (
   // NOTE: outputDynamicTable should only include columns that are active:true.
   let columns = [
     ...base,
-    ...outputDynamicTable(dynamicTableUsers, tableColumn),
+    ...outputDynamicTable(dynamicTableUsers, tableColumn(refetchJobs)),
   ];
 
   // 4) Swap only the Cell for the 2 special fields based on withMedia
@@ -964,7 +976,7 @@ export const bulkassigntableColumn = [
   },
   {
     id: "job_destinations.address",
-    Header: "Delivery Address", 
+    Header: "Delivery Address",
     width: "100px",
     Cell: JobDestinationsCell,
     CellExport: JobDestinationsCellExport,
@@ -1077,7 +1089,10 @@ export const getBulkAssignColumns = (
     ];
   }
 
-  const dynamicColumns = outputDynamicTable(dynamicTableUsers, bulkassigntableColumn);
+  const dynamicColumns = outputDynamicTable(
+    dynamicTableUsers,
+    bulkassigntableColumn,
+  );
 
   var columns: any[] = [
     {
