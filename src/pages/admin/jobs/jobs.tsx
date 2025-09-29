@@ -107,11 +107,16 @@ const adminStatusOptions = [
     label: "Completed (Completed/Delivered)",
     statusIds: [6, 7],
   },
-  // {
-  //   value: "Cancelled",
-  //   label: "Cancelled (Cancelled/Declined)",
-  //   statusIds: [8, 9],
-  // },
+  {
+    value: "Cancelled",
+    label: "Cancelled (Cancelled/Declined)",
+    statusIds: [8, 9],
+  },
+  {
+    value: "Futile",
+    label: "Futile",
+    statusIds: [10],
+  },
 ];
 
 const companyStatusOptions = [
