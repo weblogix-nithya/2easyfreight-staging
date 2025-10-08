@@ -38,12 +38,13 @@ export function calculateFinalWeightCBM(
         0
     );
     if (rawCBM <= 0) return { totalCBM: 0, totalWeight: 0 };
-    /* const totalWeight = jobItems.reduce(
-        (total, item) => total + (item.quantity || 0) * (item.weight || 0),
-        0
-    ); */
+
+    // const totalWeight = jobItems.reduce(
+    //     (total, item) => total + (item.weight || 0),
+    //     0
+    // );
     const totalWeight = jobItems.reduce(
-        (total, item) => total + (item.weight || 0),
+        (total, item) => total + (item.quantity || 0) * (item.weight || 0),
         0
     );
     let finalWeightCBM = rawCBM;
@@ -68,11 +69,11 @@ export function calculateFinalWeightCBM(
             finalWeightCBM = Math.max(finalCBM, weightCBM);
         }
     }
-    console.log("Final CBM:", finalWeightCBM);
+    // console.log("Final CBM:", finalWeightCBM);
     // console.log("Total Weight:", totalWeight);
 
     return {
-        totalCBM: rawCBM ? rawCBM : 0,
+        totalCBM: finalWeightCBM ? finalWeightCBM : 0,
         totalWeight: totalWeight ? totalWeight : 0
     };
 }
