@@ -135,7 +135,11 @@ function JobEdit() {
   const [job, setJob] = useState(defaultJob);
   const [reportJob, setReportJob] = useState<ReportJob>(defaultReportJob);
 
-  const [refinedData, setRefinedData] = useState(defaultJobQuoteData);
+  const [refinedData, setRefinedData] = useState({
+    ...defaultJobQuoteData,
+    total_cbm: 0,
+    total_weight: 0,
+  });
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
@@ -482,7 +486,11 @@ function JobEdit() {
           jobItems,
           companyWeight,
         );
-
+        setRefinedData({
+          ...refinedData,
+          total_cbm: parseFloat(totalCBM.toFixed(2)),
+          total_weight: parseFloat(totalWeight.toFixed(2)),
+        });
         setQuoteCalculationRes((prev) => ({
           ...prev,
           total_weight: totalWeight,
@@ -973,6 +981,11 @@ function JobEdit() {
         jobItems,
         companyWeight,
       );
+      setRefinedData({
+        ...refinedData,
+        total_cbm: parseFloat(totalCBM.toFixed(2)),
+        total_weight: parseFloat(totalWeight.toFixed(2)),
+      });
       setQuoteCalculationRes((prev) => ({
         ...prev,
         total_weight: totalWeight,
@@ -992,6 +1005,11 @@ function JobEdit() {
         jobItems,
         companyWeight,
       );
+      setRefinedData({
+        ...refinedData,
+        total_cbm: parseFloat(totalCBM.toFixed(2)),
+        total_weight: parseFloat(totalWeight.toFixed(2)),
+      });
       setQuoteCalculationRes((prev) => ({
         ...prev,
         total_weight: totalWeight,
@@ -1109,7 +1127,11 @@ function JobEdit() {
         jobItems,
         companyWeight,
       );
-
+      setRefinedData({
+        ...refinedData,
+        total_cbm: parseFloat(totalCBM.toFixed(2)),
+        total_weight: parseFloat(totalWeight.toFixed(2)),
+      });
       setQuoteCalculationRes((prev) => ({
         ...prev,
         total_weight: totalWeight,
@@ -1561,6 +1583,8 @@ function JobEdit() {
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
+      total_cbm: refinedData.total_cbm,
+      total_weight: refinedData.total_weight,
       state: refinedData.state || selectedstate?.label,
       state_code: refinedData.state_code || selectedstate?.value,
       company_rates:

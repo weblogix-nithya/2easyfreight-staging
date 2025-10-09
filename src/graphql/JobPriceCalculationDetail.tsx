@@ -132,6 +132,7 @@ export interface JobPriceCalculationDetail {
   total: number | null;
   tail_lift: number | null,
   time_slot: number | null,
+  total_cbm: number | null,
 }
 
 
@@ -180,4 +181,5 @@ export const defaultJobPriceCalculationDetail: JobPriceCalculationDetail = {
   dangerous_goods: null,
   stackable: null,
   total: null,
+  total_cbm: null,
 };
