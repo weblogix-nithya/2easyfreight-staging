@@ -224,7 +224,7 @@ function JobPage() {
         Header: "WEIGHT",
       },
       {
-        Header: "CBM",
+        Header: "RAW CBM",
       },
       {
         Header: "ACTION",
@@ -1002,7 +1002,7 @@ function JobPage() {
 
     calculateTotals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyWeight, job.job_category_id, jobItems]);
+  }, [companyWeight, job.job_category_id, jobItems,handleJobItemChanged]);
 
   const addToJobItems = () => {
     let nextId = jobItems[jobItems.length - 1].id + 1;
