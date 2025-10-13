@@ -43,6 +43,7 @@ type PaginationTableProps<T extends object> = {
   plugins?: PluginHook<T>[];
   path?: string;
   showDelete?: boolean;
+  onReset?: (data: any) => void;
   onDelete?: (data: any) => void;
   isapprove?: boolean;
   isRestore?: boolean;
@@ -90,6 +91,7 @@ const PaginationTable = <T extends object>({
   onDelete,
   onApprove,
   onRestore,
+  onReset,
   // isRestore,
   // isapprove,
   path,
@@ -387,13 +389,15 @@ const PaginationTable = <T extends object>({
                         {
                           //@ts-expect-error
                           cell.column.isApprove &&
-                            (cell.row.original.is_approved === false ||
-                              cell.row.original.is_approved === "false" ||
-                              cell.row.original.is_approved === 0 ||
-                              cell.row.original.is_approved === "0") && (
+                            (cell.row.original.is_approve === false ||
+                              cell.row.original.is_approve === "false" ||
+                              cell.row.original.is_approve === 0 ||
+                              cell.row.original.is_approve === "0") && (
                               <Button
-                                bg="white"
+                                bg="blue.100"
+                                color="white"
                                 fontSize="sm"
+                                _hover={{ bg: "blue.300" }}
                                 className="!text-[var(--chakra-colors-black-400)]"
                                 onClick={() => {
                                   onApprove(cell.row.original.id);
