@@ -10,12 +10,14 @@ interface RestoreUserTabProps {
   restoreColumns: any;
   queryPageIndex: number;
   queryPageSize: number;
+  searchQuery: string;
   setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
   setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
 function RestoreUserTab({
   restoreColumns,
+  searchQuery,
   queryPageIndex,
   queryPageSize,
   setQueryPageIndex,
@@ -48,6 +50,7 @@ function RestoreUserTab({
     variables: {
       page: queryPageIndex + 1,
       first: queryPageSize,
+      query: searchQuery,
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
