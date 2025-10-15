@@ -1140,6 +1140,7 @@ function JobEdit() {
     };
 
     calculateTotals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyWeight, job.job_category_id, jobItems]);
 
   function handleRemoveFromJobItems(index: number) {
