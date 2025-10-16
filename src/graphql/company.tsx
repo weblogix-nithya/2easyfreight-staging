@@ -59,6 +59,7 @@ export const GET_COMPANY_QUERY = gql`
       logo_url
       payment_term
       weight_per_cubic
+      standard_static
     }
   }
 `;
@@ -77,6 +78,8 @@ export const CREATE_COMPANY_MUTATION = gql`
       base_notes
       payment_term
       weight_per_cubic
+      standard_static
+      
     }
   }
 `;
@@ -97,6 +100,7 @@ export const UPDATE_COMPANY_MUTATION = gql`
       is_invoice_sendable
       payment_term
       weight_per_cubic
+      standard_static
     }
   }
 `;
@@ -133,6 +137,7 @@ export interface UpdateCompanyInput {
   lat: Number;
   payment_term: String;
   weight_per_cubic: Number;
+  standard_static: Boolean;
 }
 
 export interface CreateCompanyInput {
@@ -159,6 +164,7 @@ export interface CreateCompanyInput {
   lat: Number;
   payment_term: String;
   weight_per_cubic: Number;
+  standard_static: Boolean;
 }
 
 type Company = {
@@ -188,6 +194,7 @@ type Company = {
   logo_url: string | null;
   payment_term: string | null;
   weight_per_cubic: number | null;
+  standard_static: boolean | null;
 };
 
 export const defaultCompany: Company = {
@@ -217,6 +224,7 @@ export const defaultCompany: Company = {
   logo_url: null,
   payment_term: "7_days",
   weight_per_cubic: 500, // default weight per cubic meter
+  standard_static: false,
 };
 
 export const paymentTerms = [
