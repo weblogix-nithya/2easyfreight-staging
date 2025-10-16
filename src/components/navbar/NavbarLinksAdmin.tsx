@@ -76,6 +76,7 @@ export default function HeaderLinks(props: { secondary: boolean }) {
       "is_company_admin",
       "user_id",
       "state",
+      "reset_approve"
     ];
 
     // const paths = ["/", "/admin", "/admin/jobs", "*"];
