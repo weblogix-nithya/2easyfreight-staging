@@ -101,6 +101,7 @@ function CompanyCreate() {
         logo_url: undefined,
         payment_term: company.payment_term ?? "7_days",
         weight_per_cubic: company.weight_per_cubic ?? 500, // default value
+        standard_static: company.standard_static ?? false,
       },
     },
     onCompleted: async (data) => {
