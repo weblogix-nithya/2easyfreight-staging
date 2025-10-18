@@ -283,7 +283,6 @@ function JobPage() {
       if (data?.company?.standard_static != null) {
         setCompanyStandardStatic(data.company.standard_static ? 1 : 0);
       }
-      refetchJobTypes();
     },
     onError: (error) => {
       console.error("Error fetching company weight:", error);
@@ -344,10 +343,9 @@ function JobPage() {
     },
   });
 
-  const { refetch: refetchJobTypes } = useQuery(GET_JOB_TYPES_QUERY, {
+  useQuery(GET_JOB_TYPES_QUERY, {
     variables: defaultVariables,
     onCompleted: async (data) => {
-      console.log(companyStandardStatic, "companyStandardStatic test");
       const options = data.jobTypes.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
@@ -1497,7 +1495,7 @@ function JobPage() {
                           getCompany({ id: String(e.value) }).then((res) => {
                             setCompanyWeight(res.data.company?.weight_per_cubic);
                             setCompanyStandardStatic(res.data.company?.standard_static ? 1 : 0);
-                            refetchJobTypes();
+
                           });
                           getCompanyRates({ company_id: String(e.value) });
                         }
