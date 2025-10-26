@@ -19,7 +19,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
-import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
+import { faPen } from "@fortawesome/pro-regular-svg-icons";
 import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
@@ -498,34 +498,7 @@ PaginationTableProps<T>) => {
                           // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
-                            {
-                              //@ts-expect-error
-                              cell.column.isDownload && (
-                                <Link
-                                  href={cell.value}
-                                  target="_blank"
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faDownload}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
+                        
                             {
                               //@ts-expect-error
                               (cell.column.isEdit == undefined ||
@@ -556,60 +529,8 @@ PaginationTableProps<T>) => {
                                 </Link>
                               )
                             }
-                            {
-                              //@ts-expect-error
-                              cell.column.isView && (
-                                <Link
-                                  href={`${path || router.pathname}/${
-                                    cell.row.original.job.id
-                                  }`}
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faEye}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
-                            {
-                              //@ts-expect-error
-                              cell.column.isTracking && (
-                                <Link
-                                  href={`${path || router.pathname}/tracking/${
-                                    cell.row.original.job.id
-                                  }`}
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[#3B68DB]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
-                                  >
-                                    Track
-                                  </Button>
-                                </Link>
-                              )
-                            }
+                      
+                      
                             {
                               //@ts-expect-error
                               cell.column.isDelete && (

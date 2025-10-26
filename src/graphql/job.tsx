@@ -119,7 +119,6 @@ export const GET_JOBS_QUERY = gql`
         ready_at
         drop_at
         start_at
-        created_at
         timeslot
         last_free_at
         pick_up_notes
@@ -327,7 +326,7 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           ready_at
           start_at
           drop_at
-
+          created_at
           pick_up_address
           last_free_at
           timeslot
@@ -975,8 +974,6 @@ export type JobItem = {
 };
 
 export type JobQuoteData = {
-  total_cbm: number;
-  total_weight: number;
   freight_type: string;
   transport_type: any;
   service_choice: string;
@@ -998,8 +995,6 @@ export type JobQuoteData = {
 };
 
 const defaultJobQuoteData: JobQuoteData = {
-  total_cbm: 0,
-  total_weight: 0,
   freight_type: "",
   transport_type: "",
   service_choice: "",

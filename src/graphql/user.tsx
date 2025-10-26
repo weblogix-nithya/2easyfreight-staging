@@ -188,8 +188,8 @@ export const RESET_USER_PASSWORD_MUTATION = gql`
 `;
 
 export const MUTATION_APPROVE_USER = gql`
-  mutation ApproveUser {
-    approveUser(userId: 2233) {
+  mutation ApproveUser($userId: ID!) {
+    approveUser(userId: $userId) {
       id
       name
       email
@@ -197,6 +197,7 @@ export const MUTATION_APPROVE_USER = gql`
     }
   }
 `;
+
 export const MUTATION_RESTORE_USER = gql`
   mutation restoreUser($id: ID!) {
     restoreUser(id: $id) {
