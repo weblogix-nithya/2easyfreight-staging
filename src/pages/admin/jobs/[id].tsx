@@ -997,7 +997,11 @@ function JobEdit() {
       // Handle the error and set data to empty
       //   console.log("Error fetching job price calculation detail:", error);
       setIsUpdateMode(false); // No data found, so we need to create a new entry
-      setRefinedData(defaultJobQuoteData);
+      setRefinedData({
+        ...defaultJobQuoteData,
+        total_cbm: 0,
+        total_weight: 0,
+      });
       setQuoteCalculationRes(defaultJobPriceCalculationDetail);
 
       const { totalCBM, totalWeight } = calculateFinalWeightCBM(
