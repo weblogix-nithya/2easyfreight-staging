@@ -110,19 +110,6 @@ export const JobDestinationsCell = ({ row }: any) => {
 //   return address || "-";
 // };
 
-// export const JobDestinationsCellExport = ({ row }: any) => {
-//   const destinations = row?.original?.job?.job_destinations || [];
-//   const filteredDestinations = destinations.filter(
-//     (destination: any) => destination?.is_pickup === false
-//   );
-
-//   if (filteredDestinations.length === 0) return "-";
-
-//   // Safely call formatAddress
-//   const address = formatAddress(filteredDestinations[0]);
-//   return address || "-";
-// };
-
 export const JobDestinationsCellExport = ({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations;
 
@@ -139,7 +126,6 @@ export const JobDestinationsCellExport = ({ row }: any) => {
 
   return `${line1}\n${line2}`;
 };
-
 
 export const JobDestinationBusinessNameCell = ({ row }: any) => {
   // Add null check and default empty array
@@ -427,7 +413,6 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   }${address}\n${businessName}`;
 };
 
-
 export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations;
   if (!Array.isArray(destinations) || destinations.length === 0) return "-";
@@ -526,7 +511,6 @@ export const ReadyDropByCellExport = ({ row }: any) =>
 
 export const NotesCell = ({ row }: any) => {
   const current = row?.original?.job?.customer_notes ?? "-";
-  const current = row?.original?.job?.customer_notes ?? "-";
   const [display, setDisplay] = React.useState(current);
 
   React.useEffect(() => {
@@ -548,10 +532,6 @@ export const NotesCell = ({ row }: any) => {
   );
 };
 
-export const NotesCellExport = ({ row }: any) => {
-  const current = row?.original?.job?.customer_notes ?? "-";
-  return current;
-};
 export const NotesCellExport = ({ row }: any) => {
   const current = row?.original?.job?.customer_notes ?? "-";
   return current;
@@ -653,14 +633,8 @@ export const ItemsExtrasCell = ({ row }: any) => {
 export const ItemsExtrasCellExport = ({ row }: any) => {
   return `${row?.original?.job?.extras ? `${row.original.job.extras}` : "-"}`;
 };
-export const ItemsExtrasCellExport = ({ row }: any) => {
-  return `${row?.original?.job?.extras ? `${row.original.job.extras}` : "-"}`;
-};
 export const DriverCell = ({ row }: any) => {
   return <Text>{row?.original?.job?.driver?.full_name || "-"}</Text>;
-};
-export const DriverCellExport = ({ row }: any) => {
-  return `${row?.original?.job?.driver?.full_name || "-"}`;
 };
 export const DriverCellExport = ({ row }: any) => {
   return `${row?.original?.job?.driver?.full_name || "-"}`;
@@ -678,10 +652,6 @@ export const BookedByCell = ({ row }: any) => {
       {name}
     </Text>
   );
-};
-export const BookedByCellExport = ({ row }: any) => {
-  const name = row?.original?.job?.company?.name || "-";
-  return `${name}`;
 };
 export const BookedByCellExport = ({ row }: any) => {
   const name = row?.original?.job?.company?.name || "-";
@@ -712,13 +682,6 @@ export const JobTypeCell: React.FC<{
     </Text>
   );
 };
-export const TypeCellExport = ({ row }: any) =>
-  `${
-    row?.original?.job?.job_type?.name
-      ? `${row.original.job.job_type.name}`
-      : "-"
-  }`;
-
 export const TypeCellExport = ({ row }: any) =>
   `${
     row?.original?.job?.job_type?.name
@@ -761,13 +724,6 @@ export const StatusCellExport = ({ row }: any) =>
       : "-"
   }`;
 
-export const StatusCellExport = ({ row }: any) =>
-  `${
-    row?.original?.job?.job_status.name
-      ? `${row.original.job.job_status.name}`
-      : "-"
-  }`;
-
 export const ReadyAtCell = ({ row }: any) => {
   return (
     <Flex direction="column" gap={1} minWidth="200px">
@@ -781,11 +737,6 @@ export const ReadyAtCell = ({ row }: any) => {
     </Flex>
   );
 };
-
-export const ReadyAtCellExport = ({ row }: any) =>
-  `Created Date: ${
-    formatDate(row?.original?.job?.created_at) || "-"
-  } | Scheduled Date: ${formatDate(row?.original?.job?.drop_at) || "-"}`;
 
 export const ReadyAtCellExport = ({ row }: any) =>
   `Created Date: ${
@@ -885,23 +836,12 @@ export const CustomerReferenceCellExport = ({ row }: any) =>
     row?.original?.job?.reference_no ? `${row.original.job.reference_no}` : "-"
   }`;
 
-export const CustomerReferenceCellExport = ({ row }: any) =>
-  `${
-    row?.original?.job?.reference_no ? `${row.original.job.reference_no}` : "-"
-  }`;
-
 export const CategoryCell = ({ row }: any) => {
   return (
     <Text maxW="100px">{row?.original?.job?.job_category?.name || "-"}</Text>
   );
 };
 
-export const CategoryCellExport = ({ row }: any) =>
-  `${
-    row?.original?.job?.job_category?.name
-      ? `${row.original.job.job_category?.name}`
-      : "-"
-  }`;
 export const CategoryCellExport = ({ row }: any) =>
   `${
     row?.original?.job?.job_category?.name
@@ -942,9 +882,6 @@ export const DeliveryCell = ({ row }: any) => {
     </Flex>
   );
 };
-
-export const DeliveryCellExport = ({ row }: any) =>
-  `${row?.original?.job?.name ? `${row.original.job.name}` : "-"}`;
 
 export const DeliveryCellExport = ({ row }: any) =>
   `${row?.original?.job?.name ? `${row.original.job.name}` : "-"}`;
@@ -998,9 +935,6 @@ export const TimeslotCell = ({ row, refetchJobs }: any) => {
 export const TimeslotCellExport = ({ row }: any) =>
   `${row?.original?.job?.timeslot ? `${row.original.job.timeslot}` : "-"}`;
 
-export const TimeslotCellExport = ({ row }: any) =>
-  `${row?.original?.job?.timeslot ? `${row.original.job.timeslot}` : "-"}`;
-
 const MEDIA_CELL: Record<string, { with: any; without: any }> = {
   "pick_up_destination.address_formatted,pick_up_destination.address_business_name":
     {
@@ -1038,8 +972,6 @@ export const tableColumn = (refetchJobs: () => void) => [
     Cell: DeliveryCell,
     CellExport: DeliveryCellExport,
 
-    CellExport: DeliveryCellExport,
-
     // width: "100px",
   },
   {
@@ -1047,20 +979,17 @@ export const tableColumn = (refetchJobs: () => void) => [
     Header: "Booked By",
     Cell: BookedByCell, // Use the new cell component
     CellExport: BookedByCellExport,
-    CellExport: BookedByCellExport,
   },
   {
     id: "reference_no",
     Header: "Customer Reference",
     Cell: CustomerReferenceCell,
     CellExport: CustomerReferenceCellExport,
-    CellExport: CustomerReferenceCellExport,
   },
   {
     id: "job_category.name",
     Header: "category",
     Cell: CategoryCell,
-    CellExport: CategoryCellExport,
     CellExport: CategoryCellExport,
   },
   {
@@ -1069,13 +998,11 @@ export const tableColumn = (refetchJobs: () => void) => [
     Cell: JobTypeCell, // Add this line
     // width: "100px",
     CellExport: TypeCellExport,
-    CellExport: TypeCellExport,
   },
   {
     id: "job_status.name",
     Header: "Status",
     Cell: StatusCell, // Add this line
-    CellExport: StatusCellExport,
     CellExport: StatusCellExport,
     // width: "100px",
   },
@@ -1084,7 +1011,6 @@ export const tableColumn = (refetchJobs: () => void) => [
     Header: "Date",
     Cell: ReadyAtCell, // Add this line
     CellExport: ReadyAtCellExport,
-    CellExport: ReadyAtCellExport,
     // type: "date",
   },
   {
@@ -1092,14 +1018,12 @@ export const tableColumn = (refetchJobs: () => void) => [
     Header: "Pickup From",
     Cell: PickupAddressCell, // Add this line
     CellExport: PickupAddressCellExport,
-    CellExport: PickupAddressCellExport,
     // width: "150px",
   },
   {
     id: "pick_up_destination.address_business_name",
     Header: "Pickup Business Name",
     Cell: PickupBusinessNameCell, // Add this line
-    CellExport: PickupBusinessNameCellExport,
     CellExport: PickupBusinessNameCellExport,
   },
   {
@@ -1133,7 +1057,6 @@ export const tableColumn = (refetchJobs: () => void) => [
     Cell: ({ row }: any) => (
       <TimeslotCell row={row} refetchJobs={refetchJobs} />
     ),
-    CellExport: TimeslotCellExport,
     CellExport: TimeslotCellExport,
   },
   {
@@ -1177,7 +1100,6 @@ export const tableColumn = (refetchJobs: () => void) => [
     Header: "Extras",
     Cell: ItemsExtrasCell,
     CellExport: ItemsExtrasCellExport,
-    CellExport: ItemsExtrasCellExport,
     // width: "100px",
   },
   {
@@ -1185,13 +1107,11 @@ export const tableColumn = (refetchJobs: () => void) => [
     Header: "Client notes",
     Cell: NotesCell,
     CellExport: NotesCellExport,
-    CellExport: NotesCellExport,
   },
   {
     id: "driver.full_name",
     Header: "Drivers",
     Cell: DriverCell,
-    CellExport: DriverCellExport,
     CellExport: DriverCellExport,
     enableSorting: true,
   },
@@ -1200,7 +1120,6 @@ export const tableColumn = (refetchJobs: () => void) => [
     Header: "Admin Notes",
     accessor: "admin_notes" as const,
     Cell: AdminNotesCell,
-    CellExport: AdminNotesCellExport,
     CellExport: AdminNotesCellExport,
     // show: isCustomer,
   },
@@ -1286,7 +1205,6 @@ export const bulkassigntableColumn = [
     Header: "Delivery ID",
     Cell: DeliveryCell,
 
-
     // width: "100px",
   },
   {
@@ -1335,7 +1253,6 @@ export const bulkassigntableColumn = [
     // width: "200px",
     Cell: PickupAddressWithTimebulkCell, // Use the new cell component
     CellExport: PickupAddressWithTimeCellExport,
-    CellExport: PickupAddressWithTimeCellExport,
   },
   {
     id: "job_destinations.address,job_destinations.address_business_name",
@@ -1377,7 +1294,6 @@ export const bulkassigntableColumn = [
     id: "last_free_at",
     Header: "Last Free Day",
     Cell: LastFreeAtCell, // Add this line
-    CellExport: LastFreeAtCellExport,
     CellExport: LastFreeAtCellExport,
     // type: "date",
   },
