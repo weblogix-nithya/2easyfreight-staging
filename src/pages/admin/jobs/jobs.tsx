@@ -648,7 +648,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     const header = outputDynamicTableHeader(dynamicTableUsers);
     const body = outputDynamicTableBody(
       dynamicTableUsers,
-      tableColumn,
+      tableColumn(refetchJobs),
       selectedJobs,
     );
     downloadExcel({
