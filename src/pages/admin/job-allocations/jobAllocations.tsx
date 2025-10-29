@@ -53,7 +53,6 @@ import {
   setRightSideBarRoute,
 } from "store/rightSideBarSlice";
 import { RootState } from "store/store";
-import { setState } from "store/userSlice";
 
 export default function JobAllocationIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
@@ -320,14 +319,7 @@ export default function JobAllocationIndex() {
     setCustomerName("");
     setPickupAddress("");
     setDeliveryAddress("");
-
-    const defaultUserState = state; // Redux state from login
-    setAustralianState(defaultUserState);        // local state
-    dispatch(setState(defaultUserState));        // Redux state
-    setCookie(null, "state", defaultUserState, { // cookie
-      maxAge: 30 * 24 * 60 * 60,
-      path: "/",
-    });
+    setAustralianState("");
   }
 
 
