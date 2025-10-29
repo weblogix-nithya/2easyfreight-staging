@@ -653,7 +653,7 @@ export default function JobAllocationIndex() {
                     <p className="mr-1 text-sm">{deliveryAddress},</p>
                   ) : null}
                   {australianState ? (
-                    <p className="text-sm">{australianState} test</p>
+                    <p className="text-sm">{australianState}</p>
                   ) : null}
 
                   <Button
