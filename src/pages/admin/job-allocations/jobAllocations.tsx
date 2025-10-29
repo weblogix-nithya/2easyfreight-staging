@@ -393,17 +393,23 @@ export default function JobAllocationIndex() {
     },
   });
 
+  // 1️⃣ Sync local australianState with Redux state
+  useEffect(() => {
+    if (state) setAustralianState(state);
+  }, [state]);
+
+  // 2️⃣ Fetch jobs and set map center when relevant dependencies change
   useEffect(() => {
     onChangeSearchQuery.cancel();
     // if (center == null) {
-    australianStates.forEach((state: any) => {
-      if (state.value == australianState) {
-        setCenter({ lat: state.lat, lng: state.lng });
+    australianStates.forEach((st: any) => {
+      if (st.value === australianState) {
+        setCenter({ lat: st.lat, lng: st.lng });
       }
     });
     // }
     getJobs();
-  }, [onChangeSearchQuery, state, rightSideBarJob, australianState, getJobs]);
+  }, [onChangeSearchQuery, rightSideBarJob, australianState, getJobs]);
 
   return (
     <AdminLayout>
