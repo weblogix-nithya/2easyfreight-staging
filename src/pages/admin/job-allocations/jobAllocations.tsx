@@ -41,6 +41,7 @@ import { australianStates, getMapIcon, jobTypes, today } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import moment from "moment";
+import { setCookie } from "nookies";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -52,6 +53,7 @@ import {
   setRightSideBarRoute,
 } from "store/rightSideBarSlice";
 import { RootState } from "store/store";
+import { setState } from "store/userSlice";
 
 export default function JobAllocationIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
@@ -315,12 +317,19 @@ export default function JobAllocationIndex() {
   );
 
   function clearJobFilters() {
-    // Clear filters, unsure if there are any other inputs that this is hit by (eg saving datas)
     setCustomerName("");
     setPickupAddress("");
     setDeliveryAddress("");
-    setAustralianState("");
+
+    const defaultUserState = state; // Redux state from login
+    setAustralianState(defaultUserState);        // local state
+    dispatch(setState(defaultUserState));        // Redux state
+    setCookie(null, "state", defaultUserState, { // cookie
+      maxAge: 30 * 24 * 60 * 60,
+      path: "/",
+    });
   }
+
 
   function onMarkerClick(data: any) {
     if (data.job_id) {
