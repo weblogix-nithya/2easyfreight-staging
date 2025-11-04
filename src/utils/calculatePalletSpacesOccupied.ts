@@ -21,7 +21,6 @@ interface Placement {
     orientation: Orientation;
 }
 
-
 /**
  * Calculate final CBM considering:
  *  - Raw CBM
@@ -48,7 +47,8 @@ export function calculateFinalWeightCBM(
         0
     );
     let finalWeightCBM = rawCBM;
-    if (job_category_id == 1) {
+
+    if (job_category_id == 1 || job_category_id == 2) {
         const palletData = jobItems.map((item) => ({
             quantity: item.quantity,
             dimension_width: item.dimension_width,
@@ -165,7 +165,7 @@ function hasConflict(
             position.y + orientation.vertical <= existing.y ||
             existing.y + existingOrient.vertical <= position.y;
 
-        if (!noOverlap) return true; // 
+        if (!noOverlap) return true;
     }
 
     return false;
@@ -194,4 +194,82 @@ function calculateTouchedSpaces(
     }
 
     return touchedSpaces;
+}
+
+/**
+ * Multi-strategy pallet calculation (standard + vertical chain for similar boxes)
+ * @param boxes Array of boxes with {id, length, width, height}
+ * @returns Minimum pallet spaces needed
+ */
+export function calculateEfficientPalletSpaces(boxes: Box[]): number {
+    if (boxes.length === 0) return 0;
+
+    // Check if boxes are similar size for vertical chain optimization
+    const isSimilarSize = boxes.every(
+        (box) =>
+            box.length >= 120 && box.length <= 160 &&
+            box.width >= 100 && box.width <= 140
+    );
+
+    let palletSpaces: number;
+
+    if (isSimilarSize && boxes.length >= 2) {
+        const standardResult = calculatePalletSpacesOccupiedFromData(
+            boxes.map((b) => ({
+                quantity: 1,
+                dimension_width: b.width / 100,
+                dimension_depth: b.length / 100,
+                dimension_height: b.height / 100
+            }))
+        );
+
+        const verticalChainResult = calculatePalletSpacesVerticalChain(boxes);
+
+        palletSpaces = Math.min(standardResult, verticalChainResult);
+        console.log(`Multi-strategy: Standard=${standardResult}, VerticalChain=${verticalChainResult}, Best=${palletSpaces}`);
+    } else {
+        // Fallback to standard algorithm
+        palletSpaces = calculatePalletSpacesOccupiedFromData(
+            boxes.map((b) => ({
+                quantity: 1,
+                dimension_width: b.width / 100,
+                dimension_depth: b.length / 100,
+                dimension_height: b.height / 100
+            }))
+        );
+        console.log(`Using standard algorithm: ${palletSpaces} pallets`);
+    }
+
+    return palletSpaces;
+}
+
+/**
+ * Vertical chain packing (optimized for similar boxes)
+ */
+function calculatePalletSpacesVerticalChain(boxes: Box[]): number {
+    const placements: Placement[] = [];
+
+    let sortedBoxes = [...boxes].sort((a, b) => a.id - b.id);
+
+    sortedBoxes.forEach((box, index) => {
+        const position = { x: 0, y: index * 120 };
+        const orientation = { horizontal: 120, vertical: 140, rotated: false };
+
+        if (position.y + orientation.vertical <= TRUCK_LENGTH) {
+            placements.push({ box, position, orientation });
+        }
+    });
+
+    const occupiedSpaces = new Set<number>();
+    placements.forEach((placement) => {
+        const touchedSpaces = calculateTouchedSpaces(
+            placement.position,
+            placement.orientation,
+            PALLET_SIZE
+        );
+        touchedSpaces.forEach((space) => occupiedSpaces.add(space));
+    });
+
+    console.log("Vertical chain occupied:", occupiedSpaces.size);
+    return occupiedSpaces.size;
 }
