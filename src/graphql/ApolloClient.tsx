@@ -117,14 +117,20 @@ export function initializeApollo(initialState = {}) {
   // For SSG and SSR always create a new Apollo Client
   if (typeof window === "undefined") return _apolloClient;
   // Create the Apollo Client once in the client
-  if (!apolloClient) apolloClient = _apolloClient;
-  setAuthToken();
-  return _apolloClient;
+  if (!apolloClient) {
+    apolloClient = _apolloClient;
+    setAuthToken(); // run only once
+  }
+  return apolloClient;
+  // if (!apolloClient) apolloClient = _apolloClient;
+  // setAuthToken();
+  // return _apolloClient;
 }
 
 export function useApollo(initialState: NormalizedCacheObject) {
-  const store = useMemo(() => initializeApollo(initialState), [initialState]);
-  return store;
+  // const store = useMemo(() => initializeApollo(initialState), [initialState]);
+  // return store;
+  return useMemo(() => initializeApollo(initialState), []);
 }
 
 export const setAuthToken = () => {

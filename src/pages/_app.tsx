@@ -38,7 +38,7 @@ function MyApp({ Component, pageProps,router }: AppProps) {
   const title = `${process.env.NEXT_PUBLIC_APP_NAME} UI Dashboard`;
   // Detect direction (default to ltr)
   const dir = typeof window !== "undefined" && window.document.documentElement.dir === "ar" ? "rtl" : "ltr";
-  const cache = React.useMemo(() => createEmotionCache(dir), [dir]);
+  const cache = React.useMemo(() => createEmotionCache(dir), []);
   return (
     <CacheProvider value={cache}>
       <ApolloProvider client={apolloClient}>
@@ -49,7 +49,7 @@ function MyApp({ Component, pageProps,router }: AppProps) {
         </Head>
         <Provider store={store}>
           <Chakra cookies={pageProps.cookies}>
-            <Component {...pageProps} key={router.asPath} />
+            <Component {...pageProps} />
           </Chakra>
         </Provider>
       </ApolloProvider>

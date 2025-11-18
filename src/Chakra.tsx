@@ -15,12 +15,12 @@ interface ChakraProps {
 }
 
 export const Chakra = ({ children, cookies }: ChakraProps) => {
-  const colorModeManager =
-  typeof cookies === "string"
-    ? cookieStorageManagerSSR(cookies)
-    : localStorageManager;
+  // const colorModeManager =
+  // typeof cookies === "string"
+  //   ? cookieStorageManagerSSR(cookies)
+  //   : localStorageManager;
   return (
-    <ChakraProvider theme={theme} colorModeManager={colorModeManager}>
+    <ChakraProvider theme={theme} >
     {children}
   </ChakraProvider>
   );
