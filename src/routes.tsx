@@ -63,6 +63,18 @@ const routes: IRoute[] = [
     isPrivate: false,
   },
   {
+    name: "Pre-Allocation",
+    title: "Pre-Allocation",
+    layout: "/admin",
+    path: "/pre-allocation",
+    icon: <FontAwesomeIcon icon={faTruckRampBox} className="mr-1" />,
+    component: PreAllocation,
+    sidebar: true,
+    isAdmin: true,
+    isCompany: true,
+    isPrivate: false,
+  },
+  {
     name: "Delivery Jobs",
     title: "Delivery Jobs",
     layout: "/admin",
@@ -74,18 +86,7 @@ const routes: IRoute[] = [
     isCompany: true,
     isPrivate: false,
   },
-    {
-    name: "PreAllocaation",
-    title: "PreAllocaation",
-    layout: "/admin",
-    path: "/pre-allocation",
-    icon: <FontAwesomeIcon icon={faTruckRampBox} className="mr-1" />,
-    component: Jobs,
-    sidebar: true,
-    isAdmin: true,
-    isCompany: true,
-    isPrivate: false,
-  },
+
   {
     name: "Hourly Hire",
     title: "Hourly Hire",

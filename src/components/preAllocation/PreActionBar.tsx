@@ -12,26 +12,26 @@ import React, { useState } from "react";
 type ActionBarProps = {
   selectedJobs: any[];
   onSwitch: (state: boolean) => void;
-  hasChanges?: boolean;           // ✅ shows Save button when true
   onSaveChanges?: () => void;     // ✅ callback for Save button
+  onClickBulkSort: () => void;
 };
 
 const ActionBar = ({
   selectedJobs,
   onSwitch,
-  hasChanges = false,
   onSaveChanges,
+  onClickBulkSort,
 }: ActionBarProps) => {
   const [isSwitched, setIsSwitched] = useState<boolean>(false);
 
-  const totals = selectedJobs.reduce(
-    (acc, job) => {
-      acc.totalWeights += job?.original?.job?.total_weight ?? 0;
-      acc.totalCBM += job?.original?.job?.total_volume ?? 0;
-      return acc;
-    },
-    { totalWeights: 0, totalCBM: 0 },
-  );
+  // const totals = selectedJobs.reduce(
+  //   (acc, job) => {
+  //     acc.totalWeights += job?.original?.job?.total_weight ?? 0;
+  //     acc.totalCBM += job?.original?.job?.total_volume ?? 0;
+  //     return acc;
+  //   },
+  //   { totalWeights: 0, totalCBM: 0 },
+  // );
 
   return (
     <HStack
@@ -69,17 +69,41 @@ const ActionBar = ({
           </FormLabel>
         </Flex>
       </Box>
+      <Box className="w-3/4 ">
+        <Button
+          float="right"
+          px={5}
+          py={1}
+          variant="secondary"
+          onClick={onSaveChanges}
+          mr={3}
+        >
+          Pre-Allocate Jobs {"  "}
+          {selectedJobs.length > 0 && <>( {selectedJobs.length} )</>}
+        </Button>
 
+        <Button
+          float="right"
+          px={5}
+          py={1}
+          variant="secondary"
+          onClick={onClickBulkSort}
+          mr={3}
+        >
+          Sort Jobs {"  "}
+          {selectedJobs.length > 0 && <>( {selectedJobs.length} )</>}
+        </Button>{" "}
+      </Box>
       {/* Totals */}
-      <Box>
+      {/* <Box>
         <Text fontWeight="bold">
           Total Selected: {totals.totalWeights} kg,{" "}
           {totals.totalCBM.toFixed(2)} cbm
         </Text>
-      </Box>
+      </Box> */}
 
       {/* ✅ Save Changes Button */}
-      {hasChanges && (
+      {/* {hasChanges && (
         <Box>
           <Button
             colorScheme="blue"
@@ -90,7 +114,7 @@ const ActionBar = ({
             Save Changes
           </Button>
         </Box>
-      )}
+      )} */}
     </HStack>
   );
 };

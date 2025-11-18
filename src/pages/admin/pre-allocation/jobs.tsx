@@ -4,48 +4,48 @@ import {
   Button,
   Flex,
   SimpleGrid,
-  Spinner,
+  //Spinner,
   Tag,
   TagCloseButton,
   TagLabel,
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
-import ActionBar from "components/jobs/PreActionBar";
 import {
   defaultJobFilter,
   defaultSelectedFilter,
   filterDisplayNames,
   SelectedFilter,
 } from "components/jobs/Filters";
+import { getCompanyColumns } from "components/jobs/JobTableColumnsCustomer";
+import ActionBar from "components/preAllocation/PreActionBar";
 import {
   getBulkAssignColumns,
   getColumns,
-  tableColumn,
-} from "components/jobs/PreJobTableColumns";
-import { getCompanyColumns } from "components/jobs/JobTableColumnsCustomer";
+  // tableColumn,
+} from "components/preAllocation/PreJobTableColumns";
 // import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import JobPaginationTable from "components/table/PreJobPaginationTable";
 import { GET_AVAILABLE_DRIVERS_QUERY } from "graphql/driver";
-import {
-  DynamicTableUser,
-  GET_DYNAMIC_TABLE_USERS_QUERY,
-} from "graphql/dynamicTableUser";
+// import {
+//   DynamicTableUser,
+//   GET_DYNAMIC_TABLE_USERS_QUERY,
+// } from "graphql/dynamicTableUser";
 // import { GET_JOBS_QUERY, Job } from "graphql/job";
-import { GET_JOBS_QUERY, GROUPED_PAGINATED_JOBS_QUERY } from "graphql/job";
-import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
-import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
-import { JoinOnClause } from "graphql/types/types";
-import {
-  outputDynamicTableBody,
-  outputDynamicTableHeader,
-} from "helpers/helper";
+import { PRE_ALLOCATION_JOBS_QUERY } from "graphql/job";
+// import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
+// import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
+// import { JoinOnClause } from "graphql/types/types";
+// import {
+//   outputDynamicTableBody,
+//   outputDynamicTableHeader,
+// } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import dynamic from "next/dynamic";
 import { destroyCookie, parseCookies, setCookie } from "nookies";
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { downloadExcel } from "react-export-table-to-excel";
+// import { downloadExcel } from "react-export-table-to-excel";
 // import { FaFileExcel } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -65,13 +65,16 @@ const JobStatusDateFilter = dynamic(
   },
 );
 const FilterJobsModal = React.lazy(
-  () => import("components/jobs/FilterJobsModal"),
+  () => import("components/preAllocation/FilterJobsModal"),
 );
-const JobBulkAssignModal = React.lazy(
-  () => import("components/jobs/JobBulkAssignModal"),
+const PreAllocateModal = React.lazy(
+  () => import("components/preAllocation/PreAllocateModal"),
+);
+const AssignJobsModal = React.lazy(
+  () => import("components/preAllocation/AssignJobsModal"),
 );
 const JobBulkSortModal = React.lazy(
-  () => import("components/jobs/JobBulkSortModal"),
+  () => import("components/preAllocation/PreJobBulkSortModal"),
 );
 // const JobTableSettingsModal = React.lazy(
 //   () => import("components/jobs/JobTableSettingsModal"),
@@ -85,28 +88,28 @@ const JobTableSettingsModal = dynamic(
   },
 );
 
-const driverListOptions = [
-  {
-    value: "all",
-    label: "All",
-    statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  },
-  {
-    value: "D1",
-    label: "driver 1",
-    statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  },
-  {
-    value: "D2",
-    label: "Driver 2",
-    statusIds: [1, 2, 3],
-  },
-  {
-    value: "D3",
-    label: "Driver 3",
-    statusIds: [6, 7],
-  },
-];
+// const driverListOptions = [
+//   {
+//     value: "all",
+//     label: "All",
+//     statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+//   },
+//   {
+//     value: "D1",
+//     label: "driver 1",
+//     statusIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+//   },
+//   {
+//     value: "D2",
+//     label: "Driver 2",
+//     statusIds: [1, 2, 3],
+//   },
+//   {
+//     value: "D3",
+//     label: "Driver 3",
+//     statusIds: [6, 7],
+//   },
+// ];
 
 function formatDate(date: Date, isStart: boolean): string {
   const year = date.getFullYear();
@@ -117,19 +120,18 @@ function formatDate(date: Date, isStart: boolean): string {
 }
 
 // export default function JobIndex() {
-export default function JobIndex({}: // initialLoadOnly = false,
-{
-  // initialLoadOnly?: boolean;
-}) {
+export default function JobIndex({ }: // initialLoadOnly = false,
+  {
+    // initialLoadOnly?: boolean;
+  }) {
   // const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
   // const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
-  const [hasChanges, setHasChanges] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
-  const [_statusFilter, setStatusFilter] = useState("all");
+  // const [_statusFilter, setStatusFilter] = useState("all");
   const today = new Date();
   const [rangeDate, setRangeDate] = useState<[Date, Date]>([today, today]);
   const [_isTableLoading, setIsTableLoading] = useState(false);
@@ -142,11 +144,11 @@ export default function JobIndex({}: // initialLoadOnly = false,
     isCustomer,
     userId,
   } = useSelector((state: RootState) => state.user);
-  const statusOptions = driverListOptions;
+  // const statusOptions = driverListOptions;
 
-  const [selectedStatus, setSelectedStatus] = useState<
-    (typeof statusOptions)[number] | null
-  >(statusOptions[0]);
+  // const [selectedStatus, setSelectedStatus] = useState<
+  //   (typeof statusOptions)[number] | null
+  // >(statusOptions[0]);
 
   const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
@@ -155,16 +157,16 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const [withMedia, setWithMedia] = useState(false);
   const [isMediaBusy, setIsMediaBusy] = useState(false);
   const hideTimerRef = useRef<number | null>(null);
-  const [_jobStatuses, setJobStatuses] = useState([]);
-  const [jobCategories, setJobCategories] = useState([]);
+  // const [_jobStatuses, setJobStatuses] = useState([]);
+  // const [jobCategories, setJobCategories] = useState([]);
   const [selectedJobs, setSelectedJobs] = useState([]);
   // console.log(selectedJobs,'selectedJobs')
-  const [drivers, setDrivers] = useState([]);
-  // const [selectedDriver, setSelectedDriver] = useState(null);
+  // const [drivers, setDrivers] = useState([]);
+  const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOptions, setDriverOptions] = useState([]);
-  const [dynamicTableUsers, setDynamicTableUsers] = useState<
-    DynamicTableUser[]
-  >([]);
+  // const [dynamicTableUsers, setDynamicTableUsers] = useState<
+  //   DynamicTableUser[]
+  // >([]);
   const [isShowSelectedOnly, setIsShowSelectedOnly] = useState(false);
   const [isChecked, setIsChecked] = useState(true);
   const [jobFilter, setJobFilter] = useState(defaultJobFilter);
@@ -176,35 +178,41 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
     useState<typeof filterDisplayNames>(filterDisplayNames);
   const [companyColumns, setCompanyColumns] = useState([]); // State for company columns
-
+  console.log(companyColumns, 'companyColumns');
   const handleToggleWithMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsMediaBusy(true);
     setWithMedia(e.target.checked);
   };
 
-  const { refetch: getDynamicTableUsers, data: dynamicTableData } = useQuery(
-    GET_DYNAMIC_TABLE_USERS_QUERY,
-    {
-      variables: {
-        query: "",
-        page: 1,
-        first: 100,
-        orderByColumn: "sort_id",
-        orderByOrder: "ASC",
-        user_id: userId,
-      },
-      skip: !userId,
-      notifyOnNetworkStatusChange: true,
-      onCompleted: (data) => {
-        // console.log("dynamicTableData =>", data.dynamicTableUsers.data);
-        setDynamicTableUsers(
-          data.dynamicTableUsers.data.filter(
-            (item: DynamicTableUser) => item.is_active == true,
-          ),
-        );
-      },
-    },
-  );
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [assignDriver, setAssignDriver] = useState(null);
+
+
+
+
+  // const { refetch: getDynamicTableUsers, data: dynamicTableData } = useQuery(
+  //   GET_DYNAMIC_TABLE_USERS_QUERY,
+  //   {
+  //     variables: {
+  //       query: "",
+  //       page: 1,
+  //       first: 100,
+  //       orderByColumn: "sort_id",
+  //       orderByOrder: "ASC",
+  //       user_id: userId,
+  //     },
+  //     skip: !userId,
+  //     notifyOnNetworkStatusChange: true,
+  //     onCompleted: (data) => {
+  //       // console.log("dynamicTableData =>", data.dynamicTableUsers.data);
+  //       setDynamicTableUsers(
+  //         data.dynamicTableUsers.data.filter(
+  //           (item: DynamicTableUser) => item.is_active == true,
+  //         ),
+  //       );
+  //     },
+  //   },
+  // );
   const baseGroupedVars = React.useCallback(
     () => ({
       page: queryPageIndex + 1,
@@ -218,9 +226,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
         isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
       between_at: rangeDate?.[0]
         ? {
-            from_at: formatDate(rangeDate[0], true),
-            to_at: formatDate(rangeDate[1], false),
-          }
+          from_at: formatDate(rangeDate[0], true),
+          to_at: formatDate(rangeDate[1], false),
+        }
         : undefined,
     }), // eslint-disable-line react-hooks/exhaustive-deps
     [
@@ -248,7 +256,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     data: groupedJobs,
     loading: loadingGroupedJobs,
     refetch: refetchGroupedJobs,
-  } = useQuery(GROUPED_PAGINATED_JOBS_QUERY, {
+  } = useQuery(PRE_ALLOCATION_JOBS_QUERY, {
     variables: groupedVars,
     skip: !userId || isCompanyAdmin || isCustomer || isCompany,
     fetchPolicy: "network-only",
@@ -257,7 +265,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     },
   });
 
-  const _jobs = groupedJobs?.groupedPaginatedJobs;
+  const _jobs = groupedJobs?.preAllocationJobs;
   const loading = loadingGroupedJobs;
   const refetchJobs = refetchGroupedJobs;
 
@@ -267,9 +275,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
       isCustomer,
       withMedia,
       refetchJobs,
-      dynamicTableData?.dynamicTableUsers?.data || [],
+      // dynamicTableData?.dynamicTableUsers?.data || [],
     );
-  }, [dynamicTableData, isAdmin, isCustomer, withMedia, refetchJobs]);
+  }, [isAdmin, isCustomer, withMedia, refetchJobs]);
 
   useEffect(() => {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -290,80 +298,52 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
     isCustomer,
-    dynamicTableUsers,
+    // dynamicTableUsers,
   );
 
-  const orderByRelationship = useMemo(() => {
-    let join = undefined as JoinOnClause;
-    let column = sorting?.id ?? "id";
-    let order = sorting?.direction ? "DESC" : "ASC";
-    let table_name = "jobs";
-    // let scope = undefined;
-    if (column.includes("driver")) {
-      join = {
-        name: "drivers",
-        table_name: "drivers",
-        key: "id",
-        other_key: "driver_id",
-        other_table_name: "jobs",
-      };
-      table_name = "drivers";
-      column = "full_name";
-    }
-    return [
-      {
-        join: join ? [join] : undefined,
-        column,
-        order,
-        table_name,
-        // scope,
-      },
-    ];
-  }, [sorting]);
+  // const orderByRelationship = useMemo(() => {
+  //   let join = undefined as JoinOnClause;
+  //   let column = sorting?.id ?? "id";
+  //   let order = sorting?.direction ? "DESC" : "ASC";
+  //   let table_name = "jobs";
+  //   // let scope = undefined;
+  //   if (column.includes("driver")) {
+  //     join = {
+  //       name: "drivers",
+  //       table_name: "drivers",
+  //       key: "id",
+  //       other_key: "driver_id",
+  //       other_table_name: "jobs",
+  //     };
+  //     table_name = "drivers";
+  //     column = "full_name";
+  //   }
+  //   return [
+  //     {
+  //       join: join ? [join] : undefined,
+  //       column,
+  //       order,
+  //       table_name,
+  //       // scope,
+  //     },
+  //   ];
+  // }, [sorting]);
 
-  const {
-    loading: companyJobsLoading,
-    error: _companyJobsError,
-    data: companyJobs,
-    refetch: getCompanyJobs,
-  } = useQuery(GET_JOBS_QUERY, {
-    variables: {
-      query: searchQuery,
-      page: queryPageIndex + 1,
-      first: queryPageSize,
-      orderByRelationship: orderByRelationship,
-      company_id: isCompany || isCompanyAdmin ? parseInt(companyId) : undefined,
-      customer_id:
-        isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
-      job_status_ids: mainJobFilter?.job_status_ids || [
-        1, 2, 3, 4, 5, 6, 7, 10,
-      ],
-      between_at: rangeDate?.[0]
-        ? {
-            from_at: formatDate(rangeDate[0], true),
-            to_at: formatDate(rangeDate[1], false),
-          }
-        : undefined,
-      ...mainJobFilter,
-    },
-    skip: isAdmin && !isCompanyAdmin,
-  });
 
   useEffect(() => {
-    const hasGroupedJobs = groupedJobs?.groupedPaginatedJobs?.data?.length > 0;
-    const hasCompanyJobs = companyJobs?.jobs?.data?.length > 0;
+    const hasGroupedJobs = groupedJobs?.preAllocationJobs?.data?.length > 0;
 
-    if ((isAdmin && hasGroupedJobs) || (!isAdmin && hasCompanyJobs)) {
-      getJobStatuses();
-      getJobCategories();
+
+    if ((isAdmin && hasGroupedJobs)) {
+      // getJobStatuses();
+      // getJobCategories();
       getAvailableDrivers();
-      getDynamicTableUsers();
+      // getDynamicTableUsers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isAdmin,
-    groupedJobs?.groupedPaginatedJobs?.data?.length,
-    companyJobs?.jobs?.data?.length,
+    groupedJobs?.preAllocationJobs?.data?.length,
   ]);
 
   useEffect(() => {
@@ -436,8 +416,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
   } = useDisclosure();
 
   useEffect(() => {
-    getJobStatuses();
-    getJobCategories();
+    // getJobStatuses();
+    // getJobCategories();
+    getAvailableDrivers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -466,30 +447,15 @@ export default function JobIndex({}: // initialLoadOnly = false,
   //   }, 300);
   // }, []);
 
-  // useEffect(() => {
-  //   if (isAdmin) {
-  //     refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
-  //   } else if (isCompany || isCustomer) {
-  //     getCompanyJobs(); // GET_JOBS_QUERY
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [
-  //   queryPageIndex,
-  //   queryPageSize,
-  //   searchQuery,
-  //   mainFilters,
-  //   rangeDate,
-  //   withMedia,
-  //   isAdmin,
-  //   isCompany,
-  //   isCustomer,
-  // ]);
+  useEffect(() => {
+    if (isAdmin) {
+      refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
+    }
+  }, [queryPageIndex, queryPageSize, searchQuery, mainFilters, rangeDate, withMedia, isAdmin, refetchJobs]);
 
   useEffect(() => {
     if (isAdmin) {
       refetchGroupedJobs(groupedVars); // <— pass latest vars
-    } else if (isCompany || isCustomer) {
-      getCompanyJobs(); // (you can do the same pattern with a companyVars memo if needed)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -514,48 +480,48 @@ export default function JobIndex({}: // initialLoadOnly = false,
     [],
   );
 
-  const { refetch: getJobStatuses } = useQuery(GET_JOB_STATUSES_QUERY, {
-    skip: true,
-    variables: {
-      query: "",
-      page: 1,
-      first: 100,
-      orderByColumn: "id",
-      orderByOrder: "ASC",
-    },
-    onCompleted: (data) => {
-      setJobStatuses([]);
-      setJobStatuses(
-        data.jobStatuses.data.map((jobStatus: any) => ({
-          value: parseInt(jobStatus.id),
-          label: jobStatus.name,
-        })),
-      );
-    },
-  });
+  // const { refetch: getJobStatuses } = useQuery(GET_JOB_STATUSES_QUERY, {
+  //   skip: true,
+  //   variables: {
+  //     query: "",
+  //     page: 1,
+  //     first: 100,
+  //     orderByColumn: "id",
+  //     orderByOrder: "ASC",
+  //   },
+  //   onCompleted: (data) => {
+  //     setJobStatuses([]);
+  //     setJobStatuses(
+  //       data.jobStatuses.data.map((jobStatus: any) => ({
+  //         value: parseInt(jobStatus.id),
+  //         label: jobStatus.name,
+  //       })),
+  //     );
+  //   },
+  // });
 
-  const { refetch: getJobCategories } = useQuery(GET_JOB_CATEGORIES_QUERY, {
-    skip: true,
-    variables: {
-      query: "",
-      page: 1,
-      first: 100,
-      orderByColumn: "id",
-      orderByOrder: "ASC",
-    },
-    onCompleted: (data) => {
-      setJobCategories([]);
-      data.jobCategorys.data.map((category: any) => {
-        setJobCategories((jobCategories) => [
-          ...jobCategories,
-          {
-            value: parseInt(category.id),
-            label: category.name,
-          },
-        ]);
-      });
-    },
-  });
+  // const { refetch: getJobCategories } = useQuery(GET_JOB_CATEGORIES_QUERY, {
+  //   skip: true,
+  //   variables: {
+  //     query: "",
+  //     page: 1,
+  //     first: 100,
+  //     orderByColumn: "id",
+  //     orderByOrder: "ASC",
+  //   },
+  //   onCompleted: (data) => {
+  //     // setJobCategories([]);
+  //     data.jobCategorys.data.map((category: any) => {
+  //       setJobCategories((jobCategories) => [
+  //         ...jobCategories,
+  //         {
+  //           value: parseInt(category.id),
+  //           label: category.name,
+  //         },
+  //       ]);
+  //     });
+  //   },
+  // });
 
   const { refetch: getAvailableDrivers } = useQuery(
     GET_AVAILABLE_DRIVERS_QUERY,
@@ -573,7 +539,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       notifyOnNetworkStatusChange: true,
       onCompleted: (data) => {
         setDriverOptions([]);
-        setDrivers([]);
+        // setDrivers([]);
         data.drivers.data.map((driver: any) => {
           setDriverOptions((driverOptions) => [
             ...driverOptions,
@@ -583,28 +549,28 @@ export default function JobIndex({}: // initialLoadOnly = false,
               data: driver,
             },
           ]);
-          setDrivers(data.drivers.data);
+          // setDrivers(data.drivers.data);
         });
       },
     },
   );
 
-  const handleExport = () => {
-    const header = outputDynamicTableHeader(dynamicTableUsers);
-    const body = outputDynamicTableBody(
-      dynamicTableUsers,
-      tableColumn,
-      selectedJobs,
-    );
-    downloadExcel({
-      fileName: "react-export-table-to-excel.xls",
-      sheet: "Delivery Jobs",
-      tablePayload: {
-        header,
-        body: body,
-      },
-    });
-  };
+  // const handleExport = () => {
+  //   const header = outputDynamicTableHeader(dynamicTableUsers);
+  //   const body = outputDynamicTableBody(
+  //     dynamicTableUsers,
+  //     tableColumn,
+  //     selectedJobs,
+  //   );
+  //   downloadExcel({
+  //     fileName: "react-export-table-to-excel.xls",
+  //     sheet: "Pre-Allocation Jobs",
+  //     tablePayload: {
+  //       header,
+  //       body: body,
+  //     },
+  //   });
+  // };
   const handleSortingChange = (sortBy: string | any[]) => {
     // console.log("handleSorting", sortBy);
     if (sortBy.length === 0) {
@@ -623,27 +589,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
     }
   };
 
-  const handleStatusChange = (selectedOption: any) => {
-    setSelectedStatus(selectedOption);
-    setStatusFilter(selectedOption.value);
-    setQueryPageIndex(0);
-
-    // Update job status IDs filter based on selection
-    let statusIds: number[] = [];
-    if (selectedOption.value !== "all") {
-      const option = statusOptions.find(
-        (opt) => opt.value === selectedOption.value,
-      );
-      statusIds = option?.statusIds || [];
-    }
-
-    // Store the status IDs in state or update the existing filter
-    const updatedJobFilter = {
-      ...mainJobFilter,
-      job_status_ids:
-        statusIds.length > 0 ? statusIds : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    };
-    setMainJobFilter(updatedJobFilter);
+  // 🟩 Simple handler – no filtering logic
+  const handleDriverChange = (selectedOption: any) => {
+    setSelectedDriver(selectedOption);
   };
 
   useEffect(() => {
@@ -655,10 +603,28 @@ export default function JobIndex({}: // initialLoadOnly = false,
     if (isAdmin && !isCompanyAdmin) {
       refetchGroupedJobs(groupedVars);
     } else if (isCompany || isCustomer || (isAdmin && isCompanyAdmin)) {
-      getCompanyJobs();
+      // getCompanyJobs();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupedVars, isAdmin, isCompany, isCustomer, isCompanyAdmin]);
+
+  // function getDynamicTableUsers() {
+  //   throw new Error("Function not implemented.");
+  // }
+  const openAssignModal = (driver) => {
+    if (!driver) return;
+    setAssignDriver(driver);
+    // Pre-select jobs for this driver
+    const filteredJobs = _jobs?.data?.filter(j => j.driver?.id === driver.id) || [];
+    const driverJobs = filteredJobs.map((item) => ({
+      id: item.job.id,
+      original: { job: item.job },
+    }));
+    console.log(driverJobs, 'driverJobs');
+    setSelectedJobs(driverJobs || []);
+    setIsAssignOpen(true);
+  };
+
 
   return (
     <AdminLayout>
@@ -676,7 +642,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
             onOpenSetting={onOpenSetting}
             onOpenFilter={onOpenFilter}
             isFilterTicked={is_filter_ticked}
-            handleExport={handleExport}
+            // handleExport={handleExport}
             debouncedSearch={debouncedSearch}
             onToggleFilterCheckbox={(checked) => {
               if (!checked) {
@@ -689,8 +655,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
                 path: "*",
               });
               dispatch(setIsFilterTicked(checked ? "1" : "0"));
-            }}
-          />
+            }} handleExport={function (): void {
+              throw new Error("Function not implemented.");
+            }} />
 
           <Flex alignItems="left" flexWrap={"wrap"}>
             {Object.keys(mainFilters).map((filterKey) => {
@@ -748,9 +715,10 @@ export default function JobIndex({}: // initialLoadOnly = false,
           /> */}
 
           <JobStatusDateFilter
-            statusOptions={statusOptions}
-            onStatusChange={handleStatusChange}
-            selectedStatus={selectedStatus}
+            driverOptions={driverOptions}
+            onDriverChange={handleDriverChange}
+            selectedDriver={selectedDriver}
+            selectedJobs={selectedJobs}
             rangeDate={rangeDate}
             setRangeDate={setRangeDate}
             withMedia={withMedia}
@@ -759,26 +727,51 @@ export default function JobIndex({}: // initialLoadOnly = false,
           />
 
           {isAdmin && _jobs?.data?.length > 0 ? (
+            // <JobPaginationTable
+            //   columns={adminColumns}
+            //   data={_jobs?.data}
+            //   total={_jobs?.total}
+            //   options={{
+            //     manualSortBy: true,
+            //     manualPagination: true,
+            //     initialState: {
+            //       pageIndex: queryPageIndex,
+            //       pageSize: queryPageSize,
+            //       sortBy: [],
+            //     },
+            //     pageCount: _jobs?.last_page,
+            //   }}
+            //   onReorder={(reordered) => {
+            //     console.log("New reordered list:", reordered);
+            //     // handleBulkAssignJobs({ variables: { input: reordered } });
+            //   }}
+            //   onReorderChange={(changed) => setHasChanges(changed)} // ✅ handled here
+            //   autoSaveOnReorder={false} // ✅ manual save
+            //   setQueryPageIndex={setQueryPageIndex}
+            //   setQueryPageSize={setQueryPageSize}
+            //   isServerSide
+            //   showPageSizeSelect
+            //   showRowSelection
+            //   setSelectedRow={setSelectedJobs}
+            //   isFilterRowSelected={isShowSelectedOnly}
+            //   isChecked={isChecked}
+            //   onSortingChange={handleSortingChange}
+            //   restyleTable
+            // />
             <JobPaginationTable
               columns={adminColumns}
               data={_jobs?.data}
               total={_jobs?.total}
               options={{
                 manualSortBy: true,
-                manualPagination: true,
                 initialState: {
                   pageIndex: queryPageIndex,
                   pageSize: queryPageSize,
-                  sortBy: [], 
+                  sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
                 },
+                manualPagination: true,
                 pageCount: _jobs?.last_page,
               }}
-              onReorder={(reordered) => {
-                console.log("New reordered list:", reordered);
-                // handleBulkAssignJobs({ variables: { input: reordered } });
-              }}
-              onReorderChange={(changed) => setHasChanges(changed)} // ✅ handled here
-              autoSaveOnReorder={false} // ✅ manual save
               setQueryPageIndex={setQueryPageIndex}
               setQueryPageSize={setQueryPageSize}
               isServerSide
@@ -787,8 +780,11 @@ export default function JobIndex({}: // initialLoadOnly = false,
               setSelectedRow={setSelectedJobs}
               isFilterRowSelected={isShowSelectedOnly}
               isChecked={isChecked}
+              showManualPages
               onSortingChange={handleSortingChange}
+              onAssignClick={openAssignModal}
               restyleTable
+
             />
           ) : (
             <Box textAlign="center" py={4} px={10} color="gray.600">
@@ -798,17 +794,15 @@ export default function JobIndex({}: // initialLoadOnly = false,
         </SimpleGrid>
 
         {/* Floating Action Bar */}
-        {isAdmin && !loading && (
+        {isAdmin && (
           <ActionBar
-            selectedJobs={selectedJobs}
-            onSwitch={setIsShowSelectedOnly}
-            hasChanges={hasChanges} // enable Save button
-            onSaveChanges={() => {
-              // handleBulkAssignJobs({ variables: { input: jobs } });
-              setHasChanges(false);
-            }}
-            // onClickBulkAssign={onOpenBulkAssign}
-            // onClickBulkSort={onOpenBulkSort}
+            {...({
+              selectedJobs: selectedJobs,
+              onSwitch: setIsShowSelectedOnly,
+              // hasChanges: hasChanges, // enable Save button
+              onSaveChanges: onOpenBulkAssign,
+              onClickBulkSort: onOpenBulkSort,
+            } as any)}
           />
         )}
         <Suspense fallback={null}>
@@ -817,7 +811,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               isOpen={isOpenFilter}
               onClose={onCloseFilter}
               // jobStatuses={jobStatuses}
-              jobCategories={jobCategories}
+              // jobCategories={jobCategories}
               onFilterApply={(selectedFilters, filterDisplayName) => {
                 // Update the tags
                 updateTags(selectedFilters, jobFilter);
@@ -848,7 +842,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               onClose={() => {
                 onCloseSetting();
                 // setSettingOpen(false);
-                getDynamicTableUsers();
+                // getDynamicTableUsers();
                 refetchJobs(); // Optional: Refresh job data
               }}
             />
@@ -856,11 +850,13 @@ export default function JobIndex({}: // initialLoadOnly = false,
         </Suspense>
         <Suspense fallback={null}>
           {isOpenBulkAssign && (
-            <JobBulkAssignModal
+            <PreAllocateModal
               isOpen={isOpenBulkAssign}
-              onClose={onCloseBulkAssign}
-              driverOptions={driverOptions}
-              drivers={drivers}
+              onClose={() => {
+                setSelectedDriver(null); // reset driver when modal closes
+                onCloseBulkAssign();
+              }}
+              selectedDriver={selectedDriver}
               selectedJobs={selectedJobs}
               columns={bulkAssignColumns}
               setIsChecked={setIsChecked}
@@ -880,6 +876,27 @@ export default function JobIndex({}: // initialLoadOnly = false,
               setSelectedJobs={setSelectedJobs}
               refreshPage={() => refetchJobs()}
             />
+          )}
+        </Suspense>
+        <Suspense fallback={null}>
+          {isAssignOpen && (
+            <AssignJobsModal
+              isOpen={isAssignOpen}
+              onClose={() => {
+                setAssignDriver(null);
+                setIsAssignOpen(false);
+                setIsChecked(false);
+                setSelectedJobs([]);
+              }}
+              driver={assignDriver}
+              columns={bulkAssignColumns}
+              selectedJobs={selectedJobs}
+              setSelectedJobs={setSelectedJobs}
+              setIsChecked={setIsChecked}
+              refreshPage={refetchJobs}
+            />
+
+
           )}
         </Suspense>
       </Box>

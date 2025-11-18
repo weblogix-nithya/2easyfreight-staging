@@ -1,4 +1,4 @@
-import { SettingsIcon } from "@chakra-ui/icons";
+// import { SettingsIcon } from "@chakra-ui/icons";
 import {
   Button,
   Checkbox,
@@ -9,8 +9,7 @@ import {
 import { FullChevronDown } from "components/icons/Icons";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 // import NextLink from "next/link";
-import Router from "next/router";
-import { FaFileExcel } from "react-icons/fa";
+// import { FaFileExcel } from "react-icons/fa";
 
 interface JobHeaderProps {
   isAdmin: boolean;
@@ -26,10 +25,10 @@ interface JobHeaderProps {
 const JobHeader = ({
   isAdmin,
   // isCompany,
-  onOpenSetting,
+  // onOpenSetting,
   onOpenFilter,
   isFilterTicked,
-  handleExport,
+  // handleExport,
   debouncedSearch,
   onToggleFilterCheckbox,
 }: JobHeaderProps) => {
@@ -38,13 +37,13 @@ const JobHeader = ({
   return (
     <>
       <Flex justifyContent="space-between" alignItems="center">
-        <h1>Delivery Jobs</h1>
-        {isAdmin && (
+        <h1>Pre-Allocation Jobs</h1>
+        {/* {isAdmin && (
           <Button variant="no-effects" onClick={onOpenSetting}>
             <SettingsIcon className="mr-2" />
             Settings
           </Button>
-        )}
+        )} */}
       </Flex>
 
       <Flex justifyContent="space-between" alignItems="center" mt={4}>
@@ -78,13 +77,13 @@ const JobHeader = ({
         </Flex>
 
         <Flex>
-          <Button
+          {/* <Button
             leftIcon={<FaFileExcel />}
             variant="primary"
             onClick={handleExport}
           >
             Export Xls
-          </Button>
+          </Button> */}
         </Flex>
       </Flex>
     </>
