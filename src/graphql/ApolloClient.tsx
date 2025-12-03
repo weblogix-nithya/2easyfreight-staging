@@ -4,7 +4,8 @@ import {
   from,
   HttpOptions,
   InMemoryCache,
-  NormalizedCacheObject} from "@apollo/client";
+  NormalizedCacheObject
+} from "@apollo/client";
 import { createUploadLink } from "apollo-upload-client";
 import { destroyCookie, parseCookies } from "nookies";
 import { useMemo } from "react";
@@ -32,7 +33,7 @@ const clearAllCookies = () => {
   //   destroyCookie(null, name, { path });
   // });
 
-  
+
   cookieNames.forEach((name) => {
     destroyCookie(null, name, { path: "/" });
   });
@@ -62,31 +63,31 @@ function createApolloClient(token: string = "") {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
-const errorLink = new ApolloLink((operation, forward) => {
-  return forward(operation).map((response) => {
-    const { errors } = response;
-    const networkError = (response as any).networkError;
-    const graphQLErrors = errors;
+  const errorLink = new ApolloLink((operation, forward) => {
+    return forward(operation).map((response) => {
+      const { errors } = response;
+      const networkError = (response as any).networkError;
+      const graphQLErrors = errors;
 
-    if (
-      networkError?.message?.includes("401") ||
-      graphQLErrors?.some((error: { message: string }) =>
-        error.message.toLowerCase().includes("unauthenticated")
-      )
-    ) {
-      // Redirect to login page and pass the current URL as `redirectTo`
-      const redirectTo = window.location.pathname + window.location.search;
-      
-      clearAllCookies(); // Clear cookies upon unauthentication
+      if (
+        networkError?.message?.includes("401") ||
+        graphQLErrors?.some((error: { message: string }) =>
+          error.message.toLowerCase().includes("unauthenticated")
+        )
+      ) {
+        // Redirect to login page and pass the current URL as `redirectTo`
+        const redirectTo = window.location.pathname + window.location.search;
 
-      apolloClient?.clearStore().then(() => {
-        window.location.href = `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`;
-      });
-    }
+        clearAllCookies(); // Clear cookies upon unauthentication
 
-    return response;  // Return the response
+        apolloClient?.clearStore().then(() => {
+          window.location.href = `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`;
+        });
+      }
+
+      return response;  // Return the response
+    });
   });
-});
 
   return new ApolloClient({
     ssrMode: typeof window === "undefined",

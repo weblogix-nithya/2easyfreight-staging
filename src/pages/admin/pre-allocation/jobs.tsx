@@ -134,7 +134,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   const today = new Date();
   const [rangeDate, setRangeDate] = useState<[Date, Date]>([today, today]);
   const [_isTableLoading, setIsTableLoading] = useState(false);
-  const { isAdmin, companyId, customerId, userId } = useSelector((state: RootState) => state.user);
+  const { isAdmin, isCustomer, companyId, customerId, userId } = useSelector((state: RootState) => state.user);
   const { filters, displayName, jobMainFilters, is_filter_ticked } = useSelector((state: RootState) => state.jobFilter);
   const dispatch = useDispatch();
   const [withMedia, setWithMedia] = useState(false);
@@ -231,12 +231,13 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   }, [adminColumns]);
 
   useEffect(() => {
-    const columns = getCompanyColumns(isAdmin, withMedia);
+    const columns = getCompanyColumns(isAdmin, isCustomer, withMedia);
     setCompanyColumns(columns);
   }, [withMedia, isAdmin]);
 
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
+    isCustomer
     // dynamicTableUsers,
   );
 

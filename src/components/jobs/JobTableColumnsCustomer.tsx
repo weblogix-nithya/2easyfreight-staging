@@ -300,6 +300,7 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
 
 export const getCompanyColumns = (
   isAdmin: boolean,
+  isCustomer: boolean,
   withMedia: boolean,
 ) => {
   return [
