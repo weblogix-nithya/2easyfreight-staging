@@ -12,33 +12,12 @@ export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 
 export const DeliveryCell = ({ row }: any) => {
-  const router = useRouter();
-  const job = row?.original?.job;
-
-  const handleNavigate = () => {
-    if (job?.id) {
-      router.push(`/admin/jobs/${job.id}`);
-    }
-  };
+  const job = row?.original;
 
   return (
-    <Flex align="center" justify="space-between" maxW="150px">
-      <Text mr="2" noOfLines={1}>
-        {job?.name || "-"}
-      </Text>
-
-      {job?.id && (
-        <Tooltip label="Edit Job" placement="top">
-          <IconButton
-            aria-label="Edit Job"
-            icon={<EditIcon />}
-            size="xs"
-            variant="ghost"
-            onClick={handleNavigate}
-          />
-        </Tooltip>
-      )}
-    </Flex>
+    <Text mr="2" noOfLines={1}>
+      {job?.name || "-"}
+    </Text>
   );
 };
 
