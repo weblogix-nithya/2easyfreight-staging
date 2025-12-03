@@ -6,10 +6,14 @@ import {
   HStack,
   Switch,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
 
+
+
 type ActionBarProps = {
+  selectedDriver: any;
   selectedJobs: any[];
   onSwitch: (state: boolean) => void;
   onSaveChanges?: () => void;     // ✅ callback for Save button
@@ -17,6 +21,7 @@ type ActionBarProps = {
 };
 
 const ActionBar = ({
+  selectedDriver,
   selectedJobs,
   onSwitch,
   onSaveChanges,
@@ -32,6 +37,7 @@ const ActionBar = ({
   //   },
   //   { totalWeights: 0, totalCBM: 0 },
   // );
+  const toast = useToast();
 
   return (
     <HStack
@@ -75,7 +81,19 @@ const ActionBar = ({
           px={5}
           py={1}
           variant="secondary"
-          onClick={onSaveChanges}
+          onClick={() => {
+            if (!selectedDriver?.id || selectedJobs.length === 0) {
+              toast({
+                title: "Please select a driver and jobs to pre-allocate.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+              });
+              return;
+            }
+
+            onSaveChanges && onSaveChanges();
+          }}
           mr={3}
         >
           Pre-Allocate Jobs {"  "}

@@ -176,9 +176,6 @@ const JobStatusDateFilter = ({
                 <Badge colorScheme="red" variant="subtle" >Current Suburb: -</Badge>
                 <Badge colorScheme="red" variant="subtle" >Mobile Number: {selectedDriver.phone_no ?? "-"}</Badge>
                 <Badge colorScheme="red" variant="subtle" >Rego: {selectedDriver.registration_no ?? "-"}</Badge>
-              </Flex>
-
-              <Flex wrap="wrap" align="start" gap={3} w="full">
                 <Badge colorScheme="red" variant="subtle" >TAILGATE: {selectedDriver.is_tailgated ? "Yes" : "No"}</Badge>
                 <Badge colorScheme={isCBMOver ? "pink" : "blue"} textColor={isCBMOver ? "red" : undefined} variant="subtle" >
                   CBM: {totals.totalCBM.toFixed(2)} / {selectedDriver.no_max_volume ?? 0}
@@ -190,7 +187,7 @@ const JobStatusDateFilter = ({
               </Flex>
 
               {(isCBMOver || isWeightOver) && (
-                <Text color="red.500" fontSize="sm" mt={2}>
+                <Text color="red.500" fontSize="sm">
                   ⚠️ Selected jobs exceed max {isCBMOver ? "CBM" : ""}{isCBMOver && isWeightOver ? " & " : ""}{isWeightOver ? "Weight" : ""}. Uncheck jobs to reduce totals.
                 </Text>
               )}

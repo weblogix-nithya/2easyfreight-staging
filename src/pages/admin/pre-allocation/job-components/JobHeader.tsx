@@ -13,7 +13,7 @@ import { SearchBar } from "components/navbar/searchBar/SearchBar";
 
 interface JobHeaderProps {
   isAdmin: boolean;
-  isCompany: boolean;
+  // isCompany: boolean;
   onOpenSetting: () => void;
   onOpenFilter: () => void;
   isFilterTicked: string;

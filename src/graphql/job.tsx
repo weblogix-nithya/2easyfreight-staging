@@ -445,7 +445,12 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           area_color
           total_quantity
           total_weight
-        total_volume
+          total_volume
+          is_inbound_connect
+          is_hand_unloading
+          is_dangerous_goods
+          is_tailgate_required
+          is_paperwork_required
           job_type { id name }
           job_status { id name }
           ready_at
@@ -474,6 +479,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           job_destinations {
             id
             is_pickup
+            is_saved_address
             address_line_1
             address_city
             address_state
@@ -906,6 +912,17 @@ export const REMOVE_PRE_ALLOCATE_DRIVER = gql`
     }
   }
 `;
+
+export const JOB_UPDATED_SUB = gql`
+  subscription JobUpdated {
+    jobUpdated {
+      id
+      job_type_id
+      job_status_id
+    }
+  }
+`;
+
 
 
 export interface UpdateJobInput {

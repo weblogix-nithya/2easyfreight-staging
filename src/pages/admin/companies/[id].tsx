@@ -513,8 +513,8 @@ function CompanyEdit() {
 
       // Refresh rates from API
       const { data } = await getCompanyRates({
-        variables: { company_id: company.id },
-        fetchPolicy: "network-only",
+        company_id: company.id, // pass variables directly
+        // fetchPolicy: "network-only", // still optional if your query supports it
       });
 
       if (data?.getRatesByCompany) {
@@ -647,10 +647,8 @@ function CompanyEdit() {
       });
 
       // Refresh rates from API
-      const { data } = await getCompanyRates({
-        variables: { company_id: company.id },
-        fetchPolicy: "network-only",
-      });
+      const { data } = await getCompanyRates({ company_id: company.id });
+
 
       if (data?.getRatesByCompany) {
         setCompanyRates(data.getRatesByCompany);

@@ -222,11 +222,11 @@ export default function StatementGenerateModal({
                       setSelectedCompany(e);
                       if (e) {
                         getCustomersByCompanyId({
-                          query: "",
-                          page: 1,
-                          first: 100,
-                          orderByColumn: "id",
-                          orderByOrder: "ASC",
+                          // query: "",
+                          // page: 1,
+                          // first: 100,
+                          // orderByColumn: "id",
+                          // orderByOrder: "ASC",
                           company_id: e.value,
                         });
                       }
