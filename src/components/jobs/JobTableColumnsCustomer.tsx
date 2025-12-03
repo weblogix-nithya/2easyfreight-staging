@@ -263,9 +263,9 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   );
   const collectionTime = pickupDest?.updated_at
     ? `Collection time: ${formatDate(
-        pickupDest.updated_at,
-        "HH:mm, DD/MM/YYYY",
-      )}\n`
+      pickupDest.updated_at,
+      "HH:mm, DD/MM/YYYY",
+    )}\n`
     : "";
 
   return `${collectionTime}${formatAddress(
@@ -300,7 +300,6 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
 
 export const getCompanyColumns = (
   isAdmin: boolean,
-  isCustomer: boolean,
   withMedia: boolean,
 ) => {
   return [

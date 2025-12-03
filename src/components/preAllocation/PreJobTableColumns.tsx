@@ -25,6 +25,14 @@ import {
   // useToast,
   VStack
 } from "@chakra-ui/react";
+import {
+  faHandHolding,
+  faInfinity,
+  faPager,
+  faTruckRampBox,
+  faWarning,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
 import { PRE_ALLOCATION_JOBS_QUERY, REMOVE_PRE_ALLOCATE_DRIVER } from "graphql/job";
@@ -60,20 +68,33 @@ export const JobDestinationsCell = ({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations || [];
 
   const filteredDestinations = destinations.filter(
-    (destination: any) => destination?.is_pickup === false,
+    (destination: any) => destination?.is_pickup === false
   );
 
   const first = filteredDestinations[0];
+
+  const renderAddress = (destination: any) => {
+    if (destination?.is_saved_address) {
+      // Only show business name if saved address
+      return destination.address_business_name || "-";
+    } else {
+      return (
+        <>
+          {/* {destination.address_business_name ? `${destination.address_business_name}\n` : ""}
+        {destination.address_line_1 ? `${destination.address_line_1}\n` : ""} */}
+          {destination.address_city}
+          {"\n"}
+          {destination.address_postal_code}, {destination.address_state}
+        </>
+      );
+    }
+  };
+
   return (
     <>
       {first ? (
-        <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
-          {/* {first.address_line_1} */}
-          {/* {first.address_business_name || "-"} */}
-          {/* {"\n"} */}
-          {first.address_city}
-          {"\n"}
-          {first.address_postal_code}, {first.address_state}
+        <Text whiteSpace="pre-line" fontSize="sm" minWidth={"170px"}>
+          {renderAddress(first)}
         </Text>
       ) : (
         <Text>-</Text>
@@ -94,8 +115,8 @@ export const JobDestinationsCell = ({ row }: any) => {
             <PopoverCloseButton />
             <PopoverBody>
               {filteredDestinations.map((destination: any, index: number) => (
-                <Text color="black" mb="5" key={`dest-${index}`}>
-                  Address {index + 1}: {formatAddress(destination)}
+                <Text color="black" mb="5" key={`dest-${index}`} whiteSpace="pre-line">
+                  Address {index + 1}: {renderAddress(destination)}
                 </Text>
               ))}
             </PopoverBody>
@@ -105,6 +126,7 @@ export const JobDestinationsCell = ({ row }: any) => {
     </>
   );
 };
+
 
 export const JobDestinationsCellExport = ({ row }: any) => {
   const filteredDestinations = row?.original?.job?.job_destinations.filter(
@@ -664,23 +686,35 @@ export const PickupBusinessNameCell = ({ row }: any) => {
 
 export const PickupAddressCell = ({ row }: any) => {
   const pickup = row?.original?.job?.job_destinations?.find(
-    (d: any) => d.is_pickup === true,
+    (d: any) => d.is_pickup === true
   );
 
   if (!pickup) return <>-</>;
 
-  // const line1 = pickup.address_line_1;
-  const line1 = pickup?.address_business_name || "-";
-  const line2 = `${pickup.address_city},  ${pickup.address_postal_code} ${pickup.address_state}`;
+  const renderPickupAddress = (pickup: any) => {
+    if (pickup?.is_saved_address) {
+      // Only show business name
+      return pickup.address_business_name || "-";
+    }
+
+    // Show full address
+    return (
+      <>
+        {/* {pickup.address_business_name ? `${pickup.address_business_name}\n` : ""}
+        {pickup.address_line_1 ? `${pickup.address_line_1}\n` : ""} */}
+        {pickup.address_city}, {pickup.address_postal_code} {pickup.address_state}
+      </>
+    );
+  };
 
   return (
-    <Text whiteSpace="normal" textTransform="capitalize" fontSize="sm" minWidth={"170px"}>
-      {line1?.toLowerCase()}
-      {"\n"}
-      {line2}
+    <Text whiteSpace="pre-line" textTransform="capitalize" fontSize="sm" minWidth={"170px"}>
+      {renderPickupAddress(pickup)}
     </Text>
   );
 };
+
+
 
 export const CustomerReferenceCell = ({ row }: any) => {
   return (
@@ -761,23 +795,91 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
   };
 
   return (
-    <Flex align="center" justify="space-between" maxW="150px">
-      {canRemove && (
-        <Tooltip label="Remove Job from Driver" placement="top">
-          <IconButton
-            aria-label="Remove Job from Driver"
-            icon={<CloseIcon />}
-            size="xs"
-            mr="5"
-            color="red.500"
-            variant="ghost"
-            isLoading={loading}
-            onClick={handleRemove}
-          />
-        </Tooltip>
-      )}
+    <Flex direction="column" w="100%" maxW="150px">
 
-      <Text fontSize="sm">{job?.name || "-"}</Text>
+      {/* ROW 1: Remove Left, Job Name Right */}
+      <Flex align="center" justify="space-between" w="100%">
+
+        {/* Remove Button LEFT */}
+        {canRemove && (
+          <Tooltip label="Remove Job from Driver" placement="top">
+            <IconButton
+              aria-label="Remove Job from Driver"
+              icon={<CloseIcon />}
+              size="xs"
+              color="red.500"
+              variant="ghost"
+              isLoading={loading}
+              onClick={handleRemove}
+            />
+          </Tooltip>
+        )}
+
+        {/* Job Name RIGHT */}
+        <Text fontSize="sm" ml="2" noOfLines={1}>
+          {job?.name || "-"}
+        </Text>
+      </Flex>
+
+      {/* ROW 2: Icons under job name (RIGHT aligned) */}
+      <Flex justify={canRemove ? "flex-end" : "flex-start"} gap={1} mt="1" ml="2">
+        {job.is_inbound_connect && (
+          <React.Fragment key="inbound-connect">  {/* ✅ Key for conditional */}
+            <Tooltip label="Inbound Connect">
+              <FontAwesomeIcon
+                icon={faInfinity}
+                className="!text-[var(--chakra-colors-red-400)] p-1"
+                size="sm"
+              />
+            </Tooltip>
+          </React.Fragment>
+        )}
+        {job.is_paperwork_required && (
+          <React.Fragment key="paperwork-required">  {/* ✅ Key for conditional */}
+            <Tooltip label="Paperwork Required">
+              <FontAwesomeIcon
+                icon={faPager}
+                className="!text-[var(--chakra-colors-red-400)] p-1"
+                size="sm"
+              />
+            </Tooltip>
+          </React.Fragment>
+        )}
+        {job.is_hand_unloading && (
+          <React.Fragment key="hand-unloading">  {/* ✅ Key for conditional */}
+            <Tooltip label="Handling">
+              <FontAwesomeIcon
+                icon={faHandHolding}
+                className="!text-[var(--chakra-colors-red-400)] p-1"
+                size="sm"
+              />
+            </Tooltip>
+          </React.Fragment>
+        )}
+        {job.is_dangerous_goods && (
+          <React.Fragment key="dangerous-goods">  {/* ✅ Key for conditional */}
+            <Tooltip label="Dangerous goods">
+              <FontAwesomeIcon
+                icon={faWarning}
+                className="!text-[var(--chakra-colors-red-400)] p-1"
+                size="sm"
+              />
+            </Tooltip>
+          </React.Fragment>
+        )}
+        {job.is_tailgate_required && (
+          <React.Fragment key="tailgate-required">  {/* ✅ Key for conditional */}
+            <Tooltip label="Tail lift">
+              <FontAwesomeIcon
+                icon={faTruckRampBox}
+                className="!text-[var(--chakra-colors-red-400)] p-1"
+                size="sm"
+              />
+            </Tooltip>
+          </React.Fragment>
+        )}
+      </Flex>
+
     </Flex>
   );
 };
@@ -796,7 +898,6 @@ export const DeliveryCellBulkAssign = ({ row }: any) => {
 // export const DeliveryCell = ({ row }: any) => {
 //   // const router = useRouter();
 //   const job = row?.original?.job;
-// console
 //   // const handleNavigate = () => {
 //   //   if (job?.id) {
 //   //     router.push(`/admin/jobs/${job.id}`);
@@ -1079,12 +1180,12 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
   //   Cell: ItemsCbmCell,
   //   CellExport: ItemsCbmCellExport,
   // },
-  {
-    id: "extras",
-    Header: "Extras",
-    Cell: ItemsExtrasCell,
-    // width: "100px",
-  },
+  // {
+  //   id: "extras",
+  //   Header: "Extras",
+  //   Cell: ItemsExtrasCell,
+  //   // width: "100px",
+  // },
   {
     id: "customer_notes",
     Header: "Client notes",
@@ -1107,7 +1208,7 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
 
 export const getColumns = (
   isAdmin: boolean,
-  isCustomer: boolean,
+  // isCustomer: boolean,
   withMedia: boolean,
   refetchJobs?: () => void,
   dynamicTableUsers?: DynamicTableUser[],
@@ -1317,12 +1418,12 @@ export const bulkassigntableColumn = [
   //   Cell: ItemsCbmCell,
   //   CellExport: ItemsCbmCellExport,
   // },
-  {
-    id: "extras",
-    Header: "Extras",
-    Cell: ItemsExtrasCell,
-    // width: "100px",
-  },
+  // {
+  //   id: "extras",
+  //   Header: "Extras",
+  //   Cell: ItemsExtrasCell,
+  //   // width: "100px",
+  // },
   {
     id: "customer_notes",
     Header: "Client notes",

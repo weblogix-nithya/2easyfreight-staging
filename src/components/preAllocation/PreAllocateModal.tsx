@@ -34,7 +34,7 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   selectedDriver: any;
   selectedJobs: any[];
   columns: any[];
-  refreshPage: any;
+  // refreshPage: any;
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
   setIsChecked: React.Dispatch<React.SetStateAction<any>>;
 }
@@ -43,7 +43,7 @@ export default function PreAllocateModal({
   isOpen,
   onClose,
   selectedJobs,
-  refreshPage,
+  // refreshPage,
   setSelectedJobs,
   setIsChecked,
   selectedDriver,
@@ -85,7 +85,7 @@ export default function PreAllocateModal({
         duration: 3000,
         isClosable: true,
       });
-      refreshPage();
+      // refreshPage();
       setIsChecked(false);
       setSelectedJobs([]);
       setIsSaving(false);

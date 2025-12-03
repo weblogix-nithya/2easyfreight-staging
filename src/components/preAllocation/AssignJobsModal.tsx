@@ -37,7 +37,7 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   onClose: () => void;
   selectedJobs: any[];
   columns: any[];
-  refreshPage: any;
+  // refreshPage: any;
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
   setIsChecked: React.Dispatch<React.SetStateAction<any>>;
 }
@@ -47,7 +47,7 @@ export default function AssignJobsModal({
   isOpen,
   onClose,
   selectedJobs,
-  refreshPage,
+  // refreshPage,
   setSelectedJobs,
   setIsChecked,
   driver,
@@ -90,7 +90,7 @@ export default function AssignJobsModal({
         duration: 3000,
         isClosable: true,
       });
-      refreshPage();
+      // refreshPage();
       setIsChecked(false);
       setSelectedJobs([]);
       setIsSaving(false);
