@@ -1,18 +1,11 @@
 import { useEffect, useState } from "react";
 import { useEcho } from "utils/websocketConfig";
 
-
 export const subscriptionEvents = {
     jobUpdated: { channel: "jobs", event: ".job.updated" },
     invoiceUpdated: { channel: "invoices", event: ".invoice.updated" },
 };
-/**
- * Pass events as object:
- * {
- *   jobUpdated: { channel: "jobs", event: ".job.updated" },
- *   invoiceUpdated: { channel: "invoices", event: ".invoice.updated" }
- * }
- */
+
 type EventConfig = Record<
     string,
     {
@@ -20,6 +13,9 @@ type EventConfig = Record<
         event: string;
     }
 >;
+
+// Track global subscriptions to prevent duplicates
+const globalSubscribed = new Map<string, boolean>();
 
 export function useSubscriptionService(events: EventConfig) {
     const { echo, connected } = useEcho();
@@ -31,6 +27,12 @@ export function useSubscriptionService(events: EventConfig) {
         const unsubscribeFns: (() => void)[] = [];
 
         Object.entries(events).forEach(([key, { channel, event }]) => {
+            const subKey = `${channel}:${event}`;
+
+            // Skip if already subscribed globally
+            if (globalSubscribed.get(subKey)) return;
+            globalSubscribed.set(subKey, true);
+
             const ch = echo.channel(channel);
 
             const callback = (payload: any) => {
@@ -46,5 +48,3 @@ export function useSubscriptionService(events: EventConfig) {
 
     return data; // ✅ Only data
 }
-
-

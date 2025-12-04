@@ -201,11 +201,10 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   const _jobs = groupedJobs?.preAllocationJobs;
 
   const subscriptionData = useSubscriptionService(subscriptionEvents);
-  const jobData = subscriptionData.jobUpdated;  // Only interested in job updates
+  const jobData = subscriptionData.jobUpdated;
 
   useEffect(() => {
-    if (jobData) {
-      console.log("✅ Job updated:", jobData);
+    if (jobData?.jobs) {
       refetchJobs();
     }
   }, [jobData]);
