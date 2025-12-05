@@ -380,6 +380,7 @@ function JobEdit() {
           pick_up_state: data?.job.pick_up_state,
           timeslot_depots: data?.job.timeslot_depots,
           is_paperwork_required: data?.job.is_paperwork_required,
+          is_stackable_required: data?.job.is_stackable_required,
           job_status_id: data?.job.job_status_id,
         }));
         if (data?.job.company_area && companyRates.length > 0) {
@@ -682,6 +683,8 @@ function JobEdit() {
         is_hand_unloading: job.is_hand_unloading,
         is_dangerous_goods: job.is_dangerous_goods,
         is_tailgate_required: job.is_tailgate_required,
+        is_stackable_required: job.is_stackable_required,
+        is_paperwork_required: job.is_paperwork_required,
         timeslot: job.timeslot,
         timeslot_depots: job.timeslot_depots,
         last_free_at: job.last_free_at,
@@ -2023,7 +2026,7 @@ function JobEdit() {
 
                 {/* Job Details */}
                 {tabId == 1 &&
-                  ([1, 2, 3, 4, 5].includes(Number(job.job_status_id)) ? (
+                  ([1, 2, 3, 4, 5, 6].includes(Number(job.job_status_id)) ? (
                     <JobDetailsTab
                       isAdmin={isAdmin}
                       job={job}
