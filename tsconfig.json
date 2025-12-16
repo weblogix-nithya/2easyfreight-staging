@@ -41,16 +41,14 @@
       }
     ]
   },
-  "exclude": [
-    "node_modules"
-  ],
   "include": [
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "./src",
-    "next-env.d.ts",
-    "next.config.js",
-    ".next/types/**/*.ts",
-    "src/types/**/*.d.ts" // ✅ Add this
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
   ]
 }

@@ -173,6 +173,8 @@ const PaginationTable = <T extends object>({
       columns,
       data,
       autoResetSelectedRows: false,
+      autoResetSortBy: false,
+      disableSortRemove: true,
     },
     useSortBy,
     usePagination,
@@ -190,6 +192,15 @@ const PaginationTable = <T extends object>({
       // no need to force here; next render will show real state anyway
     }
   }, [selectedFlatRows]);
+
+  useEffect(() => {
+    if (!setSelectedRow || setSelectedRow.length === 0) {
+      optimisticSelRef.current.clear();
+      toggleAllRowsSelected(false);
+      forceUpdate();
+    }
+  }, [setSelectedRow, toggleAllRowsSelected]);
+
   function getOptimisticSelected(row: any) {
     const v = optimisticSelRef.current.get(row.id);
     return typeof v === "boolean" ? v : row.isSelected;
@@ -238,11 +249,11 @@ const PaginationTable = <T extends object>({
   const pageRows = React.useMemo(() => {
     let rows = [...page];
     // 1. Sort selected rows first
-    rows.sort((a, b) => {
-      const aSel = getOptimisticSelected(a) ? 1 : 0;
-      const bSel = getOptimisticSelected(b) ? 1 : 0;
-      return bSel - aSel;
-    });
+    // rows.sort((a, b) => {
+    //   const aSel = getOptimisticSelected(a) ? 1 : 0;
+    //   const bSel = getOptimisticSelected(b) ? 1 : 0;
+    //   return bSel - aSel;
+    // });
     // 2. Only selected rows filter
     if (isFilterRowSelected) {
       rows = rows.filter((r) => getOptimisticSelected(r));
@@ -259,6 +270,7 @@ const PaginationTable = <T extends object>({
     if (!isChecked) toggleAllRowsSelected(isChecked);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecked]);
+  // console.log("Rendering PaginationTable", pageRows.map((r) => r.original?.job?.name));
   return (
     <VStack w="full" align="start" spacing={4}>
       <Table colorScheme="white" {...getTableProps()}>
@@ -269,13 +281,14 @@ const PaginationTable = <T extends object>({
               key={`header-row-${index}`}
             >
               {headerGroup.headers.map((column) => (
+
                 <Th
                   {...column.getHeaderProps(
                     column.enableSorting
                       ? column.getSortByToggleProps()
                       : undefined,
                   )}
-                  {...column.getHeaderProps()}
+                  // {...column.getHeaderProps()}
                   key={`row-header-${column.id}`}
                   paddingLeft={restyleTable && 1}
                   paddingInlineStart={restyleTable && 1}
@@ -307,8 +320,9 @@ const PaginationTable = <T extends object>({
         </Thead>
         <Tbody {...getTableBodyProps()}>
           {pageRows.map((row, index) => {
-            // console.log(row, "row one");
+            // console.log(row.original?.job?.name, "row before prepare");
             prepareRow(row);
+            // console.log(row.original?.job?.name, "row after prepare");
             const status = row.original?.job?.job_status?.name;
 
             const driver = row.original.driver;

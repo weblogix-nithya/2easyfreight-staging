@@ -34,7 +34,7 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   selectedDriver: any;
   selectedJobs: any[];
   columns: any[];
-  // refreshPage: any;
+  refreshPage: any;
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
   setIsChecked: React.Dispatch<React.SetStateAction<any>>;
 }
@@ -43,9 +43,9 @@ export default function PreAllocateModal({
   isOpen,
   onClose,
   selectedJobs,
-  // refreshPage,
+  refreshPage,
   setSelectedJobs,
-  setIsChecked,
+  // setIsChecked,
   selectedDriver,
 }: FilterJobsModalProps) {
   const toast = useToast();
@@ -78,20 +78,22 @@ export default function PreAllocateModal({
     variables: {
       input: sortedBulkAssignJobs,
     },
-    onCompleted: () => {
+    onCompleted: (data) => {
+      // console.log(data);
       toast({
         title: "Jobs pre-allocated successfully",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      // refreshPage();
-      setIsChecked(false);
-      setSelectedJobs([]);
-      setIsSaving(false);
+      refreshPage();
+      // setIsChecked(false);
+      // setSelectedJobs([]);
+      // setIsSaving(false);
       onClose();
     },
     onError: (error) => {
+      console.log(error);
       showGraphQLErrorToast(error);
     },
   });

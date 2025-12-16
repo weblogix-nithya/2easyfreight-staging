@@ -366,9 +366,11 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           job_destinations {
             id
             is_pickup
+            is_saved_address
             address_line_1
             address_city
             address_postal_code
+            address_state
             address_business_name
             updated_at
             arrived_at
@@ -399,6 +401,8 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
     $preallocation_driver_id: ID
     $query: String
     $has_company_ids: [ID]
+    $sort_by: String
+    $sort_order: String
   ) {
     preAllocationJobs(
       page: $page
@@ -414,6 +418,8 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
       preallocation_driver_id: $preallocation_driver_id
       query: $query
       has_company_ids: $has_company_ids
+      sort_by: $sort_by
+      sort_order: $sort_order
     ) {
       current_page
       last_page

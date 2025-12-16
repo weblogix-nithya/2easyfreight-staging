@@ -2,6 +2,7 @@
 // import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import { EditIcon } from "@chakra-ui/icons";
 import {
+  Button,
   Flex,
   Icon,
   IconButton,
@@ -18,6 +19,7 @@ import {
   Tooltip,
   // Textarea,
   // useToast,
+  VStack
 } from "@chakra-ui/react";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
@@ -39,6 +41,30 @@ import { RootState } from "store/store";
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
+
+function formatAddressLines(dest: any) {
+  // console.log(dest);
+  if (!dest) {
+    return {
+      firstLine: "-",
+      secondLine: "-",
+    };
+  }
+  const firstLine =
+    dest.address_business_name || dest.address_line_1 || "-";
+
+  const addressParts = [
+    dest?.address_line_1 || null,
+    dest?.address_city || null,
+    dest?.address_postal_code || null,
+  ].filter(Boolean);
+
+  const secondLine = dest.address_business_name
+    ? `${dest.address_business_name}\n${addressParts.join(", ")}`
+    : addressParts.join(", ");
+
+  return { firstLine, secondLine };
+}
 
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
@@ -86,7 +112,7 @@ export const JobDestinationsCell = ({ row }: any) => {
             <PopoverBody>
               {filteredDestinations.map((destination: any, index: number) => (
                 <Text color="black" mb="5" key={`dest-${index}`}>
-                  Address {index + 1}: {formatAddress(destination)}
+                  Address {index + 1}: {formatAddressLines(destination).secondLine}
                 </Text>
               ))}
             </PopoverBody>
@@ -127,6 +153,7 @@ export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
 };
 export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations || [];
+  // console.log(destinations);
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
@@ -140,6 +167,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
       (item: any) => item.collection_name !== "signatures",
     ) || [];
 
+  const dest = filteredDestinations[0];
   return (
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
@@ -160,12 +188,16 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
           </Text>
         </>
       )}
-      <Text isTruncated w={"fit-content"}>
+      {/* <Text isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
       </Text>
-      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
+      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text> */}
+      {/* ⭐ Address with View More / View Less */}
+      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"} whiteSpace="pre-wrap" w={"fit-content"}>
+        {dest?.is_saved_address ? formatAddressLines(dest).firstLine : formatAddressLines(dest).secondLine}
+      </Text>
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
@@ -204,9 +236,8 @@ export const PickupAddressWithTimebulkCell = ({ row }: any) => {
 
   return (
     <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
-        pickupDest?.address_postal_code
-      }\n ${pickupDest?.address_business_name || "-"}`}
+      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code
+        }\n ${pickupDest?.address_business_name || "-"}`}
     </Text>
   );
 };
@@ -216,10 +247,9 @@ export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
   );
 
   return (
-    <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
-        pickupDest?.address_postal_code
-      }\n ${pickupDest?.address_business_name || "-"}`}
+    <Text mb="2" whiteSpace="pre-wrap" minWidth={"300px"} flexWrap={"nowrap"}>
+      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code
+        }\n ${pickupDest?.address_business_name || "-"}`}
     </Text>
   );
 };
@@ -250,10 +280,9 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
           </Text>
         </>
       )}
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
+      <Text mb="2" whiteSpace="pre-wrap" minWidth={"300px"} flexWrap={"nowrap"}>
+        {pickupDest?.is_saved_address ? formatAddressLines(pickupDest).firstLine : formatAddressLines(pickupDest).secondLine}
       </Text>
-      <Text>{pickupDest?.address_business_name || "-"}</Text>
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
@@ -283,9 +312,9 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   );
   const collectionTime = pickupDest?.updated_at
     ? `Collection time: ${formatDate(
-        pickupDest.updated_at,
-        "HH:mm, DD/MM/YYYY",
-      )}\n`
+      pickupDest.updated_at,
+      "HH:mm, DD/MM/YYYY",
+    )}\n`
     : "";
 
   return `${collectionTime}${formatAddress(
@@ -316,10 +345,9 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
           </Text>
         </>
       )}
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
+      <Text whiteSpace="pre-wrap" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+        {pickupDest?.is_saved_address ? formatAddressLines(pickupDest).firstLine : formatAddressLines(pickupDest).secondLine}
       </Text>
-      <Text>{pickupDest?.address_business_name || "-"}</Text>
     </>
   );
 };
@@ -334,6 +362,8 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
     row?.original?.job?.job_status.id == 6 ||
     row?.original?.job?.job_status.id == 7;
 
+  // ⭐ Address formatting logic (same as your other component)
+  const dest = filteredDestinations[0];
   return (
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
@@ -354,12 +384,15 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
           </Text>
         </>
       )}
-      <Text isTruncated w={"fit-content"}>
+      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+        {dest?.is_saved_address ? formatAddressLines(dest).firstLine : formatAddressLines(dest).secondLine}
+      </Text>
+      {/* <Text isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
       </Text>
-      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
+      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text> */}
     </>
   );
 };
@@ -427,17 +460,36 @@ export const ItemsTypeCellExport = ({ row }: any) => {
   });
 };
 export const ItemsDimensionCell = ({ row }: any) => {
-  const items = row?.original?.job?.job_items;
+  const items = row?.original?.job?.job_items || [];
+  const [showAll, setShowAll] = React.useState(false);
+
+  const visibleItems = showAll ? items : items.slice(0, 2);
+
   return (
-    <div>
-      {items?.map((item: any) => (
-        <Text key={`items-dimension-${item.id}`} mb={2} w={"max-content"}>
-          {`${(item.dimension_height * 100)?.toFixed(0)}x${(
+    <VStack align="start" spacing={1}>
+      {visibleItems.map((item: any) => (
+        <Text
+          fontSize="sm"
+          key={`items-dimension-${item.id}`}
+          w="max-content"
+        >
+          {`${(item.dimension_height * 100).toFixed(0)}x${(
             item.dimension_width * 100
-          )?.toFixed(0)}x${(item.dimension_depth * 100)?.toFixed(0)}`}
+          ).toFixed(0)}x${(item.dimension_depth * 100).toFixed(0)}`}
         </Text>
       ))}
-    </div>
+
+      {items.length > 2 && (
+        <Button
+          size="xs"
+          variant="link"
+          colorScheme="blue"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? "Less" : `+${items.length - 2} More`}
+        </Button>
+      )}
+    </VStack>
   );
 };
 export const ItemsDimensionCellExport = ({ row }: any) => {
@@ -628,7 +680,7 @@ export const PickupAddressCell = ({ row }: any) => {
   if (!pickup) return <>-</>;
 
   const line1 = pickup.address_line_1;
-  const line2 = `${pickup.address_city} ${pickup.address_postal_code}, Australia`;
+  const line2 = `${pickup.address_city} ${pickup.address_postal_code} ${pickup.address_state}`;
 
   return (
     <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
@@ -641,7 +693,7 @@ export const PickupAddressCell = ({ row }: any) => {
 
 export const CustomerReferenceCell = ({ row }: any) => {
   return (
-    <Text maxW="100px" noOfLines={2}>
+    <Text maxW="100px" w="120px" noOfLines={2}>
       {" "}
       {row?.original?.job?.reference_no || "-"}
     </Text>
@@ -731,10 +783,10 @@ export const TimeslotCell = ({ row, refetchJobs }: any) => {
 
 const MEDIA_CELL: Record<string, { with: any; without: any }> = {
   "pick_up_destination.address_formatted,pick_up_destination.address_business_name":
-    {
-      with: PickupAddressWithTimeCell,
-      without: PickupAddressWithTimewithoutMediaCell,
-    },
+  {
+    with: PickupAddressWithTimeCell,
+    without: PickupAddressWithTimewithoutMediaCell,
+  },
   "job_destinations.address,job_destinations.address_business_name": {
     with: JobDestinationWithBusinessNameCell,
     without: JobDestinationWithBusinessNamewithoutMediaCell,
