@@ -74,20 +74,20 @@ export const JobDestinationsCell = ({ row }: any) => {
   const first = filteredDestinations[0];
 
   const renderAddress = (destination: any) => {
-    if (destination?.is_saved_address) {
-      // Only show business name if saved address
-      return destination.address_business_name || "-";
-    } else {
-      return (
-        <>
-          {/* {destination.address_business_name ? `${destination.address_business_name}\n` : ""}
+    // if (destination?.is_saved_address) {
+    //   // Only show business name if saved address
+    //   return destination.address_business_name || "-";
+    // } else {
+    return (
+      <>
+        {/* {destination.address_business_name ? `${destination.address_business_name}\n` : ""}
         {destination.address_line_1 ? `${destination.address_line_1}\n` : ""} */}
-          {destination.address_city}
-          {"\n"}
-          {destination.address_postal_code}, {destination.address_state}
-        </>
-      );
-    }
+        {destination.address_city}
+        {"\n"}
+        {destination.address_postal_code}, {destination.address_state}
+      </>
+    );
+    // }
   };
 
   return (
@@ -692,10 +692,10 @@ export const PickupAddressCell = ({ row }: any) => {
   if (!pickup) return <>-</>;
 
   const renderPickupAddress = (pickup: any) => {
-    if (pickup?.is_saved_address) {
-      // Only show business name
-      return pickup.address_business_name || "-";
-    }
+    // if (pickup?.is_saved_address) {
+    //   // Only show business name
+    //   return pickup.address_business_name || "-";
+    // }
 
     // Show full address
     return (
@@ -1033,11 +1033,22 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     Cell: ({ row }) => (
       <DeliveryCell
         row={row}
-        refetchTable={refetchJobs}   // your Apollo useQuery refetch
-        setSelectedJobs={setSelectedJobs} // from parent table/modal
+        refetchTable={refetchJobs}
+        setSelectedJobs={setSelectedJobs}
       />
     ),
-    // width: "100px",
+    // ✅ Sort by job ID directly
+    accessor: (row: any) => row?.job?.id || 0,
+    enableSorting: true,
+    sortType: 'basic',
+  },
+  {
+    id: "suburb_area,area_color",
+    Header: "Quad",
+    Cell: SuburbAreaCell,
+    // ✅ Accessor for suburb_area sorting
+    accessor: (row: any) => row?.job?.suburb_area || '',
+    enableSorting: true,
   },
   {
     id: "job_type.name",
@@ -1064,11 +1075,11 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
   //   Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
   //   CellExport: PickupAddressWithTimeCellExport,
   // },
-  // {
-  //   id: "pick_up_destination.address_business_name",
-  //   Header: "Pickup Business Name",
-  //   Cell: PickupBusinessNameCell, // Add this line
-  // },
+  {
+    id: "pick_up_destination.address_business_name",
+    Header: "Pickup Company",
+    Cell: PickupBusinessNameCell, // Add this line
+  },
   {
     id: "job_destinations.address",
     Header: "Delivery To",
@@ -1114,11 +1125,11 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     Header: "category",
     Cell: CategoryCell,
   },
-  {
-    id: "suburb_area,area_color",
-    Header: "Quad",
-    Cell: SuburbAreaCell,
-  },
+  // {
+  //   id: "suburb_area,area_color",
+  //   Header: "Quad",
+  //   Cell: SuburbAreaCell,
+  // },
   {
     id: "company.name",
     Header: "Company",
@@ -1206,7 +1217,7 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
   },
 ];
 
-export const getColumns = (
+export const getColumnsPre = (
   isAdmin: boolean,
   // isCustomer: boolean,
   withMedia: boolean,
@@ -1302,11 +1313,11 @@ export const bulkassigntableColumn = [
   //   Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
   //   CellExport: PickupAddressWithTimeCellExport,
   // },
-  // {
-  //   id: "pick_up_destination.address_business_name",
-  //   Header: "Pickup Business Name",
-  //   Cell: PickupBusinessNameCell, // Add this line
-  // },
+  {
+    id: "pick_up_destination.address_business_name",
+    Header: "Pickup Company",
+    Cell: PickupBusinessNameCell, // Add this line
+  },
   {
     id: "job_destinations.address",
     Header: "Delivery To",

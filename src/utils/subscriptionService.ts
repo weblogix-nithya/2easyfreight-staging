@@ -1,50 +1,47 @@
-import { useEffect, useState } from "react";
-import { useEcho } from "utils/websocketConfig";
+import { useEffect, useRef } from "react";
 
-export const subscriptionEvents = {
-    jobUpdated: { channel: "jobs", event: ".job.updated" },
-    invoiceUpdated: { channel: "invoices", event: ".invoice.updated" },
-};
+import { useEcho } from "./websocketConfig";
 
 type EventConfig = Record<
     string,
     {
         channel: string;
         event: string;
+        callback?: (payload: any) => void;
     }
 >;
 
-// Track global subscriptions to prevent duplicates
-const globalSubscribed = new Map<string, boolean>();
-
 export function useSubscriptionService(events: EventConfig) {
     const { echo, connected } = useEcho();
-    const [data, setData] = useState<Record<string, any>>({});
+    const subscriptionsRef = useRef<Map<string, boolean>>(new Map());
 
     useEffect(() => {
         if (!connected || !echo) return;
 
         const unsubscribeFns: (() => void)[] = [];
 
-        Object.entries(events).forEach(([key, { channel, event }]) => {
+        Object.entries(events).forEach(([key, { channel, event, callback }]) => {
             const subKey = `${channel}:${event}`;
 
-            // Skip if already subscribed globally
-            if (globalSubscribed.get(subKey)) return;
-            globalSubscribed.set(subKey, true);
+            if (subscriptionsRef.current.get(subKey)) return;
+            subscriptionsRef.current.set(subKey, true);
 
             const ch = echo.channel(channel);
 
-            const callback = (payload: any) => {
-                setData(prev => ({ ...prev, [key]: payload }));
+            const wrappedCallback = (payload: any) => {
+                if (callback) callback(payload);
             };
 
-            ch.listen(event, callback);
-            unsubscribeFns.push(() => ch.stopListening(event, callback));
+            // ✅ automatically prepend dot if missing
+            const eventName = event.startsWith('.') ? event : `.${event}`;
+            ch.listen(eventName, wrappedCallback);
+
+            unsubscribeFns.push(() => ch.stopListening(eventName, wrappedCallback));
         });
 
-        return () => unsubscribeFns.forEach(fn => fn());
+        return () => {
+            unsubscribeFns.forEach(fn => fn());
+            subscriptionsRef.current.clear();
+        };
     }, [connected, echo, events]);
-
-    return data; // ✅ Only data
 }

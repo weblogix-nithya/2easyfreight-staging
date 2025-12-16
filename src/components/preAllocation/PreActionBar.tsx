@@ -82,6 +82,24 @@ const ActionBar = ({
           py={1}
           variant="secondary"
           onClick={() => {
+            if (!selectedDriver?.id) {
+              toast({
+                title: "Please select a driver.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+              });
+              return;
+            }
+            if (selectedJobs.length === 0) {
+              toast({
+                title: "Please select jobs to pre-allocate.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+              });
+              return;
+            }
             if (!selectedDriver?.id || selectedJobs.length === 0) {
               toast({
                 title: "Please select a driver and jobs to pre-allocate.",
@@ -100,7 +118,7 @@ const ActionBar = ({
           {selectedJobs.length > 0 && <>( {selectedJobs.length} )</>}
         </Button>
 
-        <Button
+        {/* <Button
           float="right"
           px={5}
           py={1}
@@ -108,9 +126,9 @@ const ActionBar = ({
           onClick={onClickBulkSort}
           mr={3}
         >
-          Sort Jobs {"  "}
+          Sort Jobs {" "}
           {selectedJobs.length > 0 && <>( {selectedJobs.length} )</>}
-        </Button>{" "}
+        </Button>{" "*/}
       </Box>
       {/* Totals */}
       {/* <Box>

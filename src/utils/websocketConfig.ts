@@ -19,21 +19,20 @@ export function useEcho() {
     useEffect(() => {
         if (typeof window === "undefined") return;
 
-        const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
-        const host = process.env.NEXT_PUBLIC_PUSHER_HOST;
+        const key = process.env.NEXT_PUBLIC_PUSHER_KEY!;
+        const host = process.env.NEXT_PUBLIC_PUSHER_HOST!;
 
         try {
-            // Initialize Pusher
             const pusher = new Pusher(key, {
+                cluster: "",          // ✅ required by TypeScript
                 wsHost: host,
                 wsPort: 6001,
                 wssPort: 443,
                 forceTLS: false,
                 enabledTransports: ["ws", "wss"],
                 disableStats: true,
-                cluster: "",
-                wsPath: "/ws",
             });
+
 
             pusher.connection.bind("connected", () => {
                 setConnected(true);
@@ -44,30 +43,28 @@ export function useEcho() {
                 setConnected(false);
             });
 
-            const echo = new Echo<"pusher">({
+            const echo = new Echo({
                 broadcaster: "pusher",
                 key,
                 wsHost: host,
                 wsPort: 6001,
                 wssPort: 443,
                 forceTLS: false,
+                client: pusher,
                 disableStats: true,
                 enabledTransports: ["ws", "wss"],
-                cluster: "",
-                client: pusher,
             });
 
             echoRef.current = echo;
             pusherRef.current = pusher;
 
-            // Make globally available (optional)
+            // optional global access
             (window as any).Echo = echo;
             (window as any).PusherClient = pusher;
         } catch (error) {
             console.error("❌ Error initializing Echo or Pusher:", error);
         }
 
-        // Cleanup on unmount
         return () => {
             echoRef.current?.disconnect();
             pusherRef.current?.disconnect();
@@ -75,7 +72,7 @@ export function useEcho() {
     }, []);
 
     const reconnect = () => {
-        if (pusherRef.current) {
+        if (pusherRef.current && pusherRef.current.connection.state !== "connected") {
             pusherRef.current.connect();
         }
     };
