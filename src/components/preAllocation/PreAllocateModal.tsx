@@ -45,7 +45,7 @@ export default function PreAllocateModal({
   selectedJobs,
   refreshPage,
   setSelectedJobs,
-  setIsChecked,
+  // setIsChecked,
   selectedDriver,
 }: FilterJobsModalProps) {
   const toast = useToast();

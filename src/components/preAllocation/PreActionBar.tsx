@@ -17,7 +17,7 @@ type ActionBarProps = {
   selectedJobs: any[];
   onSwitch: (state: boolean) => void;
   onSaveChanges?: () => void;     // ✅ callback for Save button
-  onClickBulkSort: () => void;
+  // onClickBulkSort: () => void;
 };
 
 const ActionBar = ({
@@ -25,7 +25,7 @@ const ActionBar = ({
   selectedJobs,
   onSwitch,
   onSaveChanges,
-  onClickBulkSort,
+  // onClickBulkSort,
 }: ActionBarProps) => {
   const [isSwitched, setIsSwitched] = useState<boolean>(false);
 
