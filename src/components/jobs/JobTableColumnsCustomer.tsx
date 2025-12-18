@@ -1,9 +1,7 @@
-import { EditIcon } from "@chakra-ui/icons";
-import { Flex, IconButton, Link, Text, Tooltip } from "@chakra-ui/react";
+import { Flex, Link, Text } from "@chakra-ui/react";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { formatAddress, formatDate } from "helpers/helper";
 import Image from "next/image";
-import { useRouter } from "next/router";
 import React from "react";
 import { RootState } from "store/store";
 // import { tableColumn } from "./JobTableColumns";

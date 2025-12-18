@@ -243,16 +243,16 @@ export const paymentTerms = [
 ];
 
 
-  const getDaysFromTerm = (termValue) => {
-    if (!termValue) return 0;
+  // const getDaysFromTerm = (termValue) => {
+  //   if (!termValue) return 0;
 
-    // Match "14" from "14_days"
-    const match = termValue.match(/^(\d+)_days/);
-    return match ? parseInt(match[1], 10) : 0;
-  };
+  //   // Match "14" from "14_days"
+  //   const match = termValue.match(/^(\d+)_days/);
+  //   return match ? parseInt(match[1], 10) : 0;
+  // };
 
-  const addDays = (dateString, days) => {
-    const date = new Date(dateString);
-    date.setDate(date.getDate() + days);
-    return date.toISOString().split("T")[0]; // yyyy-MM-dd
-  };
+  // const addDays = (dateString, days) => {
+  //   const date = new Date(dateString);
+  //   date.setDate(date.getDate() + days);
+  //   return date.toISOString().split("T")[0]; // yyyy-MM-dd
+  // };

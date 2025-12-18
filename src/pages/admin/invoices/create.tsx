@@ -1,5 +1,6 @@
 // Chakra imports
 import { useMutation, useQuery } from "@apollo/client";
+import { InfoOutlineIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
@@ -10,7 +11,6 @@ import {
   Grid,
   Input,
   SimpleGrid,
-  Skeleton,
   Table,
   TableContainer,
   Tbody,
@@ -43,7 +43,6 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-import { InfoOutlineIcon } from "@chakra-ui/icons";
 
 function InvoiceCreate() {
   const toast = useToast();
@@ -64,7 +63,7 @@ function InvoiceCreate() {
   const [companiesOptions, setCompaniesOptions] = useState([]);
   const [customerOptions, setCustomerOptions] = useState([]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [jobDateAt, setJobDateAt] = useState(today);
+  const [jobDateAt, _setJobDateAt] = useState(today);
 
   const getDaysFromTerm = (termValue) => {
     if (!termValue) return 0;
@@ -159,9 +158,7 @@ function InvoiceCreate() {
       setCustomerOptions(_customerOptions);
       if (isCustomer) {
         setInvoice({ ...invoice, ...{ customer_id: customerId } });
-        const selectedCustomer = _customerOptions.find(
-          (_e) => _e.value === customerId,
-        )?.entity;
+       
       }
     },
   });
@@ -510,7 +507,7 @@ function InvoiceCreate() {
                   >
                     <InfoOutlineIcon mr={2} />
                     <span>
-                      Selected Company's Payment Term: {selectedPaymentTerm}
+                      Selected Company&apos;s Payment Term: {selectedPaymentTerm}
                     </span>
                   </Flex>
                 )}

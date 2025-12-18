@@ -20,7 +20,7 @@ export function useSubscriptionService(events: EventConfig) {
 
         const unsubscribeFns: (() => void)[] = [];
 
-        Object.entries(events).forEach(([key, { channel, event, callback }]) => {
+        Object.entries(events).forEach(([_key, { channel, event, callback }]) => {
             const subKey = `${channel}:${event}`;
 
             if (subscriptionsRef.current.get(subKey)) return;
@@ -42,6 +42,6 @@ export function useSubscriptionService(events: EventConfig) {
         return () => {
             unsubscribeFns.forEach(fn => fn());
             subscriptionsRef.current.clear();
-        };
+        }; // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [connected, echo, events]);
 }
