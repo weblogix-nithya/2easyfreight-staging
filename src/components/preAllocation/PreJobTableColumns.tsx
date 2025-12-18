@@ -6,6 +6,7 @@ import {
   Badge,
   Button,
   Flex,
+  HStack,
   Icon,
   IconButton,
   // IconButton,
@@ -51,6 +52,14 @@ import { useState } from "react";
 import { MdMenu } from "react-icons/md";
 // import { useSelector } from "react-redux";
 import { RootState } from "store/store";
+
+type JobLabel = {
+  id: number;
+  type: "label";
+  name: string;
+  color?: string;
+};
+
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 
@@ -734,7 +743,14 @@ export const CategoryCell = ({ row }: any) => {
 export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
   const job = row?.original?.job;
   const toast = useToast();
-
+  const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
+  const getBadgeStyle = (color?: string) => {
+    if (!color) return { bg: "gray.100", color: "gray.700" };
+    if (color.startsWith("#")) {
+      return { bg: color + "20", color: color };
+    }
+    return { bg: `${color}.100`, color: `${color}.700`, };
+  };
   const canRemove = !!job?.preallocation_driver_id;
 
   const [removeDriver, { loading }] = useMutation(REMOVE_PRE_ALLOCATE_DRIVER, {
@@ -795,92 +811,155 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
   };
 
   return (
-    <Flex direction="column" w="100%" maxW="150px">
+    <>
+      {labels.length > 0 && (
+        <HStack spacing="6px" mb="10px">
+          {/* Label + popup */}
+          {labels.length > 0 && (
+            <HStack spacing="6px">
+              {/* First badge always visible */}
+              <Badge
+                fontSize="10px"
+                px="6px"
+                py="2px"
+                borderRadius="full"
+                whiteSpace="nowrap"
+                {...getBadgeStyle(labels[0].color)}
+              >
+                {labels[0].name}
+              </Badge>
 
-      {/* ROW 1: Remove Left, Job Name Right */}
-      <Flex align="center" justify="space-between" w="100%">
+              {/* +N with popup */}
+              {labels.length > 1 && (
+                <Popover trigger="hover" placement="top-start" openDelay={100}>
+                  <PopoverTrigger>
+                    <Text
+                      fontSize="12px"
+                      color="black.500"
+                      cursor="pointer"
+                      variant="ghost"
+                    >
+                      +{labels.length - 1}
+                    </Text>
+                  </PopoverTrigger>
 
-        {/* Remove Button LEFT */}
-        {canRemove && (
-          <Tooltip label="Remove Job from Driver" placement="top">
-            <IconButton
-              aria-label="Remove Job from Driver"
-              icon={<CloseIcon />}
-              size="xs"
-              color="red.500"
-              variant="ghost"
-              isLoading={loading}
-              onClick={handleRemove}
-            />
-          </Tooltip>
-        )}
+                  <PopoverContent
+                    w="auto"
+                    minW="120px"
+                    borderRadius="md"
+                    boxShadow="md"
+                    _focus={{ boxShadow: "md" }}
+                  >
+                    <PopoverBody>
+                      <HStack spacing={1} flexWrap="wrap">
+                        {labels.map((label) => (
+                          <Badge
+                            key={label.id}
+                            fontSize="10px"
+                            px="6px"
+                            py="2px"
+                            borderRadius="full"
+                            {...getBadgeStyle(label.color)}
+                          >
+                            {label.name}
+                          </Badge>
+                        ))}
+                      </HStack>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </HStack>
+          )}
+        </HStack>
+      )}
+      <Flex direction="column" w="100%" maxW="150px">
 
-        {/* Job Name RIGHT */}
-        <Text fontSize="sm" ml="2" noOfLines={1}>
-          {job?.name || "-"}
-        </Text>
+        {/* ROW 1: Remove Left, Job Name Right */}
+        <Flex align="center" justify="space-between" w="100%">
+
+          {/* Remove Button LEFT */}
+          {canRemove && (
+            <Tooltip label="Remove Job from Driver" placement="top">
+              <IconButton
+                aria-label="Remove Job from Driver"
+                icon={<CloseIcon />}
+                size="xs"
+                color="red.500"
+                variant="ghost"
+                isLoading={loading}
+                onClick={handleRemove}
+              />
+            </Tooltip>
+          )}
+
+          {/* Job Name RIGHT */}
+          <Text fontSize="sm" ml="2" noOfLines={1}>
+            {job?.name || "-"}
+          </Text>
+        </Flex>
+
+        {/* ROW 2: Icons under job name (RIGHT aligned) */}
+        <Flex justify={canRemove ? "flex-end" : "flex-start"} gap={1} mt="1" ml="2">
+          {job.is_inbound_connect && (
+            <React.Fragment key="inbound-connect">  {/* ✅ Key for conditional */}
+              <Tooltip label="Inbound Connect">
+                <FontAwesomeIcon
+                  icon={faInfinity}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+          {job.is_paperwork_required && (
+            <React.Fragment key="paperwork-required">  {/* ✅ Key for conditional */}
+              <Tooltip label="Paperwork Required">
+                <FontAwesomeIcon
+                  icon={faPager}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+          {job.is_hand_unloading && (
+            <React.Fragment key="hand-unloading">  {/* ✅ Key for conditional */}
+              <Tooltip label="Handling">
+                <FontAwesomeIcon
+                  icon={faHandHolding}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+          {job.is_dangerous_goods && (
+            <React.Fragment key="dangerous-goods">  {/* ✅ Key for conditional */}
+              <Tooltip label="Dangerous goods">
+                <FontAwesomeIcon
+                  icon={faWarning}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+          {job.is_tailgate_required && (
+            <React.Fragment key="tailgate-required">  {/* ✅ Key for conditional */}
+              <Tooltip label="Tail lift">
+                <FontAwesomeIcon
+                  icon={faTruckRampBox}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+        </Flex>
+
       </Flex>
-
-      {/* ROW 2: Icons under job name (RIGHT aligned) */}
-      <Flex justify={canRemove ? "flex-end" : "flex-start"} gap={1} mt="1" ml="2">
-        {job.is_inbound_connect && (
-          <React.Fragment key="inbound-connect">  {/* ✅ Key for conditional */}
-            <Tooltip label="Inbound Connect">
-              <FontAwesomeIcon
-                icon={faInfinity}
-                className="!text-[var(--chakra-colors-red-400)] p-1"
-                size="sm"
-              />
-            </Tooltip>
-          </React.Fragment>
-        )}
-        {job.is_paperwork_required && (
-          <React.Fragment key="paperwork-required">  {/* ✅ Key for conditional */}
-            <Tooltip label="Paperwork Required">
-              <FontAwesomeIcon
-                icon={faPager}
-                className="!text-[var(--chakra-colors-red-400)] p-1"
-                size="sm"
-              />
-            </Tooltip>
-          </React.Fragment>
-        )}
-        {job.is_hand_unloading && (
-          <React.Fragment key="hand-unloading">  {/* ✅ Key for conditional */}
-            <Tooltip label="Handling">
-              <FontAwesomeIcon
-                icon={faHandHolding}
-                className="!text-[var(--chakra-colors-red-400)] p-1"
-                size="sm"
-              />
-            </Tooltip>
-          </React.Fragment>
-        )}
-        {job.is_dangerous_goods && (
-          <React.Fragment key="dangerous-goods">  {/* ✅ Key for conditional */}
-            <Tooltip label="Dangerous goods">
-              <FontAwesomeIcon
-                icon={faWarning}
-                className="!text-[var(--chakra-colors-red-400)] p-1"
-                size="sm"
-              />
-            </Tooltip>
-          </React.Fragment>
-        )}
-        {job.is_tailgate_required && (
-          <React.Fragment key="tailgate-required">  {/* ✅ Key for conditional */}
-            <Tooltip label="Tail lift">
-              <FontAwesomeIcon
-                icon={faTruckRampBox}
-                className="!text-[var(--chakra-colors-red-400)] p-1"
-                size="sm"
-              />
-            </Tooltip>
-          </React.Fragment>
-        )}
-      </Flex>
-
-    </Flex>
+    </>
   );
 };
 

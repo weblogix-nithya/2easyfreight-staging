@@ -196,6 +196,12 @@ export const GET_JOBS_QUERY = gql`
           lng
           updated_at
         }
+        meta {
+          id
+          type
+          name
+          color
+        }
         job_items {
           id
           item_type {
@@ -328,7 +334,12 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           ready_at
           start_at
           drop_at
-
+          meta {
+            id
+            type
+            name
+            color
+          }
           pick_up_address
           last_free_at
           timeslot
@@ -482,6 +493,12 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
             dimension_depth
             dimension_width
             item_type { id name }
+          }
+          meta {
+            id
+            type
+            name
+            color
           }
           job_destinations {
             id

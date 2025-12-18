@@ -2,8 +2,10 @@
 // import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import { EditIcon } from "@chakra-ui/icons";
 import {
+  Badge,
   Button,
   Flex,
+  HStack,
   Icon,
   IconButton,
   // IconButton,
@@ -38,6 +40,13 @@ import React from "react";
 import { MdMenu } from "react-icons/md";
 // import { useSelector } from "react-redux";
 import { RootState } from "store/store";
+
+type JobLabel = {
+  id: number;
+  type: "label";
+  name: string;
+  color?: string;
+};
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
@@ -710,36 +719,114 @@ export const CategoryCell = ({ row }: any) => {
 //   return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
 // };
 
+
 export const DeliveryCell = ({ row }: any) => {
   const router = useRouter();
   const job = row?.original?.job;
 
-  const handleNavigate = () => {
-    if (job?.id) {
-      router.push(`/admin/jobs/${job.id}`);
+  const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
+  const getBadgeStyle = (color?: string) => {
+    if (!color) return { bg: "gray.100", color: "gray.700" };
+    if (color.startsWith("#")) {
+      return { bg: color + "20", color: color };
     }
+    return { bg: `${color}.100`, color: `${color}.700`, };
+  };
+  const handleNavigate = () => {
+    if (job?.id) router.push(`/admin/jobs/${job.id}`);
   };
 
   return (
-    <Flex align="center" justify="space-between" maxW="150px">
-      <Text mr="2" noOfLines={1}>
-        {job?.name || "-"}
-      </Text>
+    <>
+      {labels.length > 0 && (
+        <HStack spacing="6px" mb="10px">
+          {/* Label + popup */}
+          {labels.length > 0 && (
+            <HStack spacing="6px">
+              {/* First badge always visible */}
+              <Badge
+                fontSize="10px"
+                px="6px"
+                py="2px"
+                borderRadius="full"
+                whiteSpace="nowrap"
+                {...getBadgeStyle(labels[0].color)}
+              >
+                {labels[0].name}
+              </Badge>
 
-      {job?.id && (
-        <Tooltip label="Edit Job" placement="top">
-          <IconButton
-            aria-label="Edit Job"
-            icon={<EditIcon />}
-            size="xs"
-            variant="ghost"
-            onClick={handleNavigate}
-          />
-        </Tooltip>
+              {/* +N with popup */}
+              {labels.length > 1 && (
+                <Popover trigger="hover" placement="top-start" openDelay={100}>
+                  <PopoverTrigger>
+                    <Text
+                      fontSize="12px"
+                      color="black.500"
+                      cursor="pointer"
+                      variant="ghost"
+                    >
+                      +{labels.length - 1}
+                    </Text>
+                  </PopoverTrigger>
+
+                  <PopoverContent
+                    w="auto"
+                    minW="120px"
+                    borderRadius="md"
+                    boxShadow="md"
+                    _focus={{ boxShadow: "md" }}
+                  >
+                    <PopoverBody>
+                      <HStack spacing={1} flexWrap="wrap">
+                        {labels.map((label) => (
+                          <Badge
+                            key={label.id}
+                            fontSize="10px"
+                            px="6px"
+                            py="2px"
+                            borderRadius="full"
+                            {...getBadgeStyle(label.color)}
+                          >
+                            {label.name}
+                          </Badge>
+                        ))}
+                      </HStack>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </HStack>
+          )}
+        </HStack>
       )}
-    </Flex>
+      <Flex
+        align="center"
+        justify="space-between"
+        gap="8px"
+        maxW="260px"
+      >
+        {/* RIGHT SIDE */}
+        {job?.id && (
+          <>
+            <Text fontSize="sm" noOfLines={1}>
+              {job?.name || "-"}
+            </Text>
+            <Tooltip label="Edit Job" placement="top">
+              <IconButton
+                aria-label="Edit Job"
+                icon={<EditIcon />}
+                size="xs"
+                variant="ghost"
+                onClick={handleNavigate}
+              />
+            </Tooltip>
+          </>
+        )}
+      </Flex >
+    </>
   );
 };
+
 
 export const AdminNotesCell = ({ row }: any) => {
   const current = row?.original?.job?.admin_notes ?? "";

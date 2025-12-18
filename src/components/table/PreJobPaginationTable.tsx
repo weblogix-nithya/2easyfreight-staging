@@ -90,6 +90,8 @@ type PaginationTableProps<T extends object> = {
   onSortingChange?: any;
   onAssignClick?: (driver: any) => void;
   restyleTable?: boolean;
+  refetchJobs?: () => void;
+  onContextMenu?: (e: React.MouseEvent, job: any) => void;
 } & (
     | {
       isServerSide?: false;
@@ -135,6 +137,7 @@ const PaginationTable = <T extends object>({
   onSortingChange,
   onAssignClick,
   restyleTable = false,
+  onContextMenu,
 }: // restyleTable = false,
   // autoResetSelectedRows= false,
   PaginationTableProps<T>) => {
@@ -452,6 +455,11 @@ const PaginationTable = <T extends object>({
                   key={`data-row-${index}`}  // ✅ Fix: Use 'index' instead of undefined 'idx'
                   style={getStatusStyle(status)}
                   cursor={showRowSelection ? "pointer" : "default"}
+                  onContextMenu={(e) => {
+                    if (onContextMenu) {  // ✅ Check if handler exists
+                      onContextMenu(e, row.original.job);
+                    }
+                  }}
                   onClick={(e) => {
                     if (!showRowSelection) return;
                     const target = e.target as HTMLElement;
@@ -481,6 +489,7 @@ const PaginationTable = <T extends object>({
                             toggleOptimisticRow(row);
                           }}
                           cursor="pointer"
+                          fontSize="xx-small"
                         >
                           <Box pointerEvents="none">
                             {/* Render a visual checkbox using optimistic selected state */}
