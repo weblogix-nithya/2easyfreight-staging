@@ -1,4 +1,4 @@
-// import { SettingsIcon } from "@chakra-ui/icons";
+import { SettingsIcon } from "@chakra-ui/icons";
 import {
   Button,
   Checkbox,
@@ -13,7 +13,7 @@ import { SearchBar } from "components/navbar/searchBar/SearchBar";
 
 interface JobHeaderProps {
   isAdmin: boolean;
-  isCompany: boolean;
+  // isCompany: boolean;
   onOpenSetting: () => void;
   onOpenFilter: () => void;
   isFilterTicked: string;
@@ -25,7 +25,7 @@ interface JobHeaderProps {
 const JobHeader = ({
   isAdmin,
   // isCompany,
-  // onOpenSetting,
+  onOpenSetting,
   onOpenFilter,
   isFilterTicked,
   // handleExport,
@@ -38,12 +38,12 @@ const JobHeader = ({
     <>
       <Flex justifyContent="space-between" alignItems="center">
         <h1>Pre-Allocation Jobs</h1>
-        {/* {isAdmin && (
+        {isAdmin && (
           <Button variant="no-effects" onClick={onOpenSetting}>
             <SettingsIcon className="mr-2" />
             Settings
           </Button>
-        )} */}
+        )}
       </Flex>
 
       <Flex justifyContent="space-between" alignItems="center" mt={4}>

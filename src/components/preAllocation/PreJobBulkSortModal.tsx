@@ -32,7 +32,7 @@ import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
 interface FilterJobsModalProps extends UseDisclosureProps {
   selectedJobs: any[];
   columns: any[];
-  refreshPage: any;
+  // refreshPage: any;
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
   setIsChecked: React.Dispatch<React.SetStateAction<any>>;
 }
@@ -41,7 +41,7 @@ export default function JobBulkSortModal({
   isOpen,
   onClose,
   selectedJobs,
-  refreshPage,
+  // refreshPage,
   setSelectedJobs,
   setIsChecked,
 }: FilterJobsModalProps) {
@@ -82,7 +82,7 @@ export default function JobBulkSortModal({
         duration: 3000,
         isClosable: true,
       });
-      refreshPage();
+      // refreshPage();
       setIsChecked(false);
       setSelectedJobs([]);
       setIsSaving(false);

@@ -62,7 +62,7 @@ export default function QuoteCreate() {
   }, []);
   useEffect(() => {
     dateChanged();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requiredDateAt, dropAt, readyAt]);
   const dateChanged = () => {
     try {
@@ -86,7 +86,7 @@ export default function QuoteCreate() {
         ...(companyId ? { company_id: companyId } : {}),
       });
     }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, isCustomer]);
 
   useQuery(GET_QUOTE_CATEGORIES_QUERY, {
@@ -167,6 +167,7 @@ export default function QuoteCreate() {
       first: 1000,
       orderByColumn: "id",
       orderByOrder: "ASC",
+      company_id: undefined, // optional initially
     },
     skip: !isAdmin,
     onCompleted: (data) => {
@@ -182,7 +183,7 @@ export default function QuoteCreate() {
         if (data?.customers?.data) {
           setCustomerOptions(
             formatToSelect(
-              data.customers.data.filter((customer: { company_id: number }) => 
+              data.customers.data.filter((customer: { company_id: number }) =>
                 customer.company_id === quote.company_id
               ),
               "id",
@@ -191,9 +192,9 @@ export default function QuoteCreate() {
           );
         }
       });
-      
+
     }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.company_id, getCustomers]);
 
   useQuery(GET_COMPANYS_QUERY, {
@@ -217,7 +218,7 @@ export default function QuoteCreate() {
       });
     },
   });
-  
+
   useEffect(() => {
     if (quote.customer_id && isAdmin) {
       const customer = customers.find((customer) => customer.id === quote.customer_id);
@@ -227,7 +228,7 @@ export default function QuoteCreate() {
         setRateCardUrl('');
       }
     }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.customer_id]);
 
   const [handleCreateQuote, { loading: saving }] = useMutation(

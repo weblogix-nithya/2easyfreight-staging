@@ -45,7 +45,7 @@ export default function PreAllocateModal({
   selectedJobs,
   refreshPage,
   setSelectedJobs,
-  setIsChecked,
+  // setIsChecked,
   selectedDriver,
 }: FilterJobsModalProps) {
   const toast = useToast();
@@ -78,7 +78,8 @@ export default function PreAllocateModal({
     variables: {
       input: sortedBulkAssignJobs,
     },
-    onCompleted: () => {
+    onCompleted: (data) => {
+      // console.log(data);
       toast({
         title: "Jobs pre-allocated successfully",
         status: "success",
@@ -86,12 +87,13 @@ export default function PreAllocateModal({
         isClosable: true,
       });
       refreshPage();
-      setIsChecked(false);
-      setSelectedJobs([]);
-      setIsSaving(false);
+      // setIsChecked(false);
+      // setSelectedJobs([]);
+      // setIsSaving(false);
       onClose();
     },
     onError: (error) => {
+      console.log(error);
       showGraphQLErrorToast(error);
     },
   });

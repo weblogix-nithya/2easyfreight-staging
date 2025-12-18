@@ -3,11 +3,15 @@ import {
   Badge, Box,
   // Checkbox, 
   Flex,
+  Table,
+  Tbody,
   //  Spinner, 
-  Text, VStack
+  Text, Th,
+  Thead, Tr, VStack
 } from "@chakra-ui/react";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { Select } from "chakra-react-select";
+import { JobBulkAssignRow } from "components/preAllocation/PreJobBulkAssignRow";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface Driver {
@@ -42,9 +46,11 @@ interface Props {
   handleToggleWithMedia: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isMediaBusy?: boolean;
   selectedJobs: any[];
+  columns: any[];
 }
 
 const JobStatusDateFilter = ({
+  columns,
   driverOptions,
   onDriverChange,
   rangeDate,
@@ -148,7 +154,7 @@ const JobStatusDateFilter = ({
             position={isFixed ? "fixed" : "relative"}
             top={isFixed ? 0 : undefined}
             // left={isFixed ? 10 : undefined}
-            width={isFixed ? "84%" : undefined}
+            width={isFixed ? "87%" : undefined}
             zIndex={10}
             bg="#1d2d53"
             color="#fff"
@@ -176,9 +182,6 @@ const JobStatusDateFilter = ({
                 <Badge colorScheme="red" variant="subtle" >Current Suburb: -</Badge>
                 <Badge colorScheme="red" variant="subtle" >Mobile Number: {selectedDriver.phone_no ?? "-"}</Badge>
                 <Badge colorScheme="red" variant="subtle" >Rego: {selectedDriver.registration_no ?? "-"}</Badge>
-              </Flex>
-
-              <Flex wrap="wrap" align="start" gap={3} w="full">
                 <Badge colorScheme="red" variant="subtle" >TAILGATE: {selectedDriver.is_tailgated ? "Yes" : "No"}</Badge>
                 <Badge colorScheme={isCBMOver ? "pink" : "blue"} textColor={isCBMOver ? "red" : undefined} variant="subtle" >
                   CBM: {totals.totalCBM.toFixed(2)} / {selectedDriver.no_max_volume ?? 0}
@@ -190,11 +193,47 @@ const JobStatusDateFilter = ({
               </Flex>
 
               {(isCBMOver || isWeightOver) && (
-                <Text color="red.500" fontSize="sm" mt={2}>
+                <Text color="red.500" fontSize="sm">
                   ⚠️ Selected jobs exceed max {isCBMOver ? "CBM" : ""}{isCBMOver && isWeightOver ? " & " : ""}{isWeightOver ? "Weight" : ""}. Uncheck jobs to reduce totals.
                 </Text>
               )}
             </VStack>
+            {selectedJobs.length !== 0 && (
+              <VStack
+                bg="#ffffff"
+                color="#111111"
+                w="full"
+                align="start"
+                p={0}
+                mt="1"
+                mb={1}
+                overflowX="auto"
+                maxH="250px"     // max height 250px
+                overflowY="auto" // scroll only if content > 250px
+                spacing={4}
+                fontSize="xs"
+              >
+                <Table size="sm">
+                  <Thead>
+                    <Tr>
+                      {columns.slice(1).map((column) => (
+                        <Th key={column.id} fontSize="xs">{column.Header}</Th>
+                      ))}
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {selectedJobs.map((item) => (
+                      <JobBulkAssignRow
+                        key={item.original.job.id}
+                        columns={columns.slice(1)}
+                        item={item}
+                      />
+                    ))}
+                  </Tbody>
+                </Table>
+              </VStack>
+
+            )}
           </Box>
         </Flex>
       )}
