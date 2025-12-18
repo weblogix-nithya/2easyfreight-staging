@@ -91,6 +91,7 @@ type PaginationTableProps<T extends object> = {
   isChecked?: boolean;
   onSortingChange?: any;
   restyleTable?: boolean;
+  onContextMenu?: (event: React.MouseEvent, rowData: any) => void;
 } & (
     | {
       isServerSide?: false;
@@ -135,6 +136,7 @@ const PaginationTable = <T extends object>({
   isChecked,
   onSortingChange,
   restyleTable = false,
+  onContextMenu,
 }: // restyleTable = false,
   // autoResetSelectedRows= false,
   PaginationTableProps<T>) => {
@@ -426,6 +428,11 @@ const PaginationTable = <T extends object>({
                   key={`data-row-${row.id || idx}`}
                   style={getStatusStyle(status)}
                   cursor={showRowSelection ? "pointer" : "default"}
+                  onContextMenu={(e) => {
+                    if (onContextMenu) {  // ✅ Check if handler exists
+                      onContextMenu(e, row.original.job);
+                    }
+                  }}
                   onClick={(e) => {
                     if (!showRowSelection) return;
                     const target = e.target as HTMLElement;

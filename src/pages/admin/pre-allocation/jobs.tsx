@@ -64,6 +64,9 @@ const JobStatusDateFilter = dynamic(
     ssr: false,
   },
 );
+const JobContextMenu = React.lazy(
+  () => import("components/preAllocation/JobContextMenu"),
+);
 const FilterJobsModal = React.lazy(
   () => import("components/preAllocation/FilterJobsModal"),
 );
@@ -150,7 +153,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   const [dynamicTableUsers, setDynamicTableUsers] = useState<
     DynamicTableUser[]
   >([]);
-  const [companyColumns, setCompanyColumns] = useState([]); // State for company columns
+  // const [companyColumns, setCompanyColumns] = useState([]); // State for company columns
   const handleToggleWithMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsMediaBusy(true);
     setWithMedia(e.target.checked);
@@ -223,7 +226,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
         }
         : undefined,
     }), // eslint-disable-line react-hooks/exhaustive-deps
-    [queryPageIndex, queryPageSize, searchQuery, rangeDate, mainJobFilter?.job_status_ids],
+    [queryPageIndex, queryPageSize, searchQuery, rangeDate], //, mainJobFilter?.job_status_ids
   );
   const groupedVars = React.useMemo(
     () => {
@@ -454,7 +457,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     if (isAdmin) {
       refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
     }
-  }, [queryPageIndex, queryPageSize, searchQuery, mainFilters, rangeDate, withMedia, isAdmin, groupedVars]);
+  }, [queryPageIndex, queryPageSize, searchQuery, mainFilters, rangeDate, withMedia, isAdmin, groupedVars, refetchJobs]);
 
 
   const debouncedSearch = useMemo(
@@ -552,6 +555,55 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     setIsAssignOpen(true);
   };
 
+
+  // ✅ ADD: Context menu state
+  const [contextMenu, setContextMenu] = React.useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    job: any;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    job: null,
+  });
+
+  // ✅ ADD: Handle right click
+  // ✅ Handle context menu open
+  const handleContextMenu = (e: React.MouseEvent, job: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      job: job,
+    });
+  };
+
+  // ✅ ADD: Close context menu
+  const closeContextMenu = () => {
+    setContextMenu({
+      visible: false,
+      x: 0,
+      y: 0,
+      job: null,
+    });
+  };
+
+  // // ✅ ADD: Handle save (will connect API later)
+  // const handleSaveTagsLabels = (jobId: string, data: any) => {
+  //   console.log('Tags/Labels data:', {
+  //     jobId,
+  //     tags: data.tags,
+  //     labels: data.labels,
+  //     driver_id: data.driver_id,
+  //     job_status_id: data.job_status_id
+  //   });
+  //   closeContextMenu();
+  // };
 
   return (
     <AdminLayout>
@@ -702,12 +754,27 @@ export default function JobIndex({ }: // initialLoadOnly = false,
               onSortingChange={handleSortingChange}  // Enable sorting
               onAssignClick={openAssignModal}
               restyleTable
+              refetchJobs={refetchJobs}
+              onContextMenu={handleContextMenu}
             />
+
           ) : (
             <Box textAlign="center" py={4} px={10} color="gray.600">
               No records found.
             </Box>
           )}
+
+          <Suspense fallback={null}>
+            {contextMenu.visible && contextMenu.job && (
+              <JobContextMenu
+                job={contextMenu.job}
+                position={{ x: contextMenu.x, y: contextMenu.y }}
+                onClose={closeContextMenu}
+                // onSave={handleSaveTagsLabels}
+                drivers={driverOptions}
+              />
+            )}
+          </Suspense>
         </SimpleGrid>
 
         {/* Floating Action Bar */}
@@ -723,6 +790,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
             } as any)}
           />
         )}
+
         <Suspense fallback={null}>
           {isOpenFilter && (
             <FilterJobsModal
