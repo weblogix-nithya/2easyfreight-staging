@@ -59,7 +59,9 @@ import { RootState } from "store/store";
 import { useSubscriptionService } from "../../../utils/subscriptionService";
 // import JobFiltersTagRow from "./job-components/JobFiltersTagRow";
 import JobHeader from "./job-components/JobHeader";
-
+const JobContextMenu = React.lazy(
+  () => import("components/preAllocation/JobContextMenu"),
+);
 const JobStatusDateFilter = dynamic(
   () => import("./job-components/JobStatusDateFilter"),
   {
@@ -137,6 +139,7 @@ const companyStatusOptions = [
     statusIds: [6, 7],
   },
 ];
+
 
 function formatDate(date: Date, isStart: boolean): string {
   const year = date.getFullYear();
@@ -301,6 +304,39 @@ export default function JobIndex({ }: // initialLoadOnly = false,
       callback: () => refetchJobs(),
     },
   });
+  const [contextMenu, setContextMenu] = React.useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    job: any;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    job: null,
+  });
+
+  const handleContextMenu = (e: React.MouseEvent, job: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      job: job,
+    });
+  };
+
+  // ✅ ADD: Close context menu
+  const closeContextMenu = () => {
+    setContextMenu({
+      visible: false,
+      x: 0,
+      y: 0,
+      job: null,
+    });
+  };
 
   const adminColumns = useMemo(() => {
     return getColumns(
@@ -832,6 +868,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
                 showManualPages
                 onSortingChange={handleSortingChange}
                 restyleTable
+                onContextMenu={handleContextMenu}
               />
             ) : (
               <Box textAlign="center" py={4} px={10} color="gray.600">
@@ -871,6 +908,17 @@ export default function JobIndex({ }: // initialLoadOnly = false,
           )}
         </SimpleGrid>
 
+        <Suspense fallback={null}>
+          {contextMenu.visible && contextMenu.job && (
+            <JobContextMenu
+              job={contextMenu.job}
+              position={{ x: contextMenu.x, y: contextMenu.y }}
+              onClose={closeContextMenu}
+              // onSave={handleSaveTagsLabels}
+              drivers={driverOptions}
+            />
+          )}
+        </Suspense>
         {/* Floating Action Bar */}
         {isAdmin && !loading && (
           <ActionBar
