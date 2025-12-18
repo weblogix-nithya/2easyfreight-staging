@@ -71,7 +71,7 @@ const routes: IRoute[] = [
     component: PreAllocation,
     sidebar: true,
     isAdmin: true,
-    isCompany: true,
+    isCompany: false,
     isPrivate: false,
   },
   {

@@ -78,7 +78,7 @@ export default function PreAllocateModal({
     variables: {
       input: sortedBulkAssignJobs,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       // console.log(data);
       toast({
         title: "Jobs pre-allocated successfully",

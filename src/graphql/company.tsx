@@ -17,6 +17,7 @@ export const GET_COMPANYS_QUERY = gql`
       data {
         id
         name
+        payment_term
       }
       paginatorInfo {
         count
@@ -240,3 +241,18 @@ export const paymentTerms = [
   { label: "30 Days EOM", value: "30_days_eom" },
   { label: "75 Days EOM", value: "75_days_eom" },
 ];
+
+
+  // const getDaysFromTerm = (termValue) => {
+  //   if (!termValue) return 0;
+
+  //   // Match "14" from "14_days"
+  //   const match = termValue.match(/^(\d+)_days/);
+  //   return match ? parseInt(match[1], 10) : 0;
+  // };
+
+  // const addDays = (dateString, days) => {
+  //   const date = new Date(dateString);
+  //   date.setDate(date.getDate() + days);
+  //   return date.toISOString().split("T")[0]; // yyyy-MM-dd
+  // };

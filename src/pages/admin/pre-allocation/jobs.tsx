@@ -225,7 +225,8 @@ export default function JobIndex({ }: // initialLoadOnly = false,
           to_at: formatDate(rangeDate[1], false),
         }
         : undefined,
-    }), // eslint-disable-line react-hooks/exhaustive-deps
+    }), 
+    // eslint-disable-line react-hooks/exhaustive-deps
     [queryPageIndex, queryPageSize, searchQuery, rangeDate], //, mainJobFilter?.job_status_ids
   );
   const groupedVars = React.useMemo(
@@ -301,6 +302,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeDate, groupedVars]);
 
 
@@ -457,6 +459,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     if (isAdmin) {
       refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryPageIndex, queryPageSize, searchQuery, mainFilters, rangeDate, withMedia, isAdmin, groupedVars, refetchJobs]);
 
 

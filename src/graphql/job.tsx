@@ -131,6 +131,7 @@ export const GET_JOBS_QUERY = gql`
         admin_notes
         is_inbound_connect
         is_hand_unloading
+        is_stackable_required
         is_dangerous_goods
         is_tailgate_required
         is_paperwork_required
@@ -580,6 +581,7 @@ export const GET_JOB_QUERY = gql`
       invoice_url
       is_inbound_connect
       is_hand_unloading
+      is_stackable_required
       is_dangerous_goods
       is_tailgate_required
       is_paperwork_required
@@ -846,6 +848,7 @@ export const UPDATE_JOB_MUTATION = gql`
       minutes_waited
       is_inbound_connect
       is_hand_unloading
+      is_stackable_required
       is_dangerous_goods
       is_tailgate_required
       is_paperwork_required
