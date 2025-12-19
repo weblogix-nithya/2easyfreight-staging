@@ -38,8 +38,10 @@ import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
 import { JoinOnClause } from "graphql/types/types";
 import {
+  csvColumns,
   outputDynamicTableBody,
   outputDynamicTableHeader,
+  prepareSelectedRowsForCSV,
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
@@ -88,6 +90,46 @@ const JobTableSettingsModal = dynamic(
     ssr: false,
   },
 );
+
+export function outputDynamicTableCSVColumns(
+  dynamicTableUsers: DynamicTableUser[],
+) {
+  return dynamicTableUsers
+    .filter((u) => u.is_active)
+    .flatMap((u) => u.dynamic_table.column_name.split(","));
+}
+export function outputDynamicTableCSVHeader(dynamicTableUsers: any[]) {
+  return dynamicTableUsers
+    .filter((u) => u.is_active)
+    .map((u) => u.dynamic_table.name.toUpperCase());
+}
+
+export function outputDynamicTableCSVBody(
+  dynamicTableUsers: any[],
+  rows: any[],
+) {
+  return rows.map((row) => {
+    console.log(row, "one row");
+    console.log(dynamicTableUsers, "dynamicTableUsers");
+
+    return dynamicTableUsers
+      .filter((u) => u.is_active)
+      .map((u) => {
+        const colKey = u.dynamic_table.column_name;
+
+        // If multiple columns ("a,b,c")
+        if (colKey.includes(",")) {
+          const keys = colKey.split(",");
+          return keys
+            .map((k) => (csvColumns[k] ? csvColumns[k](row.original) : "-"))
+            .join(" | ");
+        }
+
+        // Single column
+        return csvColumns[colKey] ? csvColumns[colKey](row.original) : "-";
+      });
+  });
+}
 
 const adminStatusOptions = [
   {
@@ -140,7 +182,6 @@ const companyStatusOptions = [
   },
 ];
 
-
 function formatDate(date: Date, isStart: boolean): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -150,10 +191,10 @@ function formatDate(date: Date, isStart: boolean): string {
 }
 
 // export default function JobIndex() {
-export default function JobIndex({ }: // initialLoadOnly = false,
-  {
-    // initialLoadOnly?: boolean;
-  }) {
+export default function JobIndex({}: // initialLoadOnly = false,
+{
+  // initialLoadOnly?: boolean;
+}) {
   // const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
   // const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
   const [queryPageIndex, setQueryPageIndex] = useState(0);
@@ -254,9 +295,9 @@ export default function JobIndex({ }: // initialLoadOnly = false,
         isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
       between_at: rangeDate?.[0]
         ? {
-          from_at: formatDate(rangeDate[0], true),
-          to_at: formatDate(rangeDate[1], false),
-        }
+            from_at: formatDate(rangeDate[0], true),
+            to_at: formatDate(rangeDate[1], false),
+          }
         : undefined,
     }), // eslint-disable-line react-hooks/exhaustive-deps
     [
@@ -417,9 +458,9 @@ export default function JobIndex({ }: // initialLoadOnly = false,
       ],
       between_at: rangeDate?.[0]
         ? {
-          from_at: formatDate(rangeDate[0], true),
-          to_at: formatDate(rangeDate[1], false),
-        }
+            from_at: formatDate(rangeDate[0], true),
+            to_at: formatDate(rangeDate[1], false),
+          }
         : undefined,
       ...mainJobFilter,
     },
@@ -666,6 +707,34 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     },
   );
 
+  const handleExportCSV = () => {
+    const finalRows = prepareSelectedRowsForCSV(selectedJobs);
+    const header = outputDynamicTableCSVHeader(dynamicTableUsers);
+    const body = outputDynamicTableCSVBody(dynamicTableUsers, finalRows);
+    downloadCSV("jobs.csv", header, body);
+  };
+
+  function downloadCSV(filename: string, headers: string[], body: any[][]) {
+    const csvRows = [];
+
+    csvRows.push(headers.join(","));
+
+    body.forEach((row) => {
+      csvRows.push(
+        row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","),
+      );
+    });
+
+    const blob = new Blob([csvRows.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  }
+
   const handleExport = () => {
     const header = outputDynamicTableHeader(dynamicTableUsers);
     const body = outputDynamicTableBody(
@@ -754,6 +823,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
             onOpenFilter={onOpenFilter}
             isFilterTicked={is_filter_ticked}
             handleExport={handleExport}
+            handleExportcsv={handleExportCSV}
             debouncedSearch={debouncedSearch}
             onToggleFilterCheckbox={(checked) => {
               if (!checked) {
@@ -836,8 +906,8 @@ export default function JobIndex({ }: // initialLoadOnly = false,
           />
 
           {(isAdmin && !isCompanyAdmin && loading) ||
-            (isCompanyAdmin && companyJobsLoading) ||
-            (!isAdmin && companyJobsLoading) ? (
+          (isCompanyAdmin && companyJobsLoading) ||
+          (!isAdmin && companyJobsLoading) ? (
             <Box textAlign="center" py={4} px={10}>
               Loading <Spinner size="sm" ml={2} />
             </Box>
