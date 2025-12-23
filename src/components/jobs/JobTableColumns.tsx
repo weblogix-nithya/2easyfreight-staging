@@ -5,7 +5,7 @@ import {
   Badge,
   Button,
   Flex,
-  HStack,
+  // HStack,
   Icon,
   IconButton,
   // IconButton,
@@ -739,66 +739,23 @@ export const DeliveryCell = ({ row }: any) => {
   return (
     <>
       {labels.length > 0 && (
-        <HStack spacing="6px" mb="10px">
-          {/* Label + popup */}
-          {labels.length > 0 && (
-            <HStack spacing="6px">
-              {/* First badge always visible */}
-              <Badge
-                fontSize="10px"
-                px="6px"
-                py="2px"
-                borderRadius="full"
-                whiteSpace="nowrap"
-                {...getBadgeStyle(labels[0].color)}
-              >
-                {labels[0].name}
-              </Badge>
-
-              {/* +N with popup */}
-              {labels.length > 1 && (
-                <Popover trigger="hover" placement="top-start" openDelay={100}>
-                  <PopoverTrigger>
-                    <Text
-                      fontSize="12px"
-                      color="black.500"
-                      cursor="pointer"
-                      variant="ghost"
-                    >
-                      +{labels.length - 1}
-                    </Text>
-                  </PopoverTrigger>
-
-                  <PopoverContent
-                    w="auto"
-                    minW="120px"
-                    borderRadius="md"
-                    boxShadow="md"
-                    _focus={{ boxShadow: "md" }}
-                  >
-                    <PopoverBody>
-                      <HStack spacing={1} flexWrap="wrap">
-                        {labels.map((label) => (
-                          <Badge
-                            key={label.id}
-                            fontSize="10px"
-                            px="6px"
-                            py="2px"
-                            borderRadius="full"
-                            {...getBadgeStyle(label.color)}
-                          >
-                            {label.name}
-                          </Badge>
-                        ))}
-                      </HStack>
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </HStack>
-          )}
-        </HStack>
+        <VStack align="start" spacing="4px" mb="10px">
+          {labels.map((label) => (
+            <Badge
+              key={label.id}
+              fontSize="10px"
+              px="6px"
+              py="2px"
+              borderRadius="full"
+              whiteSpace="nowrap"
+              {...getBadgeStyle(label.color)}
+            >
+              {label.name}
+            </Badge>
+          ))}
+        </VStack>
       )}
+
       <Flex
         align="center"
         justify="space-between"
