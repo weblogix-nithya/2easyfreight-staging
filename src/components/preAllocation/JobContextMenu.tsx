@@ -10,6 +10,7 @@ import {
     FormLabel,
     HStack,
     IconButton,
+    Input,
     Link,
     SimpleGrid,
     Text,
@@ -18,13 +19,19 @@ import {
 } from "@chakra-ui/react";
 import { Select } from "chakra-react-select";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { UPDATE_JOB_RIGHT_MUTATION } from "graphql/job";
+import { UPDATE_JOB_MUTATION } from "graphql/job";
 import {
     ASSIGN_META_TO_JOB_MUTATION,
     GET_JOB_META_LIST_QUERY,
     JobMeta,
 } from "graphql/jobMeta";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
+import {
+    formatDate,
+    formatDateTimeToDB,
+    formatTimeUTCtoInput,
+    today,
+} from "helpers/helper";
 import React, { useEffect, useRef, useState } from "react";
 
 /* ---------------- TYPES ---------------- */
@@ -43,7 +50,6 @@ interface JobContextMenuProps {
     job: any;
     position: { x: number; y: number };
     onClose: () => void;
-    // onSave: (jobId: string, data: any) => void;
     drivers: DriverOption[];
 }
 
@@ -53,7 +59,6 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
     job,
     position,
     onClose,
-    // onSave,
     drivers,
 }) => {
     const toast = useToast();
@@ -61,15 +66,15 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
 
     /* ---------------- STATE ---------------- */
 
-    const [selectedDriver, setSelectedDriver] =
-        useState<DriverOption | null>(null);
-
-    const [selectedStatus, setSelectedStatus] =
-        useState<StatusOption | null>(null);
-
+    const [selectedDriver, setSelectedDriver] = useState<DriverOption | null>(null);
+    const [selectedStatus, setSelectedStatus] = useState<StatusOption | null>(null);
     const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
-
     const [jobStatuses, setJobStatuses] = useState<StatusOption[]>([]);
+
+    // Date/Time states
+    const [jobDateAt, setJobDateAt] = useState(today);
+    const [readyAt, setReadyAt] = useState("06:00");
+    const [dropAt, setDropAt] = useState("17:00");
 
     /* ---------------- QUERIES ---------------- */
 
@@ -86,15 +91,13 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
     });
 
     const [assignMetaToJob] = useMutation(ASSIGN_META_TO_JOB_MUTATION);
-    const [updateJobRight] = useMutation(UPDATE_JOB_RIGHT_MUTATION, {
+    const [updateJobRight] = useMutation(UPDATE_JOB_MUTATION, {
         onError: (error) => {
             showGraphQLErrorToast(error);
         },
     });
 
-
-
-    /* ---------------- 2️⃣ DRIVER + STATUS (BULK / SINGLE) ---------------- */
+    /* ---------------- SAVE HANDLER ---------------- */
 
     const handleSave = async () => {
         try {
@@ -113,6 +116,7 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                     )
                 );
             }
+
             /* ---------------- 2️⃣ UPDATE JOB (SINGLE) ---------------- */
             await updateJobRight({
                 variables: {
@@ -123,6 +127,9 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                         customer_id: job.customer.id,
                         company_id: job.company.id,
                         job_type_id: job.job_type.id,
+                        // Add date/time fields
+                        ready_at: jobDateAt && readyAt ? formatDateTimeToDB(jobDateAt, readyAt) : job.ready_at,
+                        drop_at: jobDateAt && dropAt ? formatDateTimeToDB(jobDateAt, dropAt) : job.drop_at,
                     },
                 },
             });
@@ -135,16 +142,13 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                 isClosable: true,
             });
 
-            // refreshPage();
-            onClose(); // ✅ only after everything success
+            onClose();
         } catch (e: unknown) {
             console.error("Save failed", e);
 
-            // Check if it's ApolloError
             if (e && typeof e === "object" && "graphQLErrors" in e) {
                 showGraphQLErrorToast(e as ApolloError);
             } else {
-                // fallback: wrap in a generic ApolloError-like object
                 showGraphQLErrorToast({
                     graphQLErrors: [],
                     networkError: null,
@@ -156,9 +160,6 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
             }
         }
     };
-
-
-    /* ---------------- 3️⃣ SUCCESS ---------------- */
 
     /* ---------------- HELPERS ---------------- */
 
@@ -189,12 +190,20 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
             });
         }
 
-        console.log("job meta:", job);
-
         if (job?.meta) {
             setSelectedLabels(job.meta.map((l: any) => String(l.id)));
         }
+
+        // Initialize date/time from job
+        if (job?.ready_at) {
+            setJobDateAt(formatDate(job.ready_at));
+            setReadyAt(formatTimeUTCtoInput(job.ready_at));
+        }
+        if (job?.drop_at) {
+            setDropAt(formatTimeUTCtoInput(job.drop_at));
+        }
     }, [job, drivers]);
+
     useEffect(() => {
         if (statusData?.jobStatuses?.data) {
             setJobStatuses(
@@ -212,16 +221,15 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                 onClose();
             }
         };
-        document.addEventListener("click", handleClickOutside); // <- changed here
+        document.addEventListener("click", handleClickOutside);
         return () => document.removeEventListener("click", handleClickOutside);
     }, [onClose]);
-
 
     /* ---------------- POSITION ---------------- */
 
     const adjustedPosition = {
         left: Math.min(position.x, window.innerWidth - 380),
-        top: Math.min(position.y, window.innerHeight - 550),
+        top: Math.min(position.y, window.innerHeight - 650),
     };
 
     /* ---------------- UI ---------------- */
@@ -270,7 +278,7 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                 {/* LABELS */}
                 <FormControl>
                     <FormLabel fontSize="sm">Labels</FormLabel>
-                    <SimpleGrid columns={2} spacing={2}>
+                    <SimpleGrid columns={2} spacing={1}>
                         {availableLabels.map((label) => (
                             <Checkbox
                                 key={label.id}
@@ -280,8 +288,8 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                             >
                                 <HStack spacing={2}>
                                     <Box
-                                        w="10px"
-                                        h="10px"
+                                        w="12px"
+                                        h="12px"
                                         borderRadius="full"
                                         bg={label.color || "gray.300"}
                                     />
@@ -294,29 +302,65 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
 
                 <Divider />
 
-                {/* DRIVER */}
+                {/* DATE & TIME */}
                 <FormControl>
-                    <FormLabel fontSize="sm">Assign Driver</FormLabel>
-                    <Select
-                        options={drivers}
-                        value={selectedDriver}
-                        onChange={(opt) => setSelectedDriver(opt)}
-                        placeholder="Select Driver"
-                        isClearable
+                    <FormLabel fontSize="sm">Job Date</FormLabel>
+                    <Input
+                        type="date"
+                        size="sm"
+                        value={jobDateAt}
+                        onChange={(e) => setJobDateAt(e.target.value)}
                     />
                 </FormControl>
 
-                {/* STATUS */}
-                <FormControl>
-                    <FormLabel fontSize="sm">Status</FormLabel>
-                    <Select
-                        options={jobStatuses}
-                        value={selectedStatus}
-                        onChange={(opt) => setSelectedStatus(opt)}
-                        placeholder="Select Status"
-                        isClearable
-                    />
-                </FormControl>
+                <HStack spacing={2}>
+                    <FormControl flex={1}>
+                        <FormLabel fontSize="sm">Ready By</FormLabel>
+                        <Input
+                            type="time"
+                            size="sm"
+                            value={readyAt}
+                            onChange={(e) => setReadyAt(e.target.value)}
+                        />
+                    </FormControl>
+                    <FormControl flex={1}>
+                        <FormLabel fontSize="sm">Drop By</FormLabel>
+                        <Input
+                            type="time"
+                            size="sm"
+                            value={dropAt}
+                            onChange={(e) => setDropAt(e.target.value)}
+                        />
+                    </FormControl>
+                </HStack>
+
+                <Divider />
+
+                {/* DRIVER & STATUS IN 2 COLUMNS */}
+                <HStack spacing={2}>
+                    <FormControl flex={1}>
+                        <FormLabel fontSize="sm">Driver</FormLabel>
+                        <Select
+                            options={drivers}
+                            value={selectedDriver}
+                            onChange={(opt) => setSelectedDriver(opt)}
+                            placeholder="Select Driver"
+                            isClearable
+                            size="sm"
+                        />
+                    </FormControl>
+                    <FormControl flex={1}>
+                        <FormLabel fontSize="sm">Status</FormLabel>
+                        <Select
+                            options={jobStatuses}
+                            value={selectedStatus}
+                            onChange={(opt) => setSelectedStatus(opt)}
+                            placeholder="Select Status"
+                            isClearable
+                            size="sm"
+                        />
+                    </FormControl>
+                </HStack>
 
                 <Divider />
 

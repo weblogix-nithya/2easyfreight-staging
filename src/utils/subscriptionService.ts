@@ -41,8 +41,8 @@ export function useSubscriptionService(events: EventConfig) {
 
         return () => {
             unsubscribeFns.forEach(fn => fn());
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             subscriptionsRef.current.clear();
-        }; 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        };
     }, [connected, echo, events]);
 }
