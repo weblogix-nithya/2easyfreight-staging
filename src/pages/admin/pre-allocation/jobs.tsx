@@ -4,6 +4,7 @@ import {
   Button,
   Flex,
   SimpleGrid,
+  Spinner,
   //Spinner,
   Tag,
   TagCloseButton,
@@ -119,12 +120,10 @@ function formatDate(date: Date, isStart: boolean): string {
   return `${year}-${month}-${day} ${time}`;
 }
 
-
-export default function JobIndex({ }: // initialLoadOnly = false,
-  {
-    // initialLoadOnly?: boolean;
-  }) {
-
+export default function JobIndex({}: // initialLoadOnly = false,
+{
+  // initialLoadOnly?: boolean;
+}) {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
 
@@ -133,8 +132,11 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   const today = new Date();
   const [rangeDate, setRangeDate] = useState<[Date, Date]>([today, today]);
   const [_isTableLoading, setIsTableLoading] = useState(false);
-  const { isAdmin, isCustomer, companyId, customerId, userId } = useSelector((state: RootState) => state.user);
-  const { filters, displayName, jobMainFilters, is_filter_ticked } = useSelector((state: RootState) => state.jobFilter);
+  const { isAdmin, isCustomer, companyId, customerId, userId } = useSelector(
+    (state: RootState) => state.user,
+  );
+  const { filters, displayName, jobMainFilters, is_filter_ticked } =
+    useSelector((state: RootState) => state.jobFilter);
   const dispatch = useDispatch();
   const [withMedia, setWithMedia] = useState(false);
   const [isMediaBusy, setIsMediaBusy] = useState(false);
@@ -147,7 +149,9 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   const [jobFilter, setJobFilter] = useState(defaultJobFilter);
   const [mainJobFilter, setMainJobFilter] = useState(null);
   const [mainFilters, setMainFilters] = useState<any>(defaultSelectedFilter);
-  const [selectedFilters, setSelectedFilters] = useState<SelectedFilter>(defaultSelectedFilter);
+  const [selectedFilters, setSelectedFilters] = useState<SelectedFilter>(
+    defaultSelectedFilter,
+  );
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
     useState<typeof filterDisplayNames>(filterDisplayNames);
   const [dynamicTableUsers, setDynamicTableUsers] = useState<
@@ -196,10 +200,10 @@ export default function JobIndex({ }: // initialLoadOnly = false,
 
       // Map column id to backend field name
       let field = sort.id;
-      if (sort.id === 'name') {
-        field = 'delivery_id';
-      } else if (sort.id === 'suburb_area,area_color') {
-        field = 'suburb_area';
+      if (sort.id === "name") {
+        field = "delivery_id";
+      } else if (sort.id === "suburb_area,area_color") {
+        field = "suburb_area";
       }
 
       setSorting({
@@ -221,29 +225,26 @@ export default function JobIndex({ }: // initialLoadOnly = false,
       // customer_id: isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
       between_at: rangeDate?.[0]
         ? {
-          from_at: formatDate(rangeDate[0], true),
-          to_at: formatDate(rangeDate[1], false),
-        }
+            from_at: formatDate(rangeDate[0], true),
+            to_at: formatDate(rangeDate[1], false),
+          }
         : undefined,
-    }), 
+    }),
     // eslint-disable-line react-hooks/exhaustive-deps
     [queryPageIndex, queryPageSize, searchQuery, rangeDate], //, mainJobFilter?.job_status_ids
   );
-  const groupedVars = React.useMemo(
-    () => {
-      const baseVars = {
-        ...baseGroupedVars(),
-        // Add sorting parameters
-        sort_by: sorting?.field || null,
-        sort_order: sorting?.order || null,
-      };
+  const groupedVars = React.useMemo(() => {
+    const baseVars = {
+      ...baseGroupedVars(),
+      // Add sorting parameters
+      sort_by: sorting?.field || null,
+      sort_order: sorting?.order || null,
+    };
 
-      return is_filter_ticked === "1"
-        ? { ...baseVars, ...(mainJobFilter ?? {}) }
-        : baseVars;
-    },
-    [is_filter_ticked, mainJobFilter, baseGroupedVars, sorting],
-  );
+    return is_filter_ticked === "1"
+      ? { ...baseVars, ...(mainJobFilter ?? {}) }
+      : baseVars;
+  }, [is_filter_ticked, mainJobFilter, baseGroupedVars, sorting]);
 
   const {
     data: groupedJobs,
@@ -258,6 +259,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     },
   });
   const _jobs = groupedJobs?.preAllocationJobs;
+  const hasData = _jobs?.data?.length > 0;
 
   useSubscriptionService({
     jobUpdated: {
@@ -279,10 +281,10 @@ export default function JobIndex({ }: // initialLoadOnly = false,
       );
       const currentStartDate = rangeDate?.[0]
         ? new Date(
-          rangeDate[0].getFullYear(),
-          rangeDate[0].getMonth(),
-          rangeDate[0].getDate(),
-        )
+            rangeDate[0].getFullYear(),
+            rangeDate[0].getMonth(),
+            rangeDate[0].getDate(),
+          )
         : null;
 
       // 🔒 Already today → stop
@@ -304,8 +306,6 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeDate, groupedVars]);
-
-
 
   const adminColumns = useMemo(() => {
     return getColumnsPre(
@@ -341,18 +341,14 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   useEffect(() => {
     const hasGroupedJobs = groupedJobs?.preAllocationJobs?.data?.length > 0;
 
-
-    if ((isAdmin && hasGroupedJobs)) {
+    if (isAdmin && hasGroupedJobs) {
       // getJobStatuses();
       // getJobCategories();
       getAvailableDrivers();
       getDynamicTableUsers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isAdmin,
-    groupedJobs?.preAllocationJobs?.data?.length,
-  ]);
+  }, [isAdmin, groupedJobs?.preAllocationJobs?.data?.length]);
 
   useEffect(() => {
     if (is_filter_ticked == "1") {
@@ -460,8 +456,17 @@ export default function JobIndex({ }: // initialLoadOnly = false,
       refetchJobs(); // GROUPED_PAGINATED_JOBS_QUERY
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryPageIndex, queryPageSize, searchQuery, mainFilters, rangeDate, withMedia, isAdmin, groupedVars, refetchJobs]);
-
+  }, [
+    queryPageIndex,
+    queryPageSize,
+    searchQuery,
+    mainFilters,
+    rangeDate,
+    withMedia,
+    isAdmin,
+    groupedVars,
+    refetchJobs,
+  ]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -548,16 +553,16 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     if (!driver) return;
     setAssignDriver(driver);
     // Pre-select jobs for this driver
-    const filteredJobs = _jobs?.data?.filter(j => j.driver?.id === driver.id) || [];
+    const filteredJobs =
+      _jobs?.data?.filter((j) => j.driver?.id === driver.id) || [];
     const driverJobs = filteredJobs.map((item) => ({
       id: item.job.id,
       original: { job: item.job },
     }));
-    console.log(driverJobs, 'driverJobs');
+    console.log(driverJobs, "driverJobs");
     setSelectedJobs(driverJobs || []);
     setIsAssignOpen(true);
   };
-
 
   // ✅ ADD: Context menu state
   const [contextMenu, setContextMenu] = React.useState<{
@@ -637,9 +642,11 @@ export default function JobIndex({ }: // initialLoadOnly = false,
                 path: "*",
               });
               dispatch(setIsFilterTicked(checked ? "1" : "0"));
-            }} handleExport={function (): void {
+            }}
+            handleExport={function (): void {
               throw new Error("Function not implemented.");
-            }} />
+            }}
+          />
 
           <Flex alignItems="left" flexWrap={"wrap"}>
             {Object.keys(mainFilters).map((filterKey) => {
@@ -698,8 +705,11 @@ export default function JobIndex({ }: // initialLoadOnly = false,
             handleToggleWithMedia={handleToggleWithMedia}
             isMediaBusy={isMediaBusy}
           />
-
-          {isAdmin && _jobs?.data?.length > 0 ? (
+          {loading ? (
+            <Box textAlign="center" py={4} px={10}>
+              Loading <Spinner size="sm" ml={2} />
+            </Box>
+          ) : hasData ? (
             // <JobPaginationTable
             //   columns={adminColumns}
             //   data={_jobs?.data}
@@ -733,14 +743,16 @@ export default function JobIndex({ }: // initialLoadOnly = false,
             // />
             <JobPaginationTable
               columns={adminColumns}
-              data={_jobs?.data || []}  // Use data directly from backend
+              data={_jobs?.data || []} // Use data directly from backend
               total={_jobs?.total}
               options={{
-                manualSortBy: true,  // Keep as true - backend handles it
+                manualSortBy: true, // Keep as true - backend handles it
                 initialState: {
                   pageIndex: queryPageIndex,
                   pageSize: queryPageSize,
-                  sortBy: sorting ? [{ id: sorting.field, desc: sorting.order === 'DESC' }] : [],
+                  sortBy: sorting
+                    ? [{ id: sorting.field, desc: sorting.order === "DESC" }]
+                    : [],
                 },
                 manualPagination: true,
                 pageCount: _jobs?.last_page,
@@ -754,13 +766,12 @@ export default function JobIndex({ }: // initialLoadOnly = false,
               isFilterRowSelected={isShowSelectedOnly}
               isChecked={isChecked}
               showManualPages
-              onSortingChange={handleSortingChange}  // Enable sorting
+              onSortingChange={handleSortingChange} // Enable sorting
               onAssignClick={openAssignModal}
               restyleTable
               refetchJobs={refetchJobs}
               onContextMenu={handleContextMenu}
             />
-
           ) : (
             <Box textAlign="center" py={4} px={10} color="gray.600">
               No records found.
@@ -868,7 +879,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
               columns={bulkAssignColumns}
               setIsChecked={setIsChecked}
               setSelectedJobs={setSelectedJobs}
-            // refreshPage={() => refetchJobs()}
+              // refreshPage={() => refetchJobs()}
             />
           )}
         </Suspense>
@@ -887,10 +898,8 @@ export default function JobIndex({ }: // initialLoadOnly = false,
               selectedJobs={selectedJobs}
               setSelectedJobs={setSelectedJobs}
               setIsChecked={setIsChecked}
-            // refreshPage={refetchJobs}
+              // refreshPage={refetchJobs}
             />
-
-
           )}
         </Suspense>
       </Box>
