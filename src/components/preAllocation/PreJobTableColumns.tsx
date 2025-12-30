@@ -1014,21 +1014,24 @@ export const TotalVolumeCell = ({ row }: any) => {
 };
 
 export const SuburbAreaCell = ({ row }: any) => {
-  const area = row?.original?.job?.suburb_area || "-";
+  const area = row?.original?.job?.suburb_area || "";
   const bgColor = row?.original?.job?.area_color || "#751010"; // fallback color
 
   return (
-    <Badge
-      bg={bgColor}
-      color="white"
-      maxW="100px"
-      px={2}
-      py={1}
-      borderRadius="md"
-      textTransform="capitalize"
-    >
-      {area}
-    </Badge>
+    <>
+      <Badge
+        bg={bgColor}
+        color="white"
+        maxW="100px"
+        px={2}
+        py={1}
+        borderRadius="md"
+        textTransform="capitalize"
+      >
+        {area}
+      </Badge>
+      <Text fontSize="xs" mt={1}>{row?.original?.job?.driver?.full_name || ""}</Text>
+    </>
   );
 };
 
