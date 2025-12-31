@@ -359,10 +359,10 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
           </Text>
         </>
       )}
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+      <Text mb="2" fontSize="sm" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
-      <Text>{pickupDest?.address_business_name || "-"}</Text>
+      <Text fontSize="sm">{pickupDest?.address_business_name || "-"}</Text>
     </>
   );
 };
@@ -397,12 +397,12 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
           </Text>
         </>
       )}
-      <Text isTruncated w={"fit-content"}>
+      <Text fontSize="sm" isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
       </Text>
-      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
+      <Text fontSize="sm">{filteredDestinations[0]?.address_business_name || "-"}</Text>
     </>
   );
 };
@@ -802,7 +802,7 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
       job_type_id: job.job_type.id,
       name: job.name,
       preallocation_driver_id: null,
-      driver_id: null,
+      driver_id: job.driver_id || null,
       d_sort_id: job.d_sort_id || null,
       sort_datetime: job.sort_datetime || null,
     };
@@ -1107,13 +1107,13 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     Cell: PickupAddressCell, // Add this line
     // width: "150px",
   },
-  // {
-  //   id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-  //   Header: "Pickup Address and Name ",
-  //   // width: "200px",
-  //   Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
-  //   CellExport: PickupAddressWithTimeCellExport,
-  // },
+  {
+    id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+    Header: "Pickup Address and Name ",
+    // width: "200px",
+    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
+    CellExport: PickupAddressWithTimeCellExport,
+  },
   {
     id: "pick_up_destination.address_business_name",
     Header: "Pickup Company",
@@ -1148,12 +1148,12 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     Header: "CBM",
     Cell: TotalVolumeCell,
   },
-  // {
-  //   id: "job_destinations.address,job_destinations.address_business_name",
-  //   Header: "Delivery Address and Name",
-  //   Cell: JobDestinationWithBusinessNamewithoutMediaCell,
-  //   CellExport: JobDestinationWithBusinessNameCellExport,
-  // },
+  {
+    id: "job_destinations.address,job_destinations.address_business_name",
+    Header: "Delivery Address and Name",
+    Cell: JobDestinationWithBusinessNamewithoutMediaCell,
+    CellExport: JobDestinationWithBusinessNameCellExport,
+  },
   {
     id: "reference_no",
     Header: "Customer Ref.",
@@ -1345,13 +1345,13 @@ export const bulkassigntableColumn = [
     Cell: PickupAddressCell, // Add this line
     // width: "150px",
   },
-  // {
-  //   id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-  //   Header: "Pickup Address and Name ",
-  //   // width: "200px",
-  //   Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
-  //   CellExport: PickupAddressWithTimeCellExport,
-  // },
+  {
+    id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+    Header: "Pickup Address and Name ",
+    // width: "200px",
+    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
+    CellExport: PickupAddressWithTimeCellExport,
+  },
   {
     id: "pick_up_destination.address_business_name",
     Header: "Pickup Company",
@@ -1386,12 +1386,12 @@ export const bulkassigntableColumn = [
     Header: "CBM",
     Cell: TotalVolumeCell,
   },
-  // {
-  //   id: "job_destinations.address,job_destinations.address_business_name",
-  //   Header: "Delivery Address and Name",
-  //   Cell: JobDestinationWithBusinessNamewithoutMediaCell,
-  //   CellExport: JobDestinationWithBusinessNameCellExport,
-  // },
+  {
+    id: "job_destinations.address,job_destinations.address_business_name",
+    Header: "Delivery Address and Name",
+    Cell: JobDestinationWithBusinessNamewithoutMediaCell,
+    CellExport: JobDestinationWithBusinessNameCellExport,
+  },
   {
     id: "reference_no",
     Header: "Customer Ref.",

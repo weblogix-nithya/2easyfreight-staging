@@ -113,24 +113,58 @@ const JobTableSettingsModal = dynamic(
 // ];
 
 function formatDate(date: Date, isStart: boolean): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  // --- 1️⃣ Calculate LAST 5 working days ---
+  const today = new Date();
+  const workingDays: Date[] = [];
+  let current = new Date(today);
+
+  while (workingDays.length < 5) {
+    current.setDate(current.getDate() - 1);
+    const day = current.getDay(); // 0 = Sun, 6 = Sat
+    if (day !== 0 && day !== 6) workingDays.push(new Date(current));
+  }
+
+  const startDate = workingDays[workingDays.length - 1]; // oldest working day
+  const endDate = today;
+
+  // --- 2️⃣ If caller passed a date, use given, ELSE override with working range ---
+  const finalDate = isStart ? startDate : endDate;
+
+  // --- 3️⃣ Format output ---
+  const year = finalDate.getFullYear();
+  const month = String(finalDate.getMonth() + 1).padStart(2, "0");
+  const day = String(finalDate.getDate()).padStart(2, "0");
   const time = isStart ? "00:00:00" : "23:59:59";
   return `${year}-${month}-${day} ${time}`;
 }
 
-export default function JobIndex({}: // initialLoadOnly = false,
-{
-  // initialLoadOnly?: boolean;
-}) {
+
+export default function JobIndex({ }: // initialLoadOnly = false,
+  {
+    // initialLoadOnly?: boolean;
+  }) {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
 
   const [searchQuery, setSearchQuery] = useState("");
   // const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
-  const today = new Date();
-  const [rangeDate, setRangeDate] = useState<[Date, Date]>([today, today]);
+  const getLast5WorkingDays = () => {
+    let date = new Date();
+    // let count = 0;
+    const days: Date[] = [];
+
+    while (days.length < 5) {
+      const day = date.getDay(); // 0 = Sun, 6 = Sat
+      if (day !== 0 && day !== 6) {
+        days.push(new Date(date));
+      }
+      date.setDate(date.getDate() - 1);
+    }
+
+    return [days[4], days[0]] as [Date, Date]; // oldest → latest
+  };
+
+  const [rangeDate, setRangeDate] = useState<[Date, Date]>(() => getLast5WorkingDays());
   const [_isTableLoading, setIsTableLoading] = useState(false);
   const { isAdmin, isCustomer, companyId, customerId, userId } = useSelector(
     (state: RootState) => state.user,
@@ -225,9 +259,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
       // customer_id: isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
       between_at: rangeDate?.[0]
         ? {
-            from_at: formatDate(rangeDate[0], true),
-            to_at: formatDate(rangeDate[1], false),
-          }
+          from_at: formatDate(rangeDate[0], true),
+          to_at: formatDate(rangeDate[1], false),
+        }
         : undefined,
     }),
     // eslint-disable-line react-hooks/exhaustive-deps
@@ -281,10 +315,10 @@ export default function JobIndex({}: // initialLoadOnly = false,
       );
       const currentStartDate = rangeDate?.[0]
         ? new Date(
-            rangeDate[0].getFullYear(),
-            rangeDate[0].getMonth(),
-            rangeDate[0].getDate(),
-          )
+          rangeDate[0].getFullYear(),
+          rangeDate[0].getMonth(),
+          rangeDate[0].getDate(),
+        )
         : null;
 
       // 🔒 Already today → stop
@@ -294,7 +328,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       ) {
         return;
       }
-      setRangeDate([today, today]);
+      // setRangeDate([today, today]);
       refetchJobs();
       getAvailableDrivers();
     };
@@ -879,7 +913,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               columns={bulkAssignColumns}
               setIsChecked={setIsChecked}
               setSelectedJobs={setSelectedJobs}
-              // refreshPage={() => refetchJobs()}
+            // refreshPage={() => refetchJobs()}
             />
           )}
         </Suspense>
@@ -898,7 +932,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               selectedJobs={selectedJobs}
               setSelectedJobs={setSelectedJobs}
               setIsChecked={setIsChecked}
-              // refreshPage={refetchJobs}
+            // refreshPage={refetchJobs}
             />
           )}
         </Suspense>
