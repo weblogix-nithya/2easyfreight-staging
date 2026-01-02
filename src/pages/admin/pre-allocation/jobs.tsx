@@ -113,27 +113,9 @@ const JobTableSettingsModal = dynamic(
 // ];
 
 function formatDate(date: Date, isStart: boolean): string {
-  // --- 1️⃣ Calculate LAST 5 working days ---
-  const today = new Date();
-  const workingDays: Date[] = [];
-  let current = new Date(today);
-
-  while (workingDays.length < 5) {
-    current.setDate(current.getDate() - 1);
-    const day = current.getDay(); // 0 = Sun, 6 = Sat
-    if (day !== 0 && day !== 6) workingDays.push(new Date(current));
-  }
-
-  const startDate = workingDays[workingDays.length - 1]; // oldest working day
-  const endDate = today;
-
-  // --- 2️⃣ If caller passed a date, use given, ELSE override with working range ---
-  const finalDate = isStart ? startDate : endDate;
-
-  // --- 3️⃣ Format output ---
-  const year = finalDate.getFullYear();
-  const month = String(finalDate.getMonth() + 1).padStart(2, "0");
-  const day = String(finalDate.getDate()).padStart(2, "0");
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   const time = isStart ? "00:00:00" : "23:59:59";
   return `${year}-${month}-${day} ${time}`;
 }
@@ -148,23 +130,8 @@ export default function JobIndex({ }: // initialLoadOnly = false,
 
   const [searchQuery, setSearchQuery] = useState("");
   // const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
-  const getLast5WorkingDays = () => {
-    let date = new Date();
-    // let count = 0;
-    const days: Date[] = [];
-
-    while (days.length < 5) {
-      const day = date.getDay(); // 0 = Sun, 6 = Sat
-      if (day !== 0 && day !== 6) {
-        days.push(new Date(date));
-      }
-      date.setDate(date.getDate() - 1);
-    }
-
-    return [days[4], days[0]] as [Date, Date]; // oldest → latest
-  };
-
-  const [rangeDate, setRangeDate] = useState<[Date, Date]>(() => getLast5WorkingDays());
+  const today = new Date();
+  const [rangeDate, setRangeDate] = useState<[Date, Date]>([today, today]);
   const [_isTableLoading, setIsTableLoading] = useState(false);
   const { isAdmin, isCustomer, companyId, customerId, userId } = useSelector(
     (state: RootState) => state.user,
@@ -328,7 +295,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
       ) {
         return;
       }
-      // setRangeDate([today, today]);
+      setRangeDate([today, today]);
       refetchJobs();
       getAvailableDrivers();
     };
