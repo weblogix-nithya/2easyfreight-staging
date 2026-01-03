@@ -450,6 +450,11 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           no_max_pallets
           weight_summary_today
           cbm_summary_today
+          first_job_start_at_today
+          last_job_drop_at_today
+          bgcolor
+          current_suburb
+          total_jobs_today_price
         }
         job {
           id
@@ -512,6 +517,10 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
             updated_at
             arrived_at
             media { name collection_name downloadable_url }
+          }
+          job_price_calculation_detail { 
+            job_id
+            total      
           }
         }
       }
