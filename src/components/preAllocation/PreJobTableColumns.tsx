@@ -1014,7 +1014,7 @@ export const TotalVolumeCell = ({ row }: any) => {
 };
 
 export const TotalPrice = ({ row }: any) => {
-  return <Text fontSize="sm" maxW="120px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
 };
 
 export const SuburbAreaCell = ({ row }: any) => {

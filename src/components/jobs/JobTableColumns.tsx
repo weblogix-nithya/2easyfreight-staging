@@ -566,6 +566,9 @@ export const ItemsExtrasCell = ({ row }: any) => {
 export const DriverCell = ({ row }: any) => {
   return <Text>{row?.original?.job?.driver?.full_name || "-"}</Text>;
 };
+export const TotalPrice = ({ row }: any) => {
+  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+};
 export const ItemsCbmCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return items?.map((item: any) => {
@@ -994,6 +997,11 @@ export const tableColumn = (refetchJobs: () => void) => [
     Cell: NotesCell,
   },
   {
+    id: "job_price_calculation_detail.total",
+    Header: "Total Price",
+    Cell: TotalPrice,
+  },
+  {
     id: "driver.full_name",
     Header: "Drivers",
     Cell: DriverCell,
@@ -1224,6 +1232,11 @@ export const bulkassigntableColumn = [
     Header: "Drivers",
     Cell: DriverCell,
     enableSorting: true,
+  },
+  {
+    id: "job_price_calculation_detail.total",
+    Header: "Total Price",
+    Cell: TotalPrice,
   },
   {
     id: "admin_notes",

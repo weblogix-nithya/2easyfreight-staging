@@ -315,6 +315,8 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           no_max_volume
           no_max_capacity
           no_max_pallets
+          current_suburb
+          total_jobs_today_price
         }
         job {
           id
@@ -391,6 +393,10 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
               collection_name
               downloadable_url
             }
+          }
+          job_price_calculation_detail { 
+            job_id
+            total      
           }
         }
       }
