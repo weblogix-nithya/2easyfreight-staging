@@ -23,7 +23,7 @@ import { faDownload, faEye, faMessageLines, faPen } from "@fortawesome/pro-regul
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
-import { formatCurrency, formatDate } from "helpers/helper";
+import { formatCurrency, formatDate, formatToTimeDate } from "helpers/helper";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
@@ -377,20 +377,27 @@ const PaginationTable = <T extends object>({
                                 Driver: {driver.full_name} — {driver.driver_no}
                               </Badge>
                               <Badge
-                                colorScheme="red"
+                                colorScheme="purple"
                                 variant="subtle"
-                                fontSize="sm"
+                                fontSize="md"
                               >
-                                Current Suburb: {driver.current_suburb || "-"}
+                                First Collection:{" "}
+                                {formatToTimeDate(
+                                  driver.first_job_start_at_today,
+                                )}
                               </Badge>
 
                               <Badge
-                                colorScheme="red"
+                                colorScheme="purple"
                                 variant="subtle"
-                                fontSize="sm"
+                                fontSize="md"
                               >
-                                Mobile Number: {driver.phone_no || "-"}
+                                Last Delivery:{" "}
+                                {formatToTimeDate(
+                                  driver.last_job_drop_at_today,
+                                )}
                               </Badge>
+
 
                               {/* ✅ Show "Assign Jobs" button ONLY for pre-allocated (yellow) */}
                               {driver.bgcolor === "yellow" && (
@@ -415,7 +422,7 @@ const PaginationTable = <T extends object>({
                                   variant="subtle"
                                   fontSize="sm"
                                 >
-                                  Driver amount: {driver.total_jobs_today_price ?? "-"}
+                                  Driver price: {driver.total_jobs_today_price ?? "-"}
                                 </Badge>
                               )}
                             </Flex>
@@ -423,6 +430,21 @@ const PaginationTable = <T extends object>({
 
                           {/* --- DRIVER DETAILS --- */}
                           <Flex wrap="wrap" align="start" gap={3} w="full">
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="sm"
+                            >
+                              Current Suburb: {driver.current_suburb || "-"}
+                            </Badge>
+
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="sm"
+                            >
+                              Mobile Number: {driver.phone_no || "-"}
+                            </Badge>
                             <Badge
                               colorScheme="red"
                               variant="subtle"

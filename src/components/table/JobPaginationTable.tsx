@@ -356,6 +356,13 @@ const PaginationTable = <T extends object>({
                                   driver.last_job_drop_at_today,
                                 )}
                               </Badge>
+                              <Badge
+                                colorScheme="red"
+                                variant="subtle"
+                                fontSize="sm"
+                              >
+                                Driver price: {driver.total_jobs_today_price ?? "-"}
+                              </Badge>
                             </Flex>
                           </Flex>
 
@@ -366,7 +373,7 @@ const PaginationTable = <T extends object>({
                               variant="subtle"
                               fontSize="md"
                             >
-                              Current Suburb: WIP
+                              Current Suburb:  {driver.current_suburb ?? "-"}
                             </Badge>
 
                             <Badge
