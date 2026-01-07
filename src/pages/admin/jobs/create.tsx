@@ -939,6 +939,8 @@ function JobPage() {
   );
   useEffect(() => {
     if (job.customer_id && customerOptions.length > 0) {
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2 in IF");
+
       setCustomerSelected({
         ...customerOptions.find((_e) => _e.value == job.customer_id)?.entity,
       });
@@ -946,6 +948,8 @@ function JobPage() {
     }
     console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2");
     if (job.customer_id == null) {
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2 in second IF");
+
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
     }
@@ -1093,7 +1097,9 @@ function JobPage() {
 
         if (selectedCustomer) {
           setCustomerSelected(selectedCustomer);
-          console.log(selectedCustomer, "sun");
+          console.log(selectedCustomer,job, "sun,j");
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted if");
+
           // setselectedCustomernotes()
           // Update refinedData with the new properties
         }
