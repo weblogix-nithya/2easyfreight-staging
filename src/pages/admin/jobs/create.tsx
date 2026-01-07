@@ -40,7 +40,10 @@ import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
-import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
+import {
+  GET_COMPANY_RATE_QUERY,
+  GET_TIMEZONE_QUERY,
+} from "graphql/CompanyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
@@ -68,12 +71,13 @@ import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
 import { ADD_MEDIA_MUTATION } from "graphql/media";
 import {
   formatDateTimeToDB,
-  getTimezone,
+  // getTimezone,
   isAfterCutoff,
   today,
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
+import { parseCookies } from "nookies";
 // import { useRouter } from "next/router";
 import {
   // startTransition,
@@ -92,7 +96,8 @@ function JobPage() {
   const toast = useToast();
   const freightCalculatedRef = useRef(false);
   const isMounted = useRef(false);
-  useEffect(() => {
+    const cookies = parseCookies();
+    useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
@@ -106,6 +111,7 @@ function JobPage() {
     isCompanyAdmin,
     isCustomer,
   } = useSelector((state: RootState) => state.user);
+
   // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
@@ -134,8 +140,6 @@ function JobPage() {
     pick_up_stateCode: "",
     depotOptions: [],
     timeslot_depots: "",
-    total_cbm: 0,
-    total_weight: 0,
   });
 
   const [companyRates, setCompanyRates] = useState([]);
@@ -178,6 +182,9 @@ function JobPage() {
   );
   const [isJobCreatedOpen, setIsJobCreatedOpen] = useState(false);
   const [newJobId, setNewJobId] = useState<string | null>(null);
+  const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(
+    null,
+  );
 
   const onClose = () => setIsJobCreatedOpen(false);
 
@@ -225,7 +232,7 @@ function JobPage() {
         Header: "WEIGHT",
       },
       {
-        Header: "RAW CBM",
+        Header: "CBM",
       },
       {
         Header: "ACTION",
@@ -317,6 +324,11 @@ function JobPage() {
     },
   });
 
+  const { refetch: getTimezone } = useQuery(GET_TIMEZONE_QUERY, {
+    skip: true, // important
+    fetchPolicy: "network-only",
+  });
+
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: defaultVariables,
     onCompleted: (data) => {
@@ -355,11 +367,11 @@ function JobPage() {
 
       try {
         // If lat/lng exists, calculate timezone and filter
-        if (pickUpDestination?.lat && pickUpDestination?.lng) {
-          const timezone = await getTimezone(
-            pickUpDestination.lat,
-            pickUpDestination.lng,
-          );
+        if (pickUpDestination?.address_state) {
+          const res = await getTimezone({
+            state: pickUpDestination.address_state,
+          });
+          const timezone = res?.data?.getTimezone?.timeZoneId;
 
           let updatedOptions = [...options];
 
@@ -458,7 +470,7 @@ function JobPage() {
         getCustomersByCompanyId({ ...defaultVariables, company_id: companyId });
 
         getCompanyRates({
-          company_id: String(companyId),
+          company_id: Number(companyId),
         });
       }
     }, 100);
@@ -834,13 +846,20 @@ function JobPage() {
     _entityArray: any[],
     valueKeyName: string,
     labelKeyName: string,
+    extraKeyName?: string, // optional 4th argument
   ) => {
     return _entityArray.map((_entityItem) => {
-      return {
+      const baseObject: any = {
         value: _entityItem[valueKeyName],
         label: _entityItem[labelKeyName],
         entity: _entityItem,
       };
+
+      if (extraKeyName && _entityItem[extraKeyName] !== undefined) {
+        baseObject[extraKeyName] = _entityItem[extraKeyName];
+      }
+
+      return baseObject;
     });
   };
   const addToJobDestinations = () => {
@@ -933,6 +952,16 @@ function JobPage() {
     let _jobItems = [...jobItems];
     _jobItems.splice(index, 1);
     setJobItems(_jobItems);
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+      job.job_category_id,
+      jobItems,
+      companyWeight,
+    );
+    setQuoteCalculationRes({
+      ...quoteCalculationRes,
+      total_weight: totalWeight,
+      cbm_auto: totalCBM,
+    });
   };
   const handleJobItemChanged = (
     value: any,
@@ -973,11 +1002,6 @@ function JobPage() {
       jobItems,
       companyWeight,
     );
-    setRefinedData({
-      ...refinedData,
-      total_cbm: parseFloat(totalCBM.toFixed(2)),
-      total_weight: parseFloat(totalWeight.toFixed(2)),
-    });
     setQuoteCalculationRes({
       ...quoteCalculationRes,
       total_weight: totalWeight,
@@ -993,11 +1017,7 @@ function JobPage() {
         jobItems,
         companyWeight,
       );
-      setRefinedData({
-        ...refinedData,
-        total_cbm: parseFloat(totalCBM.toFixed(2)),
-        total_weight: parseFloat(totalWeight.toFixed(2)),
-      });
+
       setTempcalculation({
         cbm_auto: parseFloat(totalCBM.toFixed(2)), // Rounded to 2 decimal points
         total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
@@ -1006,7 +1026,7 @@ function JobPage() {
 
     calculateTotals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyWeight, job.job_category_id, jobItems, handleJobItemChanged]);
+  }, [companyWeight, job.job_category_id, jobItems]);
 
   const addToJobItems = () => {
     let nextId = jobItems[jobItems.length - 1].id + 1;
@@ -1053,15 +1073,23 @@ function JobPage() {
         data.customers.data,
         "id",
         "full_name",
+        "base_notes",
       );
       setCustomerOptions(_customerOptions);
+      console.log(_customerOptions, "cust");
       if (isCustomer) {
-        setJob({ ...job, ...{ customer_id: customerId } });
+      console.log(isCustomer, "root-customer");
+
+        setJob({ ...job, ...{ customer_id: customerId || Number(cookies.customer_id) } });
         const selectedCustomer = _customerOptions.find(
-          (_e) => _e.value === customerId,
+          (_e) => _e.value === customerId || Number(cookies.customer_id),
         )?.entity;
+      console.log(selectedCustomer,customerId,cookies.customer_id, "usm-sc,cuseromid,cookies");
+
         if (selectedCustomer) {
           setCustomerSelected(selectedCustomer);
+          console.log(selectedCustomer, "sun");
+          // setselectedCustomernotes()
           // Update refinedData with the new properties
         }
         getCustomerAddresses();
@@ -1106,12 +1134,12 @@ function JobPage() {
 
     const checkAndUpdateJobTypes = async () => {
       try {
-        if (!pickUpDestination?.lat || !pickUpDestination?.lng) return;
+        if (!pickUpDestination?.address_state) return;
+        const res = await getTimezone({
+          state: pickUpDestination.address_state,
+        });
 
-        const timezone = await getTimezone(
-          pickUpDestination.lat,
-          pickUpDestination.lng,
-        );
+        const timezone = res?.data?.getTimezone?.timeZoneId;
 
         let updatedOptions = [...jobTypeOptions];
 
@@ -1319,8 +1347,6 @@ function JobPage() {
     const payload = {
       freight_type: refinedData.freight_type,
       transport_type: job.transport_type,
-      total_cbm: refinedData.total_cbm,
-      total_weight: refinedData.total_weight,
       state:
         refinedData.state ||
         job.pick_up_state ||
@@ -1460,7 +1486,7 @@ function JobPage() {
                       // console.log(refinedData, "n");
                     }}
                   />
-                  {!isCompany && (
+                  {isAdmin && (
                     <CustomInputField
                       isSelect={true}
                       optionsArray={companiesOptions}
@@ -1493,10 +1519,14 @@ function JobPage() {
                         if (e.value) {
                           setCompanyWeight(null); // Reset before fetching
                           getCompany({ id: String(e.value) }).then((res) => {
-                            setCompanyWeight(res.data.company?.weight_per_cubic);
-                            setCompanyStandardStatic(res.data.company?.standard_static ? 1 : 0);
+                            setCompanyWeight(
+                              res.data.company?.weight_per_cubic,
+                            );
+                            setCompanyStandardStatic(
+                              res.data.company?.standard_static ? 1 : 0,
+                            );
                           });
-                          getCompanyRates({ company_id: String(e.value) });
+                          getCompanyRates({ company_id: Number(e.value) });
                         }
                       }}
                     />
@@ -1562,34 +1592,50 @@ function JobPage() {
                       </Text>
                     </>
                   )}
-
-                  <CustomInputField
-                    isSelect={true}
-                    optionsArray={customerOptions}
-                    label={isCompany ? "Booked by" : "Customer:"}
-                    value={
-                      customerOptions.find(
-                        (entity) => entity.value === job.customer_id,
-                      ) || { value: 0, label: "" }
-                    }
-                    placeholder=""
-                    isDisabled={isCompany || isCompanyAdmin}
-                    onChange={(e) => {
-                      if (isCompany && isCompanyAdmin) return;
-
-                      setJob({
-                        ...job,
-                        customer_id: e.value || null,
-                      });
-                      const selectedCustomer = customerOptions.find(
-                        (_e) => _e.value === e.value,
-                      )?.entity;
-                      if (selectedCustomer) {
-                        setCustomerSelected(selectedCustomer);
+                  {isAdmin && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={customerOptions}
+                      label={"Customer:" }
+                      value={
+                        customerOptions.find(
+                          (entity) => entity.value === job.customer_id,
+                        ) || { value: 0, label: "" }
                       }
-                    }}
-                  />
-
+                      placeholder=""
+                      isDisabled={!isAdmin}
+                      onChange={(e) => {
+                        setCustomerBaseNotes(e.base_notes);
+                        setJob({ ...job, base_notes: e.base_notes });
+                        if (!isAdmin) return;
+                        setJob({
+                          ...job,
+                          customer_id: e.value || null,
+                        });
+                        const selectedCustomer = customerOptions.find(
+                          (_e) => _e.value === e.value,
+                        )?.entity;
+                        if (selectedCustomer) {
+                          setCustomerSelected(selectedCustomer);
+                        }
+                      }}
+                    />
+                  )}
+                   {!isAdmin && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={customerOptions}
+                      label={"Booked by"}
+                      value={
+                        customerOptions.find(
+                          (entity) => entity.value === job.customer_id,
+                        ) || { value: 0, label: "" }
+                      }
+                      placeholder=""
+                      isDisabled={!isAdmin}
+                     
+                    />
+                  )}
                   <CustomInputField
                     label="Operator phone:"
                     placeholder=""
@@ -1997,20 +2043,31 @@ function JobPage() {
                   label="Type:"
                   optionsArray={
                     companyStandardStatic
-                      ? jobTypeOptions // all options
-                      : filteredJobTypeOptions // filtered options
+                      ? jobTypeOptions
+                      : filteredJobTypeOptions
                   }
                   selectedJobId={job.job_type_id}
-                  value={(
-                    companyStandardStatic ? jobTypeOptions : filteredJobTypeOptions
-                  ).find((jobType) => jobType.value === job.job_type_id)}
+                  value={
+                    companyStandardStatic
+                      ? jobTypeOptions
+                      : filteredJobTypeOptions.find(
+                          (jobType) => jobType.value === job.job_type_id,
+                        )
+                  }
                   placeholder="Select type"
                   onChange={(e) => {
+                    // setJob({
+                    //   ...job,
+                    //   job_type_id: e.value || null,
+                    // });
                     const selectedCategory = e.value;
-                    const selectedCategoryName = (
-                      companyStandardStatic ? jobTypeOptions : filteredJobTypeOptions
-                    ).find((job_category) => job_category.value === selectedCategory)?.label;
-
+                    const selectedCategoryName = companyStandardStatic
+                      ? jobTypeOptions
+                      : filteredJobTypeOptions.find(
+                          (job_category) =>
+                            job_category.value === selectedCategory,
+                        )?.label;
+                    6;
                     setJob({
                       ...job,
                       job_type_id: selectedCategory || null,
@@ -2022,7 +2079,6 @@ function JobPage() {
                     });
                   }}
                 />
-
                 {/* Items */}
                 <Box mb="16px" mt={4}>
                   <Flex justify="space-between" align="center" className="mb-6">
@@ -2161,13 +2217,15 @@ function JobPage() {
                         label="Base notes"
                         placeholder=""
                         name="base_notes"
-                        value={job.base_notes}
-                        onChange={(e) =>
-                          setJob({
-                            ...job,
-                            [e.target.name]: e.target.value,
-                          })
+                        value={
+                          job.base_notes ? job.base_notes : customerBaseNotes
                         }
+                        // onChange={(e) =>
+                        //   setJob({
+                        //     ...job,
+                        //     [e.target.name]: e.target.value,
+                        //   })
+                        // }
                       />
                     )}
                   </Box>
