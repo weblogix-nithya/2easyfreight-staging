@@ -96,8 +96,8 @@ function JobPage() {
   const toast = useToast();
   const freightCalculatedRef = useRef(false);
   const isMounted = useRef(false);
-  const cookies = parseCookies();
-  useEffect(() => {
+    const cookies = parseCookies();
+    useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
@@ -461,20 +461,10 @@ function JobPage() {
   });
 
   useEffect(() => {
-    console.log(
-      job.customer_id,
-      job,
-      cookies.customer_id,
-      "job.customer_id and job,cs idcookies in useeffect 1",
-    );
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 1");
 
     if ((!isCompany && !isCompanyAdmin) || !companyId) return;
-    console.log(
-      job.customer_id,
-      job,
-      cookies.customer_id,
-      "job.customer_id and job,cs idcookies in useeffect 1.1",
-    );
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 1.1");
 
     const timeout = setTimeout(() => {
       if (job.company_id !== companyId) {
@@ -949,31 +939,16 @@ function JobPage() {
   );
   useEffect(() => {
     if (job.customer_id && customerOptions.length > 0) {
-      console.log(
-        job.customer_id,
-        job,
-        cookies.customer_id,
-        "job.customer_id and job,cs idcookies in useeffect 2 in IF",
-      );
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2 in IF");
 
       setCustomerSelected({
         ...customerOptions.find((_e) => _e.value == job.customer_id)?.entity,
       });
       getCustomerAddresses();
     }
-    console.log(
-      job.customer_id,
-      job,
-      cookies.customer_id,
-      "job.customer_id and job,cs idcookies in useeffect 2",
-    );
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2");
     if (job.customer_id == null) {
-      console.log(
-        job.customer_id,
-        job,
-        cookies.customer_id,
-        "job.customer_id and job,cs idcookies in useeffect 2 in second IF",
-      );
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2 in second IF");
 
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
@@ -1101,34 +1076,6 @@ function JobPage() {
     },
     skip: !isCompany,
     onCompleted: (data) => {
-      if (isCustomer) {
-        console.log(isCustomer, "root-customer");
-
-        setJob({
-          ...job,
-          ...{ customer_id: customerId || Number(cookies.customer_id) },
-        });
-        // const selectedCustomer = _customerOptions.find(
-        //   (_e) => _e.value === customerId || Number(cookies.customer_id),
-        // )?.entity;
-        console.log(customerId, cookies.customer_id, ",cuseromid,cookies");
-        console.log(
-          job.customer_id,
-          job,
-          cookies.customer_id,
-          "job.customer_id and job,cs idcookies in customer api oncompleted",
-        );
-
-        //     if (selectedCustomer) {
-        //       setCustomerSelected(selectedCustomer);
-        //       console.log(selectedCustomer,job, "sun,j");
-        // console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted if");
-
-        //       // setselectedCustomernotes()
-        //       // Update refinedData with the new properties
-        //     }
-        getCustomerAddresses();
-      }
       setCustomerOptions([]);
       let _customerOptions = formatToSelect(
         data.customers.data,
@@ -1138,6 +1085,28 @@ function JobPage() {
       );
       setCustomerOptions(_customerOptions);
       console.log(_customerOptions, "cust");
+      if (isCustomer) {
+      console.log(isCustomer, "root-customer");
+setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.customer_id),}));
+
+ 
+        // setJob({ ...job, ...{ customer_id: customerId || Number(cookies.customer_id) } });
+        const selectedCustomer = _customerOptions.find(
+          (_e) => _e.value === customerId || Number(cookies.customer_id),
+        )?.entity;
+      console.log(selectedCustomer,customerId,cookies.customer_id, "usm-sc,cuseromid,cookies");
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted");
+
+        if (selectedCustomer) {
+          setCustomerSelected(selectedCustomer);
+          console.log(selectedCustomer,job, "sun,j");
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted if");
+
+          // setselectedCustomernotes()
+          // Update refinedData with the new properties
+        }
+        getCustomerAddresses();
+      }
     },
   });
 
@@ -1640,7 +1609,7 @@ function JobPage() {
                     <CustomInputField
                       isSelect={true}
                       optionsArray={customerOptions}
-                      label={"Customer:"}
+                      label={"Customer:" }
                       value={
                         customerOptions.find(
                           (entity) => entity.value === job.customer_id,
@@ -1665,7 +1634,7 @@ function JobPage() {
                       }}
                     />
                   )}
-                  {!isAdmin && (
+                   {!isAdmin && (
                     <CustomInputField
                       isSelect={true}
                       optionsArray={customerOptions}
@@ -1677,6 +1646,7 @@ function JobPage() {
                       }
                       placeholder=""
                       isDisabled={!isAdmin}
+                     
                     />
                   )}
                   <CustomInputField
