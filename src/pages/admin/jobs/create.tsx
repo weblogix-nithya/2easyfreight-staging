@@ -461,7 +461,10 @@ function JobPage() {
   });
 
   useEffect(() => {
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 1");
+
     if ((!isCompany && !isCompanyAdmin) || !companyId) return;
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 1.1");
 
     const timeout = setTimeout(() => {
       if (job.company_id !== companyId) {
@@ -941,6 +944,7 @@ function JobPage() {
       });
       getCustomerAddresses();
     }
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2");
     if (job.customer_id == null) {
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
@@ -1085,6 +1089,7 @@ function JobPage() {
           (_e) => _e.value === customerId || Number(cookies.customer_id),
         )?.entity;
       console.log(selectedCustomer,customerId,cookies.customer_id, "usm-sc,cuseromid,cookies");
+    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted");
 
         if (selectedCustomer) {
           setCustomerSelected(selectedCustomer);
