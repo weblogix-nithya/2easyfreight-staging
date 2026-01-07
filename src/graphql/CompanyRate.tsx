@@ -25,6 +25,13 @@ export const GET_LIST_OF_SEAFREIGHTS = gql`
   }
 `;
 
+export const GET_TIMEZONE_QUERY = gql`
+  query GetTimezone($state: String!) {
+    getTimezone(state: $state) {
+      timeZoneId
+    }
+  }
+`;
 export const CREATE_COMPANY_RATE_MUTATION = gql`
   mutation CreateCompanyRate(
     $company_id: ID!
