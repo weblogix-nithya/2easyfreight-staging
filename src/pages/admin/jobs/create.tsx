@@ -96,8 +96,8 @@ function JobPage() {
   const toast = useToast();
   const freightCalculatedRef = useRef(false);
   const isMounted = useRef(false);
-    const cookies = parseCookies();
-    useEffect(() => {
+  const cookies = parseCookies();
+  useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
@@ -461,10 +461,10 @@ function JobPage() {
   });
 
   useEffect(() => {
-    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 1");
+    console.log(job.customer_id, job, cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 1");
 
     if ((!isCompany && !isCompanyAdmin) || !companyId) return;
-    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 1.1");
+    console.log(job.customer_id, job, cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 1.1");
 
     const timeout = setTimeout(() => {
       if (job.company_id !== companyId) {
@@ -543,11 +543,11 @@ function JobPage() {
           const jobDestination1 =
             jobDestinations.length > 0
               ? {
-                  state: jobDestinations[0]?.address_state,
-                  suburb: jobDestinations[0]?.address_city,
-                  postcode: jobDestinations[0]?.address_postal_code,
-                  address: jobDestinations[0]?.address,
-                }
+                state: jobDestinations[0]?.address_state,
+                suburb: jobDestinations[0]?.address_city,
+                postcode: jobDestinations[0]?.address_postal_code,
+                address: jobDestinations[0]?.address,
+              }
               : null;
 
           const filteredCompanyRates = companyRates?.filter(
@@ -566,14 +566,14 @@ function JobPage() {
             company_rates:
               ((job.job_category_id == 1 || job.job_category_id == 2) &&
                 refinedData.pick_up_stateCode === "QLD") ||
-              refinedData.pick_up_stateCode === "VIC"
+                refinedData.pick_up_stateCode === "VIC"
                 ? filteredCompanyRates.map((rate) => ({
-                    company_id: rate.company_id,
-                    seafreight_id: rate.seafreight_id,
-                    area: rate.area,
-                    cbm_rate: rate.cbm_rate,
-                    minimum_charge: rate.minimum_charge,
-                  }))
+                  company_id: rate.company_id,
+                  seafreight_id: rate.seafreight_id,
+                  area: rate.area,
+                  cbm_rate: rate.cbm_rate,
+                  minimum_charge: rate.minimum_charge,
+                }))
                 : [],
             job_pickup_address: {
               state: pickUpDestination?.address_state,
@@ -584,11 +584,11 @@ function JobPage() {
             job_destination_address:
               jobDestinations.length > 0
                 ? {
-                    state: jobDestinations[0]?.address_state,
-                    suburb: jobDestinations[0]?.address_city,
-                    postcode: jobDestinations[0]?.address_postal_code,
-                    address: jobDestinations[0]?.address,
-                  }
+                  state: jobDestinations[0]?.address_state,
+                  suburb: jobDestinations[0]?.address_city,
+                  postcode: jobDestinations[0]?.address_postal_code,
+                  address: jobDestinations[0]?.address,
+                }
                 : {},
             pickup_time: { ready_by: readyAt },
             delivery_time: { drop_by: dropAt },
@@ -762,7 +762,7 @@ function JobPage() {
   //   }
   // }, [router.isReady, pendingJobId]);
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: () => {
       /*toast({
         title: "Media updated",
@@ -887,8 +887,8 @@ function JobPage() {
       _jobDestinations[0]?.address_state == "Victoria"
         ? "VIC"
         : jobDestinations[0]?.address_state == "Queensland"
-        ? "QLD"
-        : "";
+          ? "QLD"
+          : "";
     const filtereddepotOption = depotOptions.filter(
       (option) => option.state_code == currentstate,
     );
@@ -939,16 +939,16 @@ function JobPage() {
   );
   useEffect(() => {
     if (job.customer_id && customerOptions.length > 0) {
-    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2 in IF");
+      console.log(job.customer_id, job, cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2 in IF");
 
       setCustomerSelected({
         ...customerOptions.find((_e) => _e.value == job.customer_id)?.entity,
       });
       getCustomerAddresses();
     }
-    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2");
+    console.log(job.customer_id, job, cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2");
     if (job.customer_id == null) {
-    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2 in second IF");
+      console.log(job.customer_id, job, cookies.customer_id, "job.customer_id and job,cs idcookies in useeffect 2 in second IF");
 
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
@@ -1046,11 +1046,12 @@ function JobPage() {
 
   const dateChanged = useCallback(() => {
     try {
-      setJob({
-        ...job,
+      setJob((prev) => ({
+        ...prev,
         ready_at: formatDateTimeToDB(jobDateAt, readyAt),
         drop_at: formatDateTimeToDB(jobDateAt, dropAt),
-      });
+      }));
+
     } catch (e) {
       // console.log(e);
     }
@@ -1086,21 +1087,21 @@ function JobPage() {
       setCustomerOptions(_customerOptions);
       console.log(_customerOptions, "cust");
       if (isCustomer) {
-      console.log(isCustomer, "root-customer");
-setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.customer_id),}));
+        console.log(isCustomer, "root-customer");
+        setJob(prevJob => ({ ...prevJob, customer_id: customerId || Number(cookies.customer_id), }));
 
- 
+
         // setJob({ ...job, ...{ customer_id: customerId || Number(cookies.customer_id) } });
         const selectedCustomer = _customerOptions.find(
           (_e) => _e.value === customerId || Number(cookies.customer_id),
         )?.entity;
-      console.log(selectedCustomer,customerId,cookies.customer_id, "usm-sc,cuseromid,cookies");
-    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted");
+        console.log(selectedCustomer, customerId, cookies.customer_id, "usm-sc,cuseromid,cookies");
+        console.log(job.customer_id, job, cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted");
 
         if (selectedCustomer) {
           setCustomerSelected(selectedCustomer);
-          console.log(selectedCustomer,job, "sun,j");
-    console.log(job.customer_id, job,cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted if");
+          console.log(selectedCustomer, job, "sun,j");
+          console.log(job.customer_id, job, cookies.customer_id, "job.customer_id and job,cs idcookies in customer api oncompleted if");
 
           // setselectedCustomernotes()
           // Update refinedData with the new properties
@@ -1347,11 +1348,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -1369,14 +1370,14 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
       company_rates:
         ((job.job_category_id == 1 || job.job_category_id == 2) &&
           refinedData.pick_up_stateCode === "QLD") ||
-        refinedData.pick_up_stateCode === "VIC"
+          refinedData.pick_up_stateCode === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              minimum_charge: rate.minimum_charge,
-            }))
+            company_id: rate.company_id,
+            seafreight_id: rate.seafreight_id,
+            area: rate.area,
+            cbm_rate: rate.cbm_rate,
+            minimum_charge: rate.minimum_charge,
+          }))
           : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
@@ -1387,11 +1388,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
       job_destination_address:
         jobDestinations.length > 0
           ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -1487,10 +1488,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                           job_category.value === selectedCategory,
                       )?.label;
 
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         job_category_id: selectedCategory || null,
-                      });
+                      }));
+
 
                       setRefinedData({
                         ...refinedData,
@@ -1517,11 +1519,12 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                           ...defaultVariables,
                           company_id: e.value,
                         });
-                        setJob({
-                          ...job,
+                        setJob((prev) => ({
+                          ...prev,
                           company_id: e.value || null,
                           customer_id: null,
-                        });
+                        }));
+
                         setRefinedData({
                           ...refinedData,
                           area: null,
@@ -1562,7 +1565,10 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                         ].find((_e) => _e.value === job.transport_type)}
                         placeholder=""
                         onChange={(e) => {
-                          setJob({ ...job, transport_type: e.value });
+                          setJob((prev) => ({
+                            ...prev,
+                            transport_type: e.value,
+                          }));
                           setRefinedData({
                             ...refinedData,
                             transport_type: e.value,
@@ -1589,7 +1595,10 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                             state_code: e.value,
                             state: e.label,
                           };
-                          setJob({ ...job, transport_location: e.value });
+                          setJob((prev) => ({
+                            ...prev,
+                            transport_location: e.value,
+                          }));
                           setRefinedData(newState);
                         }}
                       />
@@ -1609,7 +1618,7 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     <CustomInputField
                       isSelect={true}
                       optionsArray={customerOptions}
-                      label={"Customer:" }
+                      label={"Customer:"}
                       value={
                         customerOptions.find(
                           (entity) => entity.value === job.customer_id,
@@ -1619,12 +1628,18 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                       isDisabled={!isAdmin}
                       onChange={(e) => {
                         setCustomerBaseNotes(e.base_notes);
-                        setJob({ ...job, base_notes: e.base_notes });
-                        if (!isAdmin) return;
-                        setJob({
-                          ...job,
-                          customer_id: e.value || null,
-                        });
+                        // setJob({ ...job, base_notes: e.base_notes });
+                        // if (!isAdmin) return;
+                        // setJob({
+                        //   ...job,
+                        //   customer_id: e.value || null,
+                        // });
+                        setJob((prev) => ({
+                          ...prev,
+                          base_notes: e.base_notes,
+                          ...(isAdmin ? { customer_id: e.value || null } : {}),
+                        }));
+
                         const selectedCustomer = customerOptions.find(
                           (_e) => _e.value === e.value,
                         )?.entity;
@@ -1634,7 +1649,7 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                       }}
                     />
                   )}
-                   {!isAdmin && (
+                  {!isAdmin && (
                     <CustomInputField
                       isSelect={true}
                       optionsArray={customerOptions}
@@ -1646,7 +1661,7 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                       }
                       placeholder=""
                       isDisabled={!isAdmin}
-                     
+
                     />
                   )}
                   <CustomInputField
@@ -1656,7 +1671,7 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (_e) => {}
+                      (_e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1671,7 +1686,7 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (_e) => {}
+                      (_e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1738,11 +1753,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                       setIsSameDayJob(today === selected);
                       setIsTomorrowJob(
                         new Date(selected).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
+                        new Date(
+                          new Date(today).setDate(
+                            new Date(today).getDate() + 1,
+                          ),
+                        ).toDateString(),
                       );
                     }}
                   />
@@ -1755,15 +1770,12 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     value={readyAt}
                     onChange={(e) => {
                       setReadyAt(e.target.value);
-                      setJob({
-                        ...job,
-                        ready_at: new Date(
-                          `${jobDateAt} ${e.target.value}`,
-                        ).toISOString(),
-                        drop_at: new Date(
-                          `${jobDateAt} ${dropAt}`,
-                        ).toISOString(),
-                      });
+                      setJob((prev) => ({
+                        ...prev,
+                        ready_at: new Date(`${jobDateAt} ${e.target.value}`).toISOString(),
+                        drop_at: new Date(`${jobDateAt} ${dropAt}`).toISOString(),
+                      }));
+
                     }}
                   />
 
@@ -1775,15 +1787,14 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     value={dropAt}
                     onChange={(e) => {
                       setDropAt(e.target.value);
-                      setJob({
-                        ...job,
-                        ready_at: new Date(
-                          `${jobDateAt} ${readyAt}`,
-                        ).toISOString(),
-                        drop_at: new Date(
-                          `${jobDateAt} ${e.target.value}`,
-                        ).toISOString(),
-                      });
+                      setJob((prev) => ({
+                        ...prev,
+                        ...(readyAt && {
+                          ready_at: new Date(`${jobDateAt} ${readyAt}`).toISOString(),
+                        }),
+                        drop_at: new Date(`${jobDateAt} ${e.target.value}`).toISOString(),
+                      }));
+
                     }}
                   />
 
@@ -1793,10 +1804,10 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     name="timeslot"
                     value={job.timeslot}
                     onChange={(e) =>
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         [e.target.name]: e.target.value,
-                      })
+                      }))
                     }
                   />
 
@@ -1807,10 +1818,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     name="last_free_at"
                     value={job.last_free_at}
                     onChange={(e) => {
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         [e.target.name]: e.target.value,
-                      });
+                      }));
+
                     }}
                   />
 
@@ -1820,10 +1832,10 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     name="reference_no"
                     value={job.reference_no}
                     onChange={(e) =>
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         [e.target.name]: e.target.value,
-                      })
+                      }))
                     }
                   />
 
@@ -1833,10 +1845,10 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     name="booked_by"
                     value={job.booked_by}
                     onChange={(e) =>
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         [e.target.name]: e.target.value,
-                      })
+                      }))
                     }
                   />
 
@@ -1848,10 +1860,10 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                         placeholder=""
                         name="quoted_price"
                         onChange={(e) =>
-                          setJob({
-                            ...job,
+                          setJob((prev) => ({
+                            ...prev,
                             [e.target.name]: e.target.value,
-                          })
+                          }))
                         }
                       />
                       <CustomInputField
@@ -1861,10 +1873,10 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                         name="admin_notes"
                         value={job.admin_notes}
                         onChange={(e) =>
-                          setJob({
-                            ...job,
+                          setJob((prev) => ({
+                            ...prev,
                             [e.target.name]: e.target.value,
-                          })
+                          }))
                         }
                       />
                     </>
@@ -1945,8 +1957,8 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                             pickUpDestination.address_state == "Victoria"
                               ? "VIC"
                               : pickUpDestination.address_state == "Queensland"
-                              ? "QLD"
-                              : "";
+                                ? "QLD"
+                                : "";
                           const filtereddepotOption = depotOptions.filter(
                             (option) => option.state_code == currentPickupstate,
                           );
@@ -1955,18 +1967,17 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                           //   filtereddepotOption,
                           //   "filtereddepotOptions",
                           // );
-                          setJob({
-                            ...job,
-                            ...{
-                              pick_up_lng: jobDestination.lng,
-                              pick_up_lat: jobDestination.lat,
-                              pick_up_address: jobDestination.address,
-                              pick_up_notes: jobDestination.notes,
-                              pick_up_name: jobDestination.name,
-                              pick_up_report: jobDestination.report,
-                              pick_up_state: jobDestination.state,
-                            },
-                          });
+                          setJob((prev) => ({
+                            ...prev,
+                            pick_up_lng: jobDestination.lng,
+                            pick_up_lat: jobDestination.lat,
+                            pick_up_address: jobDestination.address,
+                            pick_up_notes: jobDestination.notes,
+                            pick_up_name: jobDestination.name,
+                            pick_up_report: jobDestination.report,
+                            pick_up_state: jobDestination.state,
+                          }));
+
 
                           setRefinedData({
                             ...refinedData,
@@ -2064,8 +2075,8 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     companyStandardStatic
                       ? jobTypeOptions
                       : filteredJobTypeOptions.find(
-                          (jobType) => jobType.value === job.job_type_id,
-                        )
+                        (jobType) => jobType.value === job.job_type_id,
+                      )
                   }
                   placeholder="Select type"
                   onChange={(e) => {
@@ -2077,14 +2088,15 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                     const selectedCategoryName = companyStandardStatic
                       ? jobTypeOptions
                       : filteredJobTypeOptions.find(
-                          (job_category) =>
-                            job_category.value === selectedCategory,
-                        )?.label;
+                        (job_category) =>
+                          job_category.value === selectedCategory,
+                      )?.label;
                     6;
-                    setJob({
-                      ...job,
+                    setJob((prev) => ({
+                      ...prev,
                       job_type_id: selectedCategory || null,
-                    });
+                    }));
+
 
                     setRefinedData({
                       ...refinedData,
@@ -2218,10 +2230,10 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                       name="customer_notes"
                       value={job.customer_notes}
                       onChange={(e) =>
-                        setJob({
-                          ...job,
+                        setJob((prev) => ({
+                          ...prev,
                           [e.target.name]: e.target.value,
-                        })
+                        }))
                       }
                     />
                     {isAdmin && (
@@ -2233,12 +2245,12 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                         value={
                           job.base_notes ? job.base_notes : customerBaseNotes
                         }
-                        // onChange={(e) =>
-                        //   setJob({
-                        //     ...job,
-                        //     [e.target.name]: e.target.value,
-                        //   })
-                        // }
+                      // onChange={(e) =>
+                      //   setJob({
+                      //     ...job,
+                      //     [e.target.name]: e.target.value,
+                      //   })
+                      // }
                       />
                     )}
                   </Box>
@@ -2270,17 +2282,18 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_inbound_connect: e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_inbound_connect: e === "1",
+                                }));
+
                                 let curretstatecode =
                                   jobDestinations[0].address_state == "Victoria"
                                     ? "VIC"
                                     : jobDestinations[0].address_state ==
                                       "Queensland"
-                                    ? "QLD"
-                                    : "";
+                                      ? "QLD"
+                                      : "";
                                 const filtereddepotOp = depotOptions.filter(
                                   (option) =>
                                     option.state_code == curretstatecode,
@@ -2317,10 +2330,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                                       ...refinedData,
                                       timeslot_depots: e.value,
                                     });
-                                    setJob({
-                                      ...job,
-                                      timeslot_depots: e.value, // Update job.timeslot_depots
-                                    });
+                                    setJob((prev) => ({
+                                      ...prev,
+                                      timeslot_depots: e.value,
+                                    }));
+
                                   }}
                                 />
                               </Box>
@@ -2343,11 +2357,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_stackable_required:
-                                    e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_stackable_required: e === "1",
+                                }));
+
                               }}
                             >
                               <Stack direction="row">
@@ -2376,10 +2390,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_hand_unloading: e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_hand_unloading: e === "1",
+                                }));
+
                               }}
                             >
                               <Stack direction="row">
@@ -2409,10 +2424,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_dangerous_goods: e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_dangerous_goods: e === "1",
+                                }));
+
                               }}
                             >
                               <Stack direction="row">
@@ -2442,11 +2458,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_tailgate_required:
-                                    e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_tailgate_required: e === "1",
+                                }));
+
                               }}
                             >
                               <Stack direction="row">
@@ -2475,11 +2491,11 @@ setJob(prevJob => ({...prevJob,customer_id: customerId || Number(cookies.custome
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_paperwork_required:
-                                    e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_paperwork_required: e === "1",
+                                }));
+
                               }}
                             >
                               <Stack direction="row">

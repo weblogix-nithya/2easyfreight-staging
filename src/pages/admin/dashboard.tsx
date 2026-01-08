@@ -474,7 +474,7 @@ export default function Dashboard() {
                     image={"/img/dashboards/jobtype-express-icon.png"}
                     title="Book New Delivery"
                     linkText="New booking"
-                    link="/admin/create"
+                    link="/admin/jobs/create"
                   />
                 </div>
                 <div className="mb-3">
