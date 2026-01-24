@@ -1592,6 +1592,7 @@ function JobPage() {
       setIsDownloading(false);
     }
   };
+
   return (
     <AdminLayout>
       <Box
@@ -2692,6 +2693,20 @@ function JobPage() {
                                     }}
                                   >
                                     Get A Quote
+                                  </Button>
+                                    <Button
+                                    variant="outline"
+                                    ms={4}
+                                    colorScheme="blue"
+                                    onClick={downloadQuotePdf}
+                                    isLoading={isDownloading}
+                                    loadingText="Downloading"
+                                    isDisabled={isDownloading}
+                                    //                                     onClick={() => {
+                                    // downloadQuotePdf()
+                                    //                                     }}
+                                  >
+                                    download Quote
                                   </Button>
                                     <Button
                                     variant="outline"
