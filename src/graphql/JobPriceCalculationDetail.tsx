@@ -116,6 +116,25 @@ export const DELETE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
   }
 `;
 
+export const CALCULATE_SEA_FREIGHT_QUERY = gql`
+  query CalculateSeaFreight($input: CalculateSeaFreightInput!) {
+    calculateSeaFreight(input: $input) {
+      freight
+      fuel
+      hand_unload
+      dangerous_goods
+      time_slot
+      tail_lift
+      stackable
+      toll_applied
+      toll_type
+      toll_amount
+      total
+    }
+  }
+`;
+
+
 // JobPriceCalculationDetail TypeScript Types and Interfaces
 
 export interface JobPriceCalculationDetail {
