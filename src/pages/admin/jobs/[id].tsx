@@ -24,7 +24,6 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
-import axios from "axios";
 import InvoiceTab from "components/jobs/InvoiceTab";
 import JobDetailsTab from "components/jobs/JobDetailsTab";
 import JobDetailsTabDisabled from "components/jobs/JobDetailsTabDisabled";
@@ -67,6 +66,7 @@ import {
   UPDATE_JOB_ITEM_MUTATION,
 } from "graphql/jobItem";
 import {
+  CALCULATE_SEA_FREIGHT_QUERY,
   CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
   CreateJobPriceCalculationDetailInput,
   defaultJobPriceCalculationDetail,
@@ -139,6 +139,10 @@ function JobEdit() {
     ...defaultJobQuoteData,
     total_cbm: 0,
     total_weight: 0,
+    pick_up_state: "",
+    pick_up_stateCode: "",
+    timeslot_depots: "",
+    toll_enabled: false,
   });
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
@@ -617,7 +621,20 @@ function JobEdit() {
       const _matchedJobType = jobTypeOptions.find(
         (type) => type.id === jobData.job.job_type_id,
       );
+        const selectedCompany = companiesOptions.find(
+        (company) => company.value === Number(job.company_id),
+      );
 
+      // ✅ Get toll value
+      const tollEnabled = selectedCompany?.toll ?? false;
+
+      console.log("Selected Company ID:", selectedCompany);
+      console.log("Toll Enabled:", tollEnabled);
+
+      setRefinedData((prev) => ({
+        ...prev,
+        toll_enabled: tollEnabled,
+      }));
       setRefinedData({
         ...refinedData,
         freight_type: selectedCategoryName,
@@ -626,6 +643,7 @@ function JobEdit() {
         // job_type: matchedJobType?.name || null,
         // job_type_color: matchedJobType?.color || null
       });
+      console.log(jobData.job.transport_location,selectedLocation.label,'j')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobData, jobCategories, jobTypeOptions, companyRates]); // Use 'jobData' instead of 'data'
@@ -1075,6 +1093,7 @@ function JobEdit() {
       const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
+        toll: _entity.toll_enabled,
       }));
 
       setCompaniesOptions(newCompaniesOptions);
@@ -1084,6 +1103,13 @@ function JobEdit() {
         (entity: { value: number }) => entity.value === job.company_id,
       );
 
+      //  if (selectedCompany) {
+      //     setRefinedData({
+      //       ...refinedData,
+      //       toll_enabled: selectedCompany.toll,
+      //     });
+      //     console.log(selectedCompany.toll,'selectedCompany.toll,')
+      //   }
       if (selectedCompany) {
         setRefinedData({
           ...refinedData,
@@ -1536,13 +1562,31 @@ function JobEdit() {
     return true;
   };
 
+    const [handleCalculateSeaFreight] = useLazyQuery(
+      CALCULATE_SEA_FREIGHT_QUERY,
+      {
+        fetchPolicy: "no-cache",
+        onCompleted: (data) => {
+          setQuoteCalculationRes((prev) => ({
+            ...prev,
+            ...data.calculateSeaFreight,
+          }));
+          // freightCalculatedRef.current = true;
+          // setIsQuotePrice(true);
+        },
+        onError: (error) => {
+          showGraphQLErrorToast(error);
+        },
+      },
+    );
+
   const sendFreightData = async () => {
-    const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
+    // const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
     // console.log(string, "st");
     if (!validateAddresses()) return;
     // Remove duplicate check that was causing multiple API calls
     setButtonText("Get A Quote");
-    const today = new Date().toISOString(); // Get current date and time in ISO format
+    const _today = new Date().toISOString(); // Get current date and time in ISO format
 
     const jobDestination1 =
       jobDestinations.length > 0
@@ -1554,7 +1598,7 @@ function JobEdit() {
           }
         : null;
 
-    const selectedCategoryName = jobCategories.find(
+    const _selectedCategoryName = jobCategories.find(
       (job_category) => job_category.value == job?.job_category_id,
     )?.label;
     // const selectedstate = locationOptions.find(
@@ -1570,7 +1614,7 @@ function JobEdit() {
       (job_type) => job_type.value == job.job_type_id,
     )?.label;
 
-    const selectedDepot = depotOptions.find(
+    const _selectedDepot = depotOptions.find(
       (depot) => depot.value === job.timeslot_depots,
     )?.label;
     // debugger
@@ -1579,85 +1623,84 @@ function JobEdit() {
     );
     // console.log(filteredCompanyRates, "filteredCompanyRates")
 
-    const payload = {
-      customer_id: Number(job.customer_id),
-      freight_type: refinedData.freight_type || selectedCategoryName,
-      transport_type: job.transport_type,
-      service_choice: selectedJobTypeName || refinedData.service_choice,
-      // cbm_rate: refinedData.cbm_rate,
-      // minimum_charge: refinedData.minimum_charge,
-      // area: refinedData.area,
-      total_cbm: refinedData.total_cbm,
-      total_weight: refinedData.total_weight,
-      state: refinedData.state || selectedstate?.label,
-      state_code: refinedData.state_code || selectedstate?.value,
-      company_rates:
-        ((job.job_category_id == 1 || job.job_category_id == 2) &&
+    try {
+      const response = await handleCalculateSeaFreight({
+        variables: {
+          input: {
+            transport_type: job.transport_type,
+            state:
+              refinedData.state ||
+              job.pick_up_state ||
+              pickUpDestination.address_state,
+            state_code: refinedData.state_code || refinedData.pick_up_stateCode,
+            service_choice: selectedJobTypeName ||refinedData.service_choice,
+            company_rates:
+              ((job.job_category_id == 1 || job.job_category_id == 2) &&
           selectedstate?.value === "QLD") ||
         selectedstate?.value === "VIC"
-          ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              state: rate.state,
-              minimum_charge: rate.minimum_charge,
-            }))
-          : [],
-      job_pickup_address: {
-        state: pickUpDestination?.address_state,
-        suburb: pickUpDestination?.address_city,
-        postcode: pickUpDestination?.address_postal_code,
-        address: pickUpDestination?.address,
-      },
-      job_destination_address:
-        jobDestinations.length > 0
-          ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
-          : {},
-      pickup_time: {
-        ready_by: readyAt,
-      },
-      delivery_time: {
-        drop_by: dropAt,
-      },
-      surcharges: {
-        hand_unload: job.is_hand_unloading || false,
-        dangerous_goods: job.is_dangerous_goods || false,
-        time_slot: job.is_inbound_connect || null,
-        timeslot_depots: job.is_inbound_connect
-          ? job.timeslot_depots || selectedDepot
-          : "", // Pass selectedDepot here
-        tail_lift: job.is_tailgate_required || false,
-        stackable: false, // If applicable, update this
-      },
-      job_items: jobItems.map((item) => ({
-        id: item.id,
-        name: item.name || "",
-        notes: item.notes || "",
-        quantity: item.quantity,
-        volume: item.volume,
-        weight: item.weight,
-        dimension_height: item.dimension_height,
-        dimension_width: item.dimension_width,
-        dimension_depth: item.dimension_depth,
-        job_destination: jobDestination1 || null,
-        item_type: {
-          id: item.item_type?.id || "",
-          name: item.item_type?.name || "",
-        },
-        created_at: refinedData.created_at || today,
-        updated_at: refinedData.updated_at || today,
-      })),
-    };
+                ? filteredCompanyRates?.map((rate) => ({
+                    company_id: rate.company_id,
+                    seafreight_id: rate.seafreight_id,
+                    area: rate.area,
+                    cbm_rate: rate.cbm_rate,
+                    minimum_charge: rate.minimum_charge,
+                    // toll_enabled: rate.toll_enabled,
+                  }))
+                : [],
+            toll_enabled: refinedData.toll_enabled,
+            job_pickup_address: {
+              suburb: pickUpDestination?.address_city,
+              postcode: pickUpDestination?.address_postal_code,
+              state: pickUpDestination?.address_state,
+            },
 
-    try {
-      const response = await axios.post(apiUrl, payload, {
-        headers: { "Content-Type": "application/json" },
+            freight_type: refinedData.freight_type,
+
+            pickup_time: {
+              ready_by: readyAt,
+            },
+            delivery_time: {
+              drop_by: dropAt,
+            },
+
+            ready_by: readyAt,
+            drop_by: dropAt,
+
+            job_destination_address:
+              jobDestinations.length > 0
+                ? {
+                    suburb: jobDestinations[0]?.address_city,
+                    postcode: jobDestinations[0]?.address_postal_code,
+                    state: jobDestinations[0]?.address_state,
+                  }
+                : null,
+
+            job_items: jobItems.map((item) => ({
+              id: item.id,
+              name: item.name || "",
+              quantity: item.quantity,
+              volume: item.volume,
+              weight: item.weight,
+              dimension_height: item.dimension_height,
+              dimension_width: item.dimension_width,
+              dimension_depth: item.dimension_depth,
+            })),
+
+            surcharges: {
+              hand_unload: job.is_hand_unloading || false,
+              dangerous_goods: job.is_dangerous_goods || false,
+              time_slot: job.is_inbound_connect || false,
+              timeslot_depots: job.is_inbound_connect
+                ? refinedData.timeslot_depots
+                : [],
+              tail_lift: job.is_tailgate_required || false,
+              stackable: false,
+            },
+
+            total_weight: job.totalWeight,
+            total_cbm: job.totalCbm,
+          },
+        },
       });
       const calculationData = response?.data;
       setQuoteCalculationRes({
