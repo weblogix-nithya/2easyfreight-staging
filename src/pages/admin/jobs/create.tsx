@@ -188,7 +188,7 @@ function JobPage() {
   const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(
     null,
   );
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [_isDownloading, setIsDownloading] = useState(false);
 
   const onClose = () => setIsJobCreatedOpen(false);
 
