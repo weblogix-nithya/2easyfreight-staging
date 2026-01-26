@@ -117,7 +117,9 @@ export const DELETE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
 `;
 
 export const CALCULATE_SEA_FREIGHT_QUERY = gql`
-  query CalculateSeaFreight($input: CalculateSeaFreightInput!) {
+  query CalculateSeaFreight(
+    $input: SeafreightPriceCalculationDetailInput!
+  ) {
     calculateSeaFreight(input: $input) {
       freight
       fuel
@@ -133,7 +135,6 @@ export const CALCULATE_SEA_FREIGHT_QUERY = gql`
     }
   }
 `;
-
 
 // JobPriceCalculationDetail TypeScript Types and Interfaces
 

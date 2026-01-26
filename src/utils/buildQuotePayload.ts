@@ -29,7 +29,7 @@ export const buildQuotePayload = ({
     (c) => c.value === job?.job_category_id,
   )?.label;
 
-  const selectedJobTypeName = jobTypeOptions?.find(
+  const _selectedJobTypeName = jobTypeOptions?.find(
     (j) => j.value === job?.job_type_id,
   )?.label;
 
