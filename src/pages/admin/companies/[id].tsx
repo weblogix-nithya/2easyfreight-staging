@@ -560,7 +560,7 @@ function CompanyEdit() {
   const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
   const [updateCompanyRate] = useMutation(UPDATE_COMPANY_RATE_MUTATION);
 
-  const [handleUpdateCompany, { }] = useMutation(UPDATE_COMPANY_MUTATION, {
+  const [handleUpdateCompany, {}] = useMutation(UPDATE_COMPANY_MUTATION, {
     variables: {
       input: { ...company, rate_card_url: undefined, logo_url: undefined },
     },
@@ -648,7 +648,6 @@ function CompanyEdit() {
 
       // Refresh rates from API
       const { data } = await getCompanyRates({ company_id: company.id });
-
 
       if (data?.getRatesByCompany) {
         setCompanyRates(data.getRatesByCompany);
@@ -785,7 +784,7 @@ function CompanyEdit() {
     },
   });
 
-  const [addCustomerToCompany, { }] = useMutation(UPDATE_CUSTOMER_MUTATION, {
+  const [addCustomerToCompany, {}] = useMutation(UPDATE_CUSTOMER_MUTATION, {
     variables: {
       input: {
         id: selectCustomerId,
@@ -808,7 +807,7 @@ function CompanyEdit() {
     },
   });
 
-  const [removeCustomerFromCompany, { }] = useMutation(
+  const [removeCustomerFromCompany, {}] = useMutation(
     UPDATE_CUSTOMER_MUTATION,
     {
       variables: {
@@ -1130,7 +1129,9 @@ function CompanyEdit() {
                           onChange={(e) =>
                             setCompany({
                               ...company,
-                              [e.target.name]: e.target.value ? parseInt(e.target.value, 10) : ""
+                              [e.target.name]: e.target.value
+                                ? parseInt(e.target.value, 10)
+                                : "",
                             })
                           }
                           placeholder=""
@@ -1152,7 +1153,8 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
-                          Job Type (Would you like to display &apos;Standard&apos; for all dates and times?)
+                          Job Type (Would you like to display
+                          &apos;Standard&apos; for all dates and times?)
                         </FormLabel>
 
                         <RadioGroup
@@ -1813,7 +1815,7 @@ function CompanyEdit() {
                                 )}
                                 options={
                                   (groupedSeafreights as Record<string, any[]>)[
-                                  selectedState
+                                    selectedState
                                   ] || []
                                 }
                                 onChange={handleRegionChange}
@@ -1860,6 +1862,35 @@ function CompanyEdit() {
                       <Divider />
 
                       <h3 className="mt-6 mb-4">Notifications</h3>
+                      <Flex className="w-full" alignItems="center">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Toll Enabled
+                        </FormLabel>
+
+                        <RadioGroup
+                          value={company.toll_enabled ? "1" : "0"}
+                          onChange={(e) => {
+                            setCompany({
+                              ...company,
+                              toll_enabled: e === "1" ? true : false,
+                            });
+                          }}
+                        >
+                          <Stack direction="row" pt={3}>
+                            <Radio value="0">No</Radio>
+                            <Radio value="1" pl={6}>
+                              Yes
+                            </Radio>
+                          </Stack>
+                        </RadioGroup>
+                      </Flex>
                       <Flex className="w-full" alignItems="center">
                         <FormLabel
                           display="flex"
