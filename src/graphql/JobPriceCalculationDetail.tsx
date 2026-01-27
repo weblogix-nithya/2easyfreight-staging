@@ -153,6 +153,9 @@ export interface JobPriceCalculationDetail {
   tail_lift: number | null,
   time_slot: number | null,
   total_cbm: number | null,
+  toll_amount: number | null,
+  toll_applied: boolean | null,
+  toll_type: string | null,
 }
 
 
@@ -202,4 +205,7 @@ export const defaultJobPriceCalculationDetail: JobPriceCalculationDetail = {
   stackable: null,
   total: null,
   total_cbm: null,
+  toll_applied: null,
+  toll_type: null,
+  toll_amount: null,
 };
