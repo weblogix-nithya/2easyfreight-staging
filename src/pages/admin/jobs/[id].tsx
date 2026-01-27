@@ -1720,6 +1720,7 @@ function JobEdit() {
         time_slot: Number(calculationData?.time_slot ?? 0),
         tail_lift: Number(calculationData?.tail_lift ?? 0),
         stackable: Number(calculationData?.stackable ?? 0),
+        toll_amount: Number(calculationData?.toll_amount ?? 0),
         total: Number(calculationData?.total ?? 0),
       });
       toast({ title: "Quote Calculation Success", status: "success" });
