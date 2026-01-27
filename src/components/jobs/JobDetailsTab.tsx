@@ -962,8 +962,8 @@ const JobDetailsTab = ({
                           job.pick_up_state == "Victoria"
                             ? "VIC"
                             : job.pick_up_state == "Queensland"
-                            ? "QLD"
-                            : "";
+                              ? "QLD"
+                              : "";
                         const filtereddepotOption = depotOptions.filter(
                           (option) => option.state_code == selectedStateCode,
                         );
@@ -1335,7 +1335,19 @@ const JobDetailsTab = ({
                             {quoteCalculationRes.stackable ?? 0}
                           </Text>
                         </Flex>
-
+                        <Flex justify="space-between" align="center">
+                          <Text
+                            fontSize="sm"
+                            fontWeight="500"
+                            color="gray.700"
+                            pr={2}
+                          >
+                            Toll Amount:
+                          </Text>
+                          <Text fontSize="sm" fontWeight="600" color="blue.600">
+                            {quoteCalculationRes.toll_amount}
+                          </Text>
+                        </Flex>
                         {/* Total */}
                         <Flex justify="space-between" align="center">
                           <Text

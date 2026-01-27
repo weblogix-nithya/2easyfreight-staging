@@ -3063,7 +3063,7 @@ function JobPage() {
                                           color="gray.700"
                                           pr={2}
                                         >
-                                          Freight:
+                                          Toll Amount:
                                         </Text>
                                         <Text
                                           fontSize="sm"
