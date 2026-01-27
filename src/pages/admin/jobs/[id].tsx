@@ -414,8 +414,8 @@ function JobEdit() {
           data.job.pick_up_state == "Victoria"
             ? "VIC"
             : data.job.pick_up_state == "Queensland"
-            ? "QLD"
-            : "";
+              ? "QLD"
+              : "";
         const selectedLocation = locationOptions.find(
           (location) => location.label == data.job.pick_up_state,
         );
@@ -621,7 +621,7 @@ function JobEdit() {
       const _matchedJobType = jobTypeOptions.find(
         (type) => type.id === jobData.job.job_type_id,
       );
-        const selectedCompany = companiesOptions.find(
+      const selectedCompany = companiesOptions.find(
         (company) => company.value === Number(job.company_id),
       );
 
@@ -643,7 +643,7 @@ function JobEdit() {
         // job_type: matchedJobType?.name || null,
         // job_type_color: matchedJobType?.color || null
       });
-      console.log(jobData.job.transport_location,selectedLocation.label,'j')
+      console.log(jobData.job.transport_location, selectedLocation.label, "j");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobData, jobCategories, jobTypeOptions, companyRates]); // Use 'jobData' instead of 'data'
@@ -1562,23 +1562,23 @@ function JobEdit() {
     return true;
   };
 
-    const [handleCalculateSeaFreight] = useLazyQuery(
-      CALCULATE_SEA_FREIGHT_QUERY,
-      {
-        fetchPolicy: "no-cache",
-        onCompleted: (data) => {
-          setQuoteCalculationRes((prev) => ({
-            ...prev,
-            ...data.calculateSeaFreight,
-          }));
-          // freightCalculatedRef.current = true;
-          // setIsQuotePrice(true);
-        },
-        onError: (error) => {
-          showGraphQLErrorToast(error);
-        },
+  const [handleCalculateSeaFreight] = useLazyQuery(
+    CALCULATE_SEA_FREIGHT_QUERY,
+    {
+      fetchPolicy: "no-cache",
+      onCompleted: (data) => {
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
+          ...data.calculateSeaFreight,
+        }));
+        // freightCalculatedRef.current = true;
+        // setIsQuotePrice(true);
       },
-    );
+      onError: (error) => {
+        showGraphQLErrorToast(error);
+      },
+    },
+  );
 
   const sendFreightData = async () => {
     // const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
@@ -1621,7 +1621,14 @@ function JobEdit() {
     const filteredCompanyRates = companyRates?.filter(
       (rate) => rate.state === jobDestination1?.state,
     );
-    // console.log(filteredCompanyRates, "filteredCompanyRates")
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+      job.job_category_id,
+      jobItems,
+      companyWeight,
+    );
+
+    const finalCBM = parseFloat(totalCBM.toFixed(2));
+    const finalWeight = parseFloat(totalWeight.toFixed(2));
 
     try {
       const response = await handleCalculateSeaFreight({
@@ -1633,11 +1640,11 @@ function JobEdit() {
               job.pick_up_state ||
               pickUpDestination.address_state,
             state_code: refinedData.state_code || refinedData.pick_up_stateCode,
-            service_choice: selectedJobTypeName ||refinedData.service_choice,
+            service_choice: selectedJobTypeName || refinedData.service_choice,
             company_rates:
               ((job.job_category_id == 1 || job.job_category_id == 2) &&
-          selectedstate?.value === "QLD") ||
-        selectedstate?.value === "VIC"
+                selectedstate?.value === "QLD") ||
+              selectedstate?.value === "VIC"
                 ? filteredCompanyRates?.map((rate) => ({
                     company_id: rate.company_id,
                     seafreight_id: rate.seafreight_id,
@@ -1696,9 +1703,8 @@ function JobEdit() {
               tail_lift: job.is_tailgate_required || false,
               stackable: false,
             },
-
-            total_weight: job.totalWeight,
-            total_cbm: job.totalCbm,
+            total_weight: finalWeight,
+            total_cbm: finalCBM,
           },
         },
       });
