@@ -84,7 +84,6 @@ export default function AdminLayout(props: DashboardLayoutProps) {
   };
 
   useEffect(() => {
-    console.log("Git Check")
     window.document.documentElement.dir = "ltr";
     if (
       cookies.access_token === "undefined" ||
