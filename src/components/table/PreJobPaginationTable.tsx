@@ -325,9 +325,9 @@ const PaginationTable = <T extends object>({
           {pageRows.map((row, index) => {
             // console.log(row.original?.job?.name, "row before prepare");
             prepareRow(row);
-            // console.log(row.original?.job?.name, "row after prepare");
-            prepareRow(row);
+
             const status = row.original?.job?.job_status?.name;
+
             const driver = row.original.driver;
             const prevDriver = pageRows[index - 1]?.original?.driver;
 
@@ -374,7 +374,7 @@ const PaginationTable = <T extends object>({
                                 fontSize="md"
                                 style={{ marginRight: "10px" }}
                               >
-                                Driver: {driver.full_name} — {driver.driver_no}
+                                #{driver.id} : {driver.full_name}
                               </Badge>
                               <Badge
                                 colorScheme="purple"
@@ -417,13 +417,15 @@ const PaginationTable = <T extends object>({
 
                               )}
                               {driver.bgcolor === "blue" && (
-                                <Badge
-                                  colorScheme="red"
-                                  variant="subtle"
-                                  fontSize="sm"
-                                >
-                                  Driver price: {driver.total_jobs_today_price ?? "-"}
-                                </Badge>
+                                <>
+                                  <Badge colorScheme="red" variant="subtle" fontSize="sm">
+                                    Today Price: {driver.total_jobs_today_price ?? 0}
+                                  </Badge>
+
+                                  <Badge colorScheme="red" variant="subtle" fontSize="sm">
+                                    Weekly Price: {driver.total_jobs_weekly_price ?? 0}
+                                  </Badge>
+                                </>
                               )}
                             </Flex>
                           </Flex>
@@ -854,7 +856,7 @@ const PaginationTable = <T extends object>({
           </>
         )}
       </HStack>
-    </VStack >
+    </VStack>
   );
 };
 

@@ -36,6 +36,7 @@ import CustomInputField from "components/fields/CustomInputField";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import JobInputTable from "components/jobs/JobInputTable";
+import TruckVisualization from "components/jobs/TruckVisualization";
 import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
@@ -70,6 +71,7 @@ import {
 } from "graphql/JobPriceCalculationDetail";
 import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
 import { ADD_MEDIA_MUTATION } from "graphql/media";
+import { FIND_SUITABLE_VEHICLE } from 'graphql/vehicle';
 import {
   formatDateTimeToDB,
   // getTimezone,
@@ -91,7 +93,9 @@ import {
 } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-import { calculateFinalWeightCBM } from "utils/calculatePalletSpacesOccupied";
+// import { calculateFinalWeightCBM } from "utils/calculatePalletSpacesOccupied";
+import { Vehicle } from "types/truck";
+import { calculateFinalWeightCBM, extractBoxesFromJobItems } from "utils/truckCalculations";
 // import { buildQuotePayload } from "utils/buildQuotePayload";
 
 function JobPage() {
@@ -189,6 +193,8 @@ function JobPage() {
     null,
   );
   const [_isDownloading, setIsDownloading] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [isVehicleLoading, setIsVehicleLoading] = useState(false)
 
   const onClose = () => setIsJobCreatedOpen(false);
 
@@ -563,11 +569,11 @@ function JobPage() {
           const jobDestination1 =
             jobDestinations.length > 0
               ? {
-                  state: jobDestinations[0]?.address_state,
-                  suburb: jobDestinations[0]?.address_city,
-                  postcode: jobDestinations[0]?.address_postal_code,
-                  address: jobDestinations[0]?.address,
-                }
+                state: jobDestinations[0]?.address_state,
+                suburb: jobDestinations[0]?.address_city,
+                postcode: jobDestinations[0]?.address_postal_code,
+                address: jobDestinations[0]?.address,
+              }
               : null;
 
           const filteredCompanyRates = companyRates?.filter(
@@ -623,10 +629,10 @@ function JobPage() {
                   job_destination_address:
                     jobDestinations.length > 0
                       ? {
-                          suburb: jobDestinations[0]?.address_city,
-                          postcode: jobDestinations[0]?.address_postal_code,
-                          state: jobDestinations[0]?.address_state,
-                        }
+                        suburb: jobDestinations[0]?.address_city,
+                        postcode: jobDestinations[0]?.address_postal_code,
+                        state: jobDestinations[0]?.address_state,
+                      }
                       : null,
 
                   job_items: jobItems.map((item) => ({
@@ -804,7 +810,7 @@ function JobPage() {
   //   }
   // }, [router.isReady, pendingJobId]);
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: () => {
       /*toast({
         title: "Media updated",
@@ -1112,7 +1118,7 @@ function JobPage() {
     } catch (e) {
       // console.log(e);
     }
-  }, [job, jobDateAt, readyAt, dropAt]);
+  }, [jobDateAt, readyAt, dropAt]);
 
   useEffect(() => {
     dateChanged();
@@ -1385,7 +1391,74 @@ function JobPage() {
     // sendFreightData();
     handleCreateJob();
   };
+  const {
+    refetch: findVehicle,
+    data: vehicleData,
+    loading: vehicleQueryLoading,
+  } = useQuery(
+    FIND_SUITABLE_VEHICLE,
+    {
+      skip: true,
+      onCompleted: (data) => {
+        if (data?.findSuitableVehicle?.vehicle) {
+          setSelectedVehicle(data.findSuitableVehicle.vehicle);
+          setIsVehicleLoading(false);
+        }
+      },
+      onError: (error) => {
+        console.error("Vehicle fetch error:", error);
+        setIsVehicleLoading(false);
+      }
+    }
+  );
 
+  // ADD THIS MEMOIZED BOXES CALCULATION
+  const boxes = useMemo(() => {
+    return extractBoxesFromJobItems(jobItems);
+  }, [jobItems]);
+
+  useEffect(() => {
+    if (jobItems.length > 0 && jobItems.some(item =>
+      item.quantity > 0 &&
+      item.dimension_depth > 0 &&
+      item.dimension_width > 0 &&
+      item.dimension_height > 0
+    )) {
+      setIsVehicleLoading(true);
+
+      console.log("Calculating totals for vehicle selection...", vehicleData);
+
+      const { totalCBM, totalWeight, occupiedSpaces } = calculateFinalWeightCBM(
+        job.job_category_id,
+        jobItems,
+        companyWeight || 0,
+        vehicleData?.findSuitableVehicle?.vehicle
+      );
+
+      const validBoxes = extractBoxesFromJobItems(jobItems);
+
+      if (validBoxes.length > 0) {
+        const maxLength = Math.max(...validBoxes.map(b => b.length / 100));
+        const maxWidth = Math.max(...validBoxes.map(b => b.width / 100));
+        const maxHeight = Math.max(...validBoxes.map(b => b.height / 100));
+
+        findVehicle({
+          input: {
+            total_pallets: Math.ceil(occupiedSpaces),
+            max_length: maxLength,
+            max_width: maxWidth,
+            max_height: maxHeight,
+            total_weight: totalWeight,
+            total_cbm: totalCBM,
+          }
+        });
+      } else {
+        setIsVehicleLoading(false);
+      }
+    } else {
+      setSelectedVehicle(null);
+    }
+  }, [jobItems, job.job_category_id, companyWeight, findVehicle, vehicleData]);
   // const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
   const [handleCalculateSeaFreight] = useLazyQuery(
@@ -1441,11 +1514,11 @@ function JobPage() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -1565,15 +1638,15 @@ function JobPage() {
             company_rates:
               ((job.job_category_id == 1 || job.job_category_id == 2) &&
                 refinedData.pick_up_stateCode === "QLD") ||
-              refinedData.pick_up_stateCode === "VIC"
+                refinedData.pick_up_stateCode === "VIC"
                 ? filteredCompanyRates?.map((rate) => ({
-                    company_id: rate.company_id,
-                    seafreight_id: rate.seafreight_id,
-                    area: rate.area,
-                    cbm_rate: rate.cbm_rate,
-                    minimum_charge: rate.minimum_charge,
-                    // toll_enabled: rate.toll_enabled,
-                  }))
+                  company_id: rate.company_id,
+                  seafreight_id: rate.seafreight_id,
+                  area: rate.area,
+                  cbm_rate: rate.cbm_rate,
+                  minimum_charge: rate.minimum_charge,
+                  // toll_enabled: rate.toll_enabled,
+                }))
                 : [],
             toll_enabled: refinedData.toll_enabled,
             job_pickup_address: {
@@ -1597,10 +1670,10 @@ function JobPage() {
             job_destination_address:
               jobDestinations.length > 0
                 ? {
-                    suburb: jobDestinations[0]?.address_city,
-                    postcode: jobDestinations[0]?.address_postal_code,
-                    state: jobDestinations[0]?.address_state,
-                  }
+                  suburb: jobDestinations[0]?.address_city,
+                  postcode: jobDestinations[0]?.address_postal_code,
+                  state: jobDestinations[0]?.address_state,
+                }
                 : null,
 
             job_items: jobItems.map((item) => ({
@@ -1679,11 +1752,11 @@ function JobPage() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -1700,11 +1773,11 @@ function JobPage() {
 
       destination: jobDestination1
         ? {
-            state: jobDestination1.state,
-            suburb: jobDestination1.suburb,
-            postcode: jobDestination1.postcode,
-            address: jobDestination1.address,
-          }
+          state: jobDestination1.state,
+          suburb: jobDestination1.suburb,
+          postcode: jobDestination1.postcode,
+          address: jobDestination1.address,
+        }
         : {},
 
       items: jobItems.map((item) => ({
@@ -1732,15 +1805,15 @@ function JobPage() {
       company_rates:
         ((job.job_category_id == 1 || job.job_category_id == 2) &&
           refinedData.pick_up_stateCode === "QLD") ||
-        refinedData.pick_up_stateCode === "VIC"
+          refinedData.pick_up_stateCode === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              area: rate.area,
-              seafreight_id: rate.seafreight_id,
-              cbm_rate: rate.cbm_rate,
-              minimum_charge: rate.minimum_charge,
-              // toll_enabled: rate.toll_enabled,
-            }))
+            company_id: rate.company_id,
+            area: rate.area,
+            seafreight_id: rate.seafreight_id,
+            cbm_rate: rate.cbm_rate,
+            minimum_charge: rate.minimum_charge,
+            // toll_enabled: rate.toll_enabled,
+          }))
           : [],
       toll_enabled: refinedData.toll_enabled,
       surcharges: {
@@ -2013,7 +2086,7 @@ function JobPage() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (_e) => {}
+                      (_e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -2028,7 +2101,7 @@ function JobPage() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (_e) => {}
+                      (_e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -2095,11 +2168,11 @@ function JobPage() {
                       setIsSameDayJob(today === selected);
                       setIsTomorrowJob(
                         new Date(selected).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
+                        new Date(
+                          new Date(today).setDate(
+                            new Date(today).getDate() + 1,
+                          ),
+                        ).toDateString(),
                       );
                     }}
                   />
@@ -2525,6 +2598,14 @@ function JobPage() {
                     </Flex>
                   </Box>
                 </Box>
+                <Divider className="my-12" />
+
+                {/* TRUCK VISUALIZATION */}
+                <TruckVisualization
+                  vehicle={selectedVehicle}
+                  boxes={boxes}
+                  isLoading={isVehicleLoading || vehicleQueryLoading}
+                />
 
                 <Divider className="my-12" />
 
@@ -2588,12 +2669,12 @@ function JobPage() {
                         value={
                           job.base_notes ? job.base_notes : customerBaseNotes
                         }
-                        // onChange={(e) =>
-                        //   setJob({
-                        //     ...job,
-                        //     [e.target.name]: e.target.value,
-                        //   })
-                        // }
+                      // onChange={(e) =>
+                      //   setJob({
+                      //     ...job,
+                      //     [e.target.name]: e.target.value,
+                      //   })
+                      // }
                       />
                     )}
                   </Box>
@@ -2634,7 +2715,7 @@ function JobPage() {
                                   jobDestinations[0].address_state == "Victoria"
                                     ? "VIC"
                                     : jobDestinations[0].address_state ==
-                                        "Queensland"
+                                      "Queensland"
                                       ? "QLD"
                                       : "";
                                 const filtereddepotOp = depotOptions.filter(
@@ -3063,7 +3144,7 @@ function JobPage() {
                                           color="gray.700"
                                           pr={2}
                                         >
-                                          Toll Amount:
+                                          West Gate Toll Charges:
                                         </Text>
                                         <Text
                                           fontSize="sm"
