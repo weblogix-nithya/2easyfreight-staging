@@ -18,6 +18,12 @@ option {
   border-bottom: 1px solid black !important;
 } */
 
-.chakra-modal__content-container {
-  pointer-events: none !important;
+
+.chakra-portal:has(.map-drawer) .chakra-modal__content-container {
+  pointer-events: none;
+}
+
+/* Re-enable pointer events on the actual drawer panel */
+.map-drawer {
+  pointer-events: auto;
 }
