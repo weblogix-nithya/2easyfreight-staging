@@ -33,7 +33,7 @@ const JobInputTable = <_T extends object>({
   optionsSelect = [],
   plugins = [],
 }: PaginationTableProps<JobItem>) => {
-  const { getTableProps, getTableBodyProps, headerGroups} =
+  const { getTableProps, getTableBodyProps, headerGroups } =
     useTable<JobItem>(
       { ...optionsSelect, columns, data },
       usePagination,
@@ -97,41 +97,6 @@ const JobInputTable = <_T extends object>({
 
                 <Td>
                   <Flex align="center">
-                    <CustomInputField
-                      // inputRef={heightRef}
-                      type="number"
-                      showLabel={false}
-                      placeholder="0.00"
-                      name="dimension_height"
-                      defaultValue={
-                        row.dimension_height_cm
-                          ? row.dimension_height_cm
-                          : (row.dimension_height * 100).toFixed(2)
-                      }
-                      suffixText="cm"
-                      onClick={handleInputHighlight}
-                      onChange={(e) => {
-                        onValueChanged(
-                          {
-                            ...row,
-                            [e.target.name]:
-                              parseFloat(e.target.value) / 100 || 0,
-                            [e.target.name + "_cm"]:
-                              parseFloat(e.target.value) || 0,
-                          },
-                          index,
-                          "volume",
-                        );
-                      }}
-                      maxWidth="95%"
-                      mb="0"
-                      inputStyles={
-                        row.dimension_height_cm == 0.0 ||
-                        (row.dimension_height * 100).toFixed(2) == "0.00"
-                          ? { color: "var(--chakra-colors-secondaryGray-600)" }
-                          : null
-                      }
-                    />
 
                     <CustomInputField
                       type="number"
@@ -163,12 +128,11 @@ const JobInputTable = <_T extends object>({
                       mb="0"
                       inputStyles={
                         row.dimension_width_cm == 0.0 ||
-                        (row.dimension_width * 100).toFixed(2) == "0.00"
+                          (row.dimension_width * 100).toFixed(2) == "0.00"
                           ? { color: "var(--chakra-colors-secondaryGray-600)" }
                           : null
                       }
                     />
-
                     <CustomInputField
                       type="number"
                       // inputRef={depthRef}
@@ -199,7 +163,42 @@ const JobInputTable = <_T extends object>({
                       mb="0"
                       inputStyles={
                         row.dimension_depth_cm == 0.0 ||
-                        (row.dimension_depth * 100).toFixed(2) == "0.00"
+                          (row.dimension_depth * 100).toFixed(2) == "0.00"
+                          ? { color: "var(--chakra-colors-secondaryGray-600)" }
+                          : null
+                      }
+                    />
+                    <CustomInputField
+                      // inputRef={heightRef}
+                      type="number"
+                      showLabel={false}
+                      placeholder="0.00"
+                      name="dimension_height"
+                      defaultValue={
+                        row.dimension_height_cm
+                          ? row.dimension_height_cm
+                          : (row.dimension_height * 100).toFixed(2)
+                      }
+                      suffixText="cm"
+                      onClick={handleInputHighlight}
+                      onChange={(e) => {
+                        onValueChanged(
+                          {
+                            ...row,
+                            [e.target.name]:
+                              parseFloat(e.target.value) / 100 || 0,
+                            [e.target.name + "_cm"]:
+                              parseFloat(e.target.value) || 0,
+                          },
+                          index,
+                          "volume",
+                        );
+                      }}
+                      maxWidth="95%"
+                      mb="0"
+                      inputStyles={
+                        row.dimension_height_cm == 0.0 ||
+                          (row.dimension_height * 100).toFixed(2) == "0.00"
                           ? { color: "var(--chakra-colors-secondaryGray-600)" }
                           : null
                       }
@@ -299,5 +298,5 @@ const JobInputTable = <_T extends object>({
       </Table>
     </VStack>
   );
-};    
+};
 export default JobInputTable;
