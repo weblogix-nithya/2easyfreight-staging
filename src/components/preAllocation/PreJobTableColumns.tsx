@@ -65,12 +65,13 @@ export const isCustomer = (state: RootState) => state.user.isCustomer;
 
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
-    <Text fontSize="sm" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {formatAddress(row?.original?.job?.pick_up_destinations)}
-    </Text>
     <Text fontSize="sm">
       {row.originaljob.pick_up_destination.address_business_name || "-"}
     </Text>
+    <Text fontSize="sm" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+      {formatAddress(row?.original?.job?.pick_up_destinations)}
+    </Text>
+
   </>
 );
 export const JobDestinationsCell = ({ row }: any) => {
@@ -281,7 +282,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     ) || [];
   return (
     <>
-      {pickupDest?.updated_at && showPickupTime && (
+      {pickupDest?.pickup_at && showPickupTime && (
         <>
           <Text fontSize="sm" color="blue.600" mb={1}>
             Arrival time:{" "}
@@ -289,14 +290,15 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
           </Text>
           <Text fontSize="sm" color="red.600" mb={1}>
             Collection time:{" "}
-            {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+            {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
+      <Text>{pickupDest?.address_business_name || "-"}</Text>
       <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
-      <Text>{pickupDest?.address_business_name || "-"}</Text>
+
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
@@ -324,9 +326,9 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
-  const collectionTime = pickupDest?.updated_at
+  const collectionTime = pickupDest?.pickup_at
     ? `Collection time: ${formatDate(
-      pickupDest.updated_at,
+      pickupDest.pickup_at,
       "HH:mm, DD/MM/YYYY",
     )}\n`
     : "";
@@ -347,7 +349,7 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
 
   return (
     <>
-      {pickupDest?.updated_at && showPickupTime && (
+      {pickupDest?.pickup_at && showPickupTime && (
         <>
           <Text fontSize="sm" color="blue.600" mb={1}>
             Arrival time:{" "}
@@ -355,14 +357,15 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
           </Text>
           <Text fontSize="sm" color="red.600" mb={1}>
             Collection time:{" "}
-            {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+            {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
+      <Text fontSize="md">{pickupDest?.address_business_name || "-"}</Text>
       <Text mb="2" fontSize="sm" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
-      <Text fontSize="sm">{pickupDest?.address_business_name || "-"}</Text>
+
     </>
   );
 };
@@ -397,12 +400,13 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
           </Text>
         </>
       )}
+      <Text fontSize="md">{filteredDestinations[0]?.address_business_name || "-"}</Text>
       <Text fontSize="sm" isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
       </Text>
-      <Text fontSize="sm">{filteredDestinations[0]?.address_business_name || "-"}</Text>
+
     </>
   );
 };
@@ -483,7 +487,7 @@ export const ItemsDimensionCell = ({ row }: any) => {
           key={`items-dimension-${item.id}`}
           w="max-content"
         >
-          {`${(item.dimension_height * 100).toFixed(0)}x${(
+          {`${(item.quantity)} x ${(item.weight)} x ${(item.dimension_height * 100).toFixed(0)}x${(
             item.dimension_width * 100
           ).toFixed(0)}x${(item.dimension_depth * 100).toFixed(0)}`}
         </Text>
@@ -506,6 +510,8 @@ export const ItemsDimensionCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return items?.map((item: any) => {
     return [
+      `${(item.quantity * 100)?.toFixed(2)}x `,
+      `${(item.weight * 100)?.toFixed(2)}cm x `,
       `${(item.dimension_height * 100)?.toFixed(2)}cm x `,
       `${(item.dimension_width * 100)?.toFixed(2)}cm x `,
       `${(item.dimension_depth * 100)?.toFixed(2)}cm  \n`,
@@ -745,11 +751,11 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
   const toast = useToast();
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
-    if (!color) return { bg: "gray.100", color: "gray.700" };
+    if (!color) return { bg: "gray", color: "#fff", boxShadow: `0 0 0 1px ${color}` };
     if (color.startsWith("#")) {
-      return { bg: color + "20", color: color };
+      return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
     }
-    return { bg: `${color}.100`, color: `${color}.700`, };
+    return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
   };
   const canRemove = !!job?.preallocation_driver_id;
 
@@ -817,10 +823,10 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
           {labels.map((label) => (
             <Badge
               key={label.id}
-              fontSize="10px"
-              px="6px"
+              fontSize="12px"
+              px="8px"
               py="2px"
-              borderRadius="full"
+              borderRadius="4px"
               whiteSpace="nowrap"
               {...getBadgeStyle(label.color)}
             >
@@ -851,7 +857,7 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
           )}
 
           {/* Job Name RIGHT */}
-          <Text fontSize="sm" ml="2" noOfLines={1}>
+          <Text ml="2" noOfLines={1}>
             {job?.name || "-"}
           </Text>
         </Flex>
@@ -988,7 +994,7 @@ export const AdminNotesCell = ({ row }: any) => {
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
-      <Text fontSize="sm" maxW="140px" noOfLines={1}>
+      <Text fontSize="md" fontWeight="bold" maxW="140px" noOfLines={1}>
         {row?.original?.job?.timeslot || "-"}
       </Text>
       <EditableFieldPopover
@@ -1013,8 +1019,34 @@ export const TotalVolumeCell = ({ row }: any) => {
   return <Text fontSize="sm" maxW="120px">{row?.original?.job?.total_volume || "-"}</Text>;
 };
 
+export const Charges = ({ row }: any) => {
+  const charges = row?.original?.job?.price_summary?.charges || [];
+
+  return (
+    <>
+      {charges.length > 0 ? (
+        charges.map((item: any, index: number) => (
+          <Text key={index} fontSize="sm" w="180px">
+            {item.name} - ${item.total}
+          </Text>
+        ))
+      ) : (
+        <Text fontSize="sm">0</Text>
+      )}
+    </>
+  );
+};
+
+export const SubTotal = ({ row }: any) => {
+  return <Text fontSize="sm" maxW="160px">{row?.original?.job?.price_summary?.sub_total || "0"}</Text>;
+};
+
+export const Tax = ({ row }: any) => {
+  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.price_summary?.tax || "0"}</Text>;
+};
+
 export const TotalPrice = ({ row }: any) => {
-  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+  return <Text fontSize="sm" maxW="160px">{row?.original?.job?.price_summary?.total || "0"}</Text>;
 };
 
 export const SuburbAreaCell = ({ row }: any) => {
@@ -1035,6 +1067,25 @@ export const SuburbAreaCell = ({ row }: any) => {
         {area}
       </Badge>
       <Text fontSize="xs" mt={1}>{row?.original?.job?.driver?.full_name || ""}</Text>
+    </>
+  );
+};
+
+export const FromQuadCell = ({ row }: any) => {
+  const fromQuad = row?.original?.job?.pickup_quad || "";
+  return (
+    <>
+      <Text mt={1} fontSize="sm" fontWeight="bold">{fromQuad}</Text>
+    </>
+  );
+};
+
+export const ToQuadCell = ({ row }: any) => {
+  const toQuad = row?.original?.job?.delivery_quad || "";
+
+  return (
+    <>
+      <Text mt={1} fontSize="sm" fontWeight="bold">{toQuad}</Text>
     </>
   );
 };
@@ -1092,6 +1143,16 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     // ✅ Accessor for suburb_area sorting
     accessor: (row: any) => row?.job?.suburb_area || '',
     enableSorting: true,
+  },
+  {
+    id: "pickup_quad",
+    Header: "From Quad",
+    Cell: FromQuadCell,
+  },
+  {
+    id: "delivery_quad",
+    Header: "To Quad",
+    Cell: ToQuadCell,
   },
   {
     id: "job_type.name",
@@ -1153,7 +1214,23 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     Cell: TotalVolumeCell,
   },
   {
-    id: "job_price_calculation_detail.total",
+    id: "price_summary.charges",
+    Header: "Charges",
+    Cell: Charges,
+  },
+  {
+    id: "price_summary.sub_total",
+    Header: "Sub Total",
+    Cell: SubTotal,
+  },
+
+  {
+    id: "price_summary.tax",
+    Header: "Tax",
+    Cell: Tax,
+  },
+  {
+    id: "price_summary.total",
     Header: "Total Price",
     Cell: TotalPrice,
   },
@@ -1173,11 +1250,6 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     Header: "category",
     Cell: CategoryCell,
   },
-  // {
-  //   id: "suburb_area,area_color",
-  //   Header: "Quad",
-  //   Cell: SuburbAreaCell,
-  // },
   {
     id: "company.name",
     Header: "Company",
@@ -1396,7 +1468,23 @@ export const bulkassigntableColumn = [
     Cell: TotalVolumeCell,
   },
   {
-    id: "job_price_calculation_detail.total",
+    id: "price_summary.charges",
+    Header: "Charges",
+    Cell: Charges,
+  },
+  {
+    id: "price_summary.sub_total",
+    Header: "Sub Total",
+    Cell: SubTotal,
+  },
+
+  {
+    id: "price_summary.tax",
+    Header: "Tax",
+    Cell: Tax,
+  },
+  {
+    id: "price_summary.total",
     Header: "Total Price",
     Cell: TotalPrice,
   },
@@ -1416,6 +1504,16 @@ export const bulkassigntableColumn = [
     id: "job_category.name",
     Header: "category",
     Cell: CategoryCell,
+  },
+  {
+    id: "pickup_quad",
+    Header: "From Quad",
+    Cell: FromQuadCell,
+  },
+  {
+    id: "delivery_quad",
+    Header: "To Quad",
+    Cell: ToQuadCell,
   },
   {
     id: "suburb_area,area_color",

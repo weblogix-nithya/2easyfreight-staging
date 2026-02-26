@@ -317,6 +317,8 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           no_max_pallets
           current_suburb
           total_jobs_today_price
+          total_jobs_weekly_price
+          
         }
         job {
           id
@@ -461,6 +463,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           bgcolor
           current_suburb
           total_jobs_today_price
+          total_jobs_weekly_price
         }
         job {
           id
@@ -469,6 +472,8 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           driver_id
           preallocation_driver_id
           suburb_area
+          pickup_quad
+          delivery_quad
           weight_color
           volume_color
           area_color
@@ -549,10 +554,15 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
               downloadable_url
             }
           }
-          job_price_calculation_detail {
-            job_id
+          price_summary {
+          sub_total
+          tax
+          total
+          charges {
+            name
             total
           }
+        }
         }
       }
     }
@@ -1094,14 +1104,14 @@ export type Job = {
   media_admin?: any[] | null;
 
   [key: string]:
-    | string
-    | number
-    | null
-    | boolean
-    | undefined
-    | Date
-    | any[]
-    | any;
+  | string
+  | number
+  | null
+  | boolean
+  | undefined
+  | Date
+  | any[]
+  | any;
 };
 
 export const defaultJob: Job = {
