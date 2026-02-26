@@ -398,8 +398,6 @@ const PaginationTable = <T extends object>({
                                 )}
                               </Badge>
 
-
-                              {/* ✅ Show "Assign Jobs" button ONLY for pre-allocated (yellow) */}
                               {driver.bgcolor === "yellow" && (
                                 <Button
                                   type="button"
