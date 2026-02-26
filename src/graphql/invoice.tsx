@@ -94,7 +94,6 @@ export const GET_INVOICES_QUERY = gql`
     }
   }
 `;
-
 export const GET_INVOICE_TOTALS_QUERY = gql`
   query invoices(
     $query: String
