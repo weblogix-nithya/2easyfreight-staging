@@ -17,3 +17,7 @@ option {
 /* .css-en-xlrwr4 {
   border-bottom: 1px solid black !important;
 } */
+
+.chakra-modal__content-container {
+  pointer-events: none !important;
+}

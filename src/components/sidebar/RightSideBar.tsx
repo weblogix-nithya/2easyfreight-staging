@@ -248,7 +248,6 @@ function RightSideBar() {
         trapFocus={false}
         blockScrollOnMount={false}
       >
-        <DrawerOverlay pointerEvents="none" />
         <DrawerContent bg={sidebarBackgroundColor} pointerEvents="auto">
           <DrawerCloseButton
             zIndex="3"
