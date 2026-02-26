@@ -1407,6 +1407,7 @@ function JobPage() {
   );
 
   const sendFreightData = async () => {
+    console.log('first')
     if (!validateAddresses()) return;
     if (!validateTimeslotDepot()) return;
     if (
