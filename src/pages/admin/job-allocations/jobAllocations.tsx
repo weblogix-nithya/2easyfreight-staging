@@ -412,7 +412,7 @@ export default function JobAllocationIndex() {
 
   return (
     <AdminLayout>
-      <RightSideBar />
+      <RightSideBar setMarkers={setMarkers}/>
       <Box
         pt={{ base: "130px", md: "97px", xl: "97px" }}
         w="full"
