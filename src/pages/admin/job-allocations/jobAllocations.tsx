@@ -253,7 +253,7 @@ export default function JobAllocationIndex() {
     return () => debouncedCenterChangeHandler.cancel?.();
   }, [debouncedCenterChangeHandler]);
 
-  const [_getRoute, { }] = useLazyQuery(GET_ROUTE_QUERY, {
+  const [_getRoute, {}] = useLazyQuery(GET_ROUTE_QUERY, {
     variables: {
       id: selectedRouteId,
     },
@@ -265,7 +265,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getJob, { }] = useLazyQuery(GET_JOB_QUERY, {
+  const [getJob, {}] = useLazyQuery(GET_JOB_QUERY, {
     variables: {
       id: selectedJobId,
     },
@@ -278,7 +278,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getDriverCurrentRoute, { }] = useLazyQuery(
+  const [getDriverCurrentRoute, {}] = useLazyQuery(
     GET_DRIVER_CURRENT_ROUTE_QUERY,
     {
       variables: {
@@ -320,7 +320,6 @@ export default function JobAllocationIndex() {
     setDeliveryAddress("");
     setAustralianState("");
   }
-
 
   function onMarkerClick(data: any) {
     if (data.job_id) {
@@ -535,7 +534,7 @@ export default function JobAllocationIndex() {
                 </Box>
 
                 <Box p="2" width="350px" minW={0}>
-                  <Select
+                  {/* <Select
                     isMulti={true}
                     placeholder="All available drivers"
                     value={
@@ -583,7 +582,54 @@ export default function JobAllocationIndex() {
                     className="select mb-0"
                     classNamePrefix="two-easy-select"
                     chakraStyles={{}}
-                  ></Select>
+                  ></Select> */}
+                  <Select
+                    isMulti
+                    placeholder="All available drivers"
+                    value={
+                      hasUserChosenDrivers
+                        ? driverOptions.filter((opt) =>
+                            selectedDriverIds.includes(opt.value),
+                          )
+                        : []
+                    }
+                    options={driverOptions.filter((opt) =>
+                      selectedVehicleClassIds.includes(
+                        opt.data.vehicle_class_id,
+                      ),
+                    )}
+                    formatOptionLabel={(option) => (
+                      <AvailableDriverCard driver={option.data} />
+                    )}
+                    filterOption={(candidate, inputValue) => {
+                      if (!inputValue) return true;
+
+                      const search = inputValue.toLowerCase().trim();
+
+                      const nameMatch = candidate.data.full_name
+                        ?.toLowerCase()
+                        .includes(search);
+
+                      const idMatch = String(candidate.data.id).includes(
+                        search,
+                      );
+
+                      return nameMatch || idMatch;
+                    }}
+                    onChange={(e) => {
+                      if (!e || e.length === 0) {
+                        setHasUserChosenDrivers(false);
+                        setSelectedDriverIds([]);
+                        return;
+                      }
+                      setHasUserChosenDrivers(true);
+                      setSelectedDriverIds(
+                        e.map((opt: any) => Number(opt.value)),
+                      );
+                    }}
+                    className="select mb-0"
+                    classNamePrefix="two-easy-select"
+                  />
                 </Box>
                 <Box p="2">
                   <Tooltip
@@ -617,8 +663,8 @@ export default function JobAllocationIndex() {
               overflowY: "auto",
               overflowX: "hidden",
             }}
-          // minW={0}
-          //  height="100vh"
+            // minW={0}
+            //  height="100vh"
           >
             <Flex className=" flex-col" minW={0}>
               <Flex className="relative">
@@ -643,9 +689,9 @@ export default function JobAllocationIndex() {
                 />
               </Flex>
               {customerName ||
-                pickupAddress ||
-                pickupAddress ||
-                australianState ? (
+              pickupAddress ||
+              pickupAddress ||
+              australianState ? (
                 <Flex className="pt-4 flex-wrap align-center">
                   <p className="text-sm mr-1">Filters: </p>
 
@@ -908,9 +954,9 @@ export default function JobAllocationIndex() {
                   ? true
                   : false
               }
-            // options={{
-            //   mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID, // 👈 dynamically load from env
-            // }}
+              // options={{
+              //   mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID, // 👈 dynamically load from env
+              // }}
             />
           </GridItem>
         </Grid>
