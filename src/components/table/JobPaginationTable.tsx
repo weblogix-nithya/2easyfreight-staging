@@ -37,6 +37,7 @@ import {
   useSortBy,
   useTable,
 } from "react-table";
+import { getTimeDifferenceInMinutes } from "helpers/helper";
 
 // Non-toggle column ids
 const EXCLUDED_IDS = new Set([
@@ -76,6 +77,18 @@ const getStatusStyle = (status: string) => {
 
   return {};
 };
+
+export const  getTimeslotBgColor = (time: string | null | undefined) => {
+  const diffMinutes = getTimeDifferenceInMinutes(time);
+
+  if (diffMinutes === null) return "transparent";
+
+  // const diffHours = diffMinutes / 60;
+
+  if (diffMinutes <= 60) return "#dc1728"; //red
+  if (diffMinutes <= 120) return "#ff7f00"; //orange
+  return "#00ff00"; //green
+}
 
 type PaginationTableProps<T extends object> = {
   columns: Column<T>[];
@@ -708,6 +721,11 @@ const PaginationTable = <T extends object>({
                           paddingRight={restyleTable && 2}
                           paddingInlineEnd={restyleTable && 2}
                           pr="20px"
+                          bg={
+                            cell.column.id === "timeslot"
+                              ? getTimeslotBgColor(row?.original?.job?.timeslot) ?? "transparent"
+                              : undefined
+                          }
                         >
                           {
                             // @ts-expect-error
