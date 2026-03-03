@@ -305,7 +305,7 @@ const PaginationTable = <T extends object>({
               <React.Fragment key={`driver-header-${index}`}>
                 {shouldShowDriverHeader && (
                   <Tr>
-                    <Td fontSize="sm" colSpan={columns.length} p={0}>
+                    <Td fontSize="md" colSpan={columns.length} p={0}>
                       <Box
                         bg="#1d2d53"
                         color="#fff"
@@ -333,7 +333,7 @@ const PaginationTable = <T extends object>({
                                 fontSize="md"
                                 style={{ marginRight: "10px" }}
                               >
-                                Driver: {driver.full_name} — {driver.driver_no}
+                                #{driver.id}: {driver.full_name}
                               </Badge>
                               <Badge
                                 colorScheme="purple"
@@ -458,7 +458,7 @@ const PaginationTable = <T extends object>({
                     let data;
                     if (cell.column.id === "selection") {
                       return (
-                        <Td fontSize="sm"
+                        <Td fontSize="md"
                           {...cell.getCellProps({
                             "data-column-id": "selection",
                           })}
@@ -503,7 +503,7 @@ const PaginationTable = <T extends object>({
 
                     if (cell.column.Header === "Actions") {
                       data = (
-                        <Td fontSize="sm"
+                        <Td fontSize="md"
                           key={`action-${index}`}
                           data-column-id="actions"
                         // paddingLeft={restyleTable && 1}
@@ -698,7 +698,7 @@ const PaginationTable = <T extends object>({
                       );
                     } else {
                       data = (
-                        <Td fontSize="sm"
+                        <Td fontSize="md"
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
