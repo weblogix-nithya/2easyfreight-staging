@@ -24,7 +24,7 @@ import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
-import { formatCurrency, formatDate, formatToTimeDate } from "helpers/helper";
+import { formatCurrency, formatDate, formatToTimeDate, getTimeDifferenceInMinutes} from "helpers/helper";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
@@ -37,7 +37,6 @@ import {
   useSortBy,
   useTable,
 } from "react-table";
-import { getTimeDifferenceInMinutes } from "helpers/helper";
 
 // Non-toggle column ids
 const EXCLUDED_IDS = new Set([
