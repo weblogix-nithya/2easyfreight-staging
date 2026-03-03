@@ -412,7 +412,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
     $per_page: Int
     $orderBy: [OrderByClause!]
     $states: [String]
-    $quadrants: [String]
+    $quadrant: [String]
     $suburbs: [String]
     $weight_from: Float
     $weight_to: Float
@@ -430,7 +430,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
       per_page: $per_page
       orderBy: $orderBy
       states: $states
-      quadrants: $quadrants
+      quadrant: $quadrant
       suburbs: $suburbs
       weight_from: $weight_from
       weight_to: $weight_to
