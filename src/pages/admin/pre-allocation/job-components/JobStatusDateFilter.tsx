@@ -149,6 +149,7 @@ const JobStatusDateFilter = ({
         <Flex
           direction="column"
         >
+
           <Box
             ref={boxRef}
             position={isFixed ? "fixed" : "relative"}

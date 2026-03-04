@@ -25,7 +25,12 @@ import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
-import { formatCurrency, formatDate, formatToTimeDate } from "helpers/helper";
+import {
+  formatCurrency,
+  formatDate,
+  formatToTimeDate,
+  getTimeDifferenceInMinutes,
+} from "helpers/helper";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
@@ -76,6 +81,18 @@ const getStatusStyle = (status: string) => {
   }
 
   return {};
+};
+
+export const getTimeslotBgColor = (time: string | null | undefined) => {
+  const diffMinutes = getTimeDifferenceInMinutes(time);
+
+  if (diffMinutes === null) return "transparent";
+
+  // const diffHours = diffMinutes / 60;
+
+  if (diffMinutes <= 60) return "#e63a49"; //red
+  if (diffMinutes <= 120) return "#ff7f00"; //orange
+  return "#00ff00"; //green
 };
 
 type PaginationTableProps<T extends object> = {
@@ -322,7 +339,7 @@ PaginationTableProps<T>) => {
               <React.Fragment key={`driver-header-${index}`}>
                 {shouldShowDriverHeader && (
                   <Tr>
-                    <Td fontSize="sm" colSpan={columns.length} p={0}>
+                    <Td fontSize="md" colSpan={columns.length} p={0}>
                       <Box
                         bg="#1d2d53"
                         color="#fff"
@@ -352,7 +369,7 @@ PaginationTableProps<T>) => {
                                 variant="subtle"
                                 fontSize="md"
                               >
-                                Driver: {driver.full_name} — {driver.driver_no}
+                                #{driver.id}: {driver.full_name}
                               </Badge>
                               <Badge
                                 colorScheme="purple"
@@ -446,33 +463,33 @@ PaginationTableProps<T>) => {
                                 </Box>
                               ) : (
                                 <>
-                                <Box
-                                  w="460px"
-                                  minH="70px"
-                                  px={3}
-                                  py={2}
-                                  bg="gray.100" // light grey background
-                                  color="red.600" // red text
-                                  border="1px solid"
-                                  borderColor="gray.300"
-                                  borderRadius="md"
-                                  size="md"
-                                  fontSize="md"
-                                  cursor="pointer"
-                                  overflow="hidden"
-                                  display="flex"
-                                  alignItems="center"
-                                  onClick={() => {
-                                    setEditingDriverId(driver.id);
-                                    setFreeTextValue(
-                                      driver.today_free_text?.text || "",
-                                    );
-                                  }}
-                                >
-                                  {driver?.today_free_text?.text?.trim()
-                                    ? driver.today_free_text.text
-                                    : "Click to add driver notes"}
-                                </Box>
+                                  <Box
+                                    w="460px"
+                                    minH="70px"
+                                    px={3}
+                                    py={2}
+                                    bg="gray.100" // light grey background
+                                    color="red.600" // red text
+                                    border="1px solid"
+                                    borderColor="gray.300"
+                                    borderRadius="md"
+                                    size="md"
+                                    fontSize="md"
+                                    cursor="pointer"
+                                    overflow="hidden"
+                                    display="flex"
+                                    alignItems="center"
+                                    onClick={() => {
+                                      setEditingDriverId(driver.id);
+                                      setFreeTextValue(
+                                        driver.today_free_text?.text || "",
+                                      );
+                                    }}
+                                  >
+                                    {driver?.today_free_text?.text?.trim()
+                                      ? driver.today_free_text.text
+                                      : "Click to add driver notes"}
+                                  </Box>
                                 </>
                               )}
                               {/* </Flex> */}
@@ -631,7 +648,7 @@ PaginationTableProps<T>) => {
                     if (cell.column.Header === "Actions") {
                       data = (
                         <Td
-                          fontSize="sm"
+                          fontSize="md"
                           key={`action-${index}`}
                           data-column-id="actions"
                           // paddingLeft={restyleTable && 1}
@@ -831,7 +848,7 @@ PaginationTableProps<T>) => {
                     } else {
                       data = (
                         <Td
-                          fontSize="sm"
+                          fontSize="md"
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
@@ -841,6 +858,13 @@ PaginationTableProps<T>) => {
                           paddingRight={restyleTable && 2}
                           paddingInlineEnd={restyleTable && 2}
                           pr="20px"
+                          bg={
+                            cell.column.id === "timeslot"
+                              ? (getTimeslotBgColor(
+                                  row?.original?.job?.timeslot,
+                                ) ?? "transparent")
+                              : undefined
+                          }
                         >
                           {
                             // @ts-expect-error
