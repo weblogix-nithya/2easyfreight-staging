@@ -815,8 +815,8 @@ export const AdminNotesCell = ({ row }: any) => {
 
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
-    <Flex gap={1} align="center">
-      <Text maxW="200px" fontSize="md" fontWeight="bold"  noOfLines={1}>
+    <Flex gap={2} align="center">
+      <Text maxW="140px" fontSize="md" fontWeight="bold"  noOfLines={1}>
         {convertTo12Hour(row?.original?.job?.timeslot) || "-"}
       </Text>
       <EditableFieldPopover

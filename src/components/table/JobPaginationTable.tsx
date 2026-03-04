@@ -84,7 +84,7 @@ export const  getTimeslotBgColor = (time: string | null | undefined) => {
 
   // const diffHours = diffMinutes / 60;
 
-  if (diffMinutes <= 60) return "#dc1728"; //red
+  if (diffMinutes <= 60) return "#e63a49"; //red
   if (diffMinutes <= 120) return "#ff7f00"; //orange
   return "#00ff00"; //green
 }
