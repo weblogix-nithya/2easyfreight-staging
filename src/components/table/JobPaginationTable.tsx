@@ -31,6 +31,8 @@ import {
   formatToTimeDate,
   getTimeDifferenceInMinutes,
 } from "helpers/helper";
+
+import { formatCurrency, formatDate, formatToTimeDate, getTimeDifferenceInMinutes} from "helpers/helper";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
@@ -83,7 +85,10 @@ const getStatusStyle = (status: string) => {
   return {};
 };
 
-export const getTimeslotBgColor = (time: string | null | undefined) => {
+
+
+export const  getTimeslotBgColor = (time: string | null | undefined) => {
+ 
   const diffMinutes = getTimeDifferenceInMinutes(time);
 
   if (diffMinutes === null) return "transparent";
@@ -94,6 +99,8 @@ export const getTimeslotBgColor = (time: string | null | undefined) => {
   if (diffMinutes <= 120) return "#ff7f00"; //orange
   return "#00ff00"; //green
 };
+}
+
 
 type PaginationTableProps<T extends object> = {
   columns: Column<T>[];
@@ -601,9 +608,10 @@ PaginationTableProps<T>) => {
                     let data;
                     if (cell.column.id === "selection") {
                       return (
-                        <Td
-                          fontSize="sm"
-                          {...cell.getCellProps({
+
+                        <Td fontSize="md"
+
+                       {...cell.getCellProps({
                             "data-column-id": "selection",
                           })}
                           key={`selection-${index}`}
@@ -847,8 +855,8 @@ PaginationTableProps<T>) => {
                       );
                     } else {
                       data = (
-                        <Td
-                          fontSize="md"
+
+                        <Td fontSize="md"
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
@@ -860,9 +868,13 @@ PaginationTableProps<T>) => {
                           pr="20px"
                           bg={
                             cell.column.id === "timeslot"
+
                               ? (getTimeslotBgColor(
                                   row?.original?.job?.timeslot,
                                 ) ?? "transparent")
+
+                              ? getTimeslotBgColor(row?.original?.job?.timeslot) ?? "transparent"
+
                               : undefined
                           }
                         >
