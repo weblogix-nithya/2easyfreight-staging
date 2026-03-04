@@ -1,4 +1,4 @@
-import { useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -33,12 +33,18 @@ import {
   GET_DYNAMIC_TABLE_USERS_QUERY,
 } from "graphql/dynamicTableUser";
 // import { GET_JOBS_QUERY, Job } from "graphql/job";
-import { GET_JOBS_QUERY, GROUPED_PAGINATED_JOBS_QUERY } from "graphql/job";
+import {
+  CREATE_DRIVER_FREE_TEXT,
+  GET_JOBS_QUERY,
+  GROUPED_PAGINATED_JOBS_QUERY,
+  UPDATE_DRIVER_FREE_TEXT,
+} from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
 import { JoinOnClause } from "graphql/types/types";
 import {
   csvColumns,
+  getLocalYMD,
   outputDynamicTableBody,
   outputDynamicTableHeader,
   prepareSelectedRowsForCSV,
@@ -252,7 +258,13 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
     useState<typeof filterDisplayNames>(filterDisplayNames);
   const [companyColumns, setCompanyColumns] = useState([]); // State for company columns
-
+  const [freeTextValue, setFreeTextValue] = React.useState("");
+  const [editingDriverId, setEditingDriverId] = React.useState<number | null>(
+    null,
+  );
+  const [savingDriverId, setSavingDriverId] = React.useState<number | null>(
+    null,
+  );
   const handleToggleWithMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsMediaBusy(true);
     setWithMedia(e.target.checked);
@@ -806,6 +818,45 @@ export default function JobIndex({}: // initialLoadOnly = false,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupedVars, isAdmin, isCompany, isCustomer, isCompanyAdmin]);
 
+  const handleUpdateDriverFreeText = async (driver: any, value: string) => {
+    // if (!driver?.id) {
+    //   console.error("Driver ID missing!", driver);
+    //   return;
+    // }
+
+    try {
+      if (driver?.today_free_text?.id) {
+        // 🔹 UPDATE existing freetext
+        await updateDriverFreeText({
+          variables: {
+            input: {
+              id: Number(driver?.today_free_text?.id),
+              text: value,
+            },
+          },
+        });
+      } else {
+        // 🔹 CREATE new freetext
+        await createDriverFreeText({
+          variables: {
+            input: {
+              driver_id: Number(driver.id),
+              date: getLocalYMD(), // only if your API still requires date
+              text: value,
+            },
+          },
+        });
+      }
+
+      await refetchJobs();
+    } catch (err) {
+      console.error("Failed to save driver note", err);
+    }
+  };
+
+  // const [updateDriverFreeTextMutation] = useMutation(UPDATE_DRIVER_FREE_TEXT);
+  const [createDriverFreeText] = useMutation(CREATE_DRIVER_FREE_TEXT);
+  const [updateDriverFreeText] = useMutation(UPDATE_DRIVER_FREE_TEXT);
   return (
     <AdminLayout>
       <Box pt={{ base: "130px", md: "97px", xl: "97px" }}>
@@ -926,6 +977,17 @@ export default function JobIndex({}: // initialLoadOnly = false,
                   },
                   manualPagination: true,
                   pageCount: _jobs?.last_page,
+                }}
+                freeTextValue={freeTextValue}
+                setFreeTextValue={setFreeTextValue}
+                editingDriverId={editingDriverId}
+                setEditingDriverId={setEditingDriverId}
+                savingDriverId={savingDriverId}
+                setSavingDriverId={setSavingDriverId}
+                onUpdateDriverFreeText={(driver, value) => {
+                  console.log(driver, "driver", value,'value');
+                  // const driver1 = drivers.find((d) => d.id === driver.id);
+                  return handleUpdateDriverFreeText(driver, value);
                 }}
                 setQueryPageIndex={setQueryPageIndex}
                 setQueryPageSize={setQueryPageSize}
