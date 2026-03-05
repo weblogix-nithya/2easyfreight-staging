@@ -318,7 +318,10 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           current_suburb
           total_jobs_today_price
           total_jobs_weekly_price
-          
+          today_free_text {
+            id
+            text
+          }
         }
         job {
           id
@@ -557,14 +560,14 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
             }
           }
           price_summary {
-          sub_total
-          tax
-          total
-          charges {
-            name
+            sub_total
+            tax
             total
+            charges {
+              name
+              total
+            }
           }
-        }
         }
       }
     }
@@ -998,6 +1001,28 @@ export const JOB_UPDATED_SUB = gql`
   }
 `;
 
+export const CREATE_DRIVER_FREE_TEXT = gql`
+  mutation CreateDriverFreeText($input: CreateDriverFreeTextInput!) {
+    createDriverFreeText(input: $input) {
+      id
+      driver_id
+      date
+      text
+    }
+  }
+`;
+
+export const UPDATE_DRIVER_FREE_TEXT = gql`
+  mutation UpdateDriverFreeText($input: UpdateDriverFreeTextInput!) {
+    updateDriverFreeText(input: $input) {
+      id
+      driver_id
+      date
+      text
+    }
+  }
+`;
+
 export interface UpdateJobInput {
   id: number;
   name?: string;
@@ -1106,14 +1131,14 @@ export type Job = {
   media_admin?: any[] | null;
 
   [key: string]:
-  | string
-  | number
-  | null
-  | boolean
-  | undefined
-  | Date
-  | any[]
-  | any;
+    | string
+    | number
+    | null
+    | boolean
+    | undefined
+    | Date
+    | any[]
+    | any;
 };
 
 export const defaultJob: Job = {

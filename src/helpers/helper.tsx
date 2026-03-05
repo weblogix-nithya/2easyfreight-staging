@@ -44,6 +44,16 @@ export function formatToTimeDate(apiDate: string): string {
   return moment.utc(apiDate).local().format("HH:mm, DD/MM/YYYY");
 }
 
+export function getLocalYMD(): string {
+  const d = new Date();
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+}
 export function formatDateTimeToDB(date: string, time: string) {
   return moment(`${date} ${time}`, "YYYY-MM-DD hh:mm a")
     .utc()
