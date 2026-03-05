@@ -19,8 +19,7 @@ import {
   Tr,
   VStack,
 } from "@chakra-ui/react";
-import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
-import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
+import { faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
 import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
@@ -31,8 +30,6 @@ import {
   formatToTimeDate,
   getTimeDifferenceInMinutes,
 } from "helpers/helper";
-
-import { formatCurrency, formatDate, formatToTimeDate, getTimeDifferenceInMinutes} from "helpers/helper";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
@@ -45,6 +42,7 @@ import {
   useSortBy,
   useTable,
 } from "react-table";
+import { RootState } from "store/store";
 
 // Non-toggle column ids
 const EXCLUDED_IDS = new Set([
@@ -85,10 +83,7 @@ const getStatusStyle = (status: string) => {
   return {};
 };
 
-
-
-export const  getTimeslotBgColor = (time: string | null | undefined) => {
- 
+export const getTimeslotBgColor = (time: string | null | undefined) => {
   const diffMinutes = getTimeDifferenceInMinutes(time);
 
   if (diffMinutes === null) return "transparent";
@@ -99,8 +94,6 @@ export const  getTimeslotBgColor = (time: string | null | undefined) => {
   if (diffMinutes <= 120) return "#ff7f00"; //orange
   return "#00ff00"; //green
 };
-}
-
 
 type PaginationTableProps<T extends object> = {
   columns: Column<T>[];
@@ -109,8 +102,8 @@ type PaginationTableProps<T extends object> = {
   options?: Omit<TableOptions<T>, "data" | "columns">;
   plugins?: PluginHook<T>[];
   path?: string;
-  showDelete?: boolean;
-  onDelete?: (data: any) => void;
+  // showDelete?: boolean;
+  // onDelete?: (data: any) => void;
   showPageSizeSelect?: boolean;
   showManualPages?: boolean;
   isChecked?: boolean;
@@ -144,7 +137,7 @@ type PaginationTableProps<T extends object> = {
       }
     | {
         showRowSelection: true;
-        setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+        setSelectedRow: React.Dispatch<React.SetStateAction<any[]>>;
         isFilterRowSelected: boolean;
       }
   );
@@ -156,7 +149,6 @@ const PaginationTable = <T extends object>({
   isServerSide = false,
   options,
   plugins = [],
-  _showDelete = false,
   setQueryPageIndex,
   setQueryPageSize,
   // onDelete,
@@ -172,7 +164,7 @@ const PaginationTable = <T extends object>({
   onContextMenu,
   editingDriverId,
   setEditingDriverId,
-  _freeTextValue,
+  // _freeTextValue,
   setFreeTextValue,
   savingDriverId,
   setSavingDriverId,
@@ -269,10 +261,14 @@ PaginationTableProps<T>) => {
   //   //eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [page, isFilterRowSelected]);
 
-  const pageRows = isFilterRowSelected
-    ? page.filter((row) => row.isSelected)
-    : page;
+  // const pageRows = isFilterRowSelected
+  //   ? page.filter((row) => row.isSelected)
+  //   : page;
 
+  const pageRows = React.useMemo(
+  () => (isFilterRowSelected ? page.filter((row) => row.isSelected) : page),
+  [page, isFilterRowSelected]
+);
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -285,7 +281,7 @@ PaginationTableProps<T>) => {
 
   return (
     <VStack w="full" align="start" spacing={4}>
-      <Table colorScheme="white" {...getTableProps()}>
+      <Table variant="simple" {...getTableProps()}>
         <Thead>
           {headerGroups.map((headerGroup, index) => (
             <Tr
@@ -581,7 +577,7 @@ PaginationTableProps<T>) => {
                 )}
                 <Tr
                   {...row.getRowProps()}
-                  key={`data-row-${row.id || idx}`}
+                  key={`data-row-${row.id || index}`}
                   style={getStatusStyle(status)}
                   cursor={showRowSelection ? "pointer" : "default"}
                   onContextMenu={(e) => {
@@ -608,10 +604,9 @@ PaginationTableProps<T>) => {
                     let data;
                     if (cell.column.id === "selection") {
                       return (
-
-                        <Td fontSize="md"
-
-                       {...cell.getCellProps({
+                        <Td
+                          fontSize="md"
+                          {...cell.getCellProps({
                             "data-column-id": "selection",
                           })}
                           key={`selection-${index}`}
@@ -665,34 +660,7 @@ PaginationTableProps<T>) => {
                           // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
-                            {
-                              //@ts-expect-error
-                              cell.column.isDownload && (
-                                <Link
-                                  href={cell.value}
-                                  target="_blank"
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faDownload}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
+                           
                             {
                               //@ts-expect-error
                               (cell.column.isEdit == undefined ||
@@ -777,33 +745,7 @@ PaginationTableProps<T>) => {
                                 </Link>
                               )
                             }
-                            {
-                              //@ts-expect-error
-                              cell.column.isDelete && (
-                                <Button
-                                  // bg={boxBg}
-                                  bg="white"
-                                  fontSize="sm"
-                                  // fontWeight="500"
-                                  className="!text-[var(--chakra-colors-black-400)]"
-                                  onClick={() => {
-                                    onDelete(cell.row.original.job.id);
-                                  }}
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={
-                                      cell.column.deleteIcon != undefined
-                                        ? cell.column.deleteIcon
-                                        : faTrashAlt
-                                    }
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                    size="lg"
-                                  />
-                                </Button>
-                              )
-                            }
+                            
                           </Flex>
                         </Td>
                       );
@@ -855,8 +797,8 @@ PaginationTableProps<T>) => {
                       );
                     } else {
                       data = (
-
-                        <Td fontSize="md"
+                        <Td
+                          fontSize="md"
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
@@ -868,13 +810,9 @@ PaginationTableProps<T>) => {
                           pr="20px"
                           bg={
                             cell.column.id === "timeslot"
-
                               ? (getTimeslotBgColor(
                                   row?.original?.job?.timeslot,
                                 ) ?? "transparent")
-
-                              ? getTimeslotBgColor(row?.original?.job?.timeslot) ?? "transparent"
-
                               : undefined
                           }
                         >
