@@ -266,9 +266,9 @@ PaginationTableProps<T>) => {
   //   : page;
 
   const pageRows = React.useMemo(
-  () => (isFilterRowSelected ? page.filter((row) => row.isSelected) : page),
-  [page, isFilterRowSelected]
-);
+    () => (isFilterRowSelected ? page.filter((row) => row.isSelected) : page),
+    [page, isFilterRowSelected],
+  );
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -660,7 +660,6 @@ PaginationTableProps<T>) => {
                           // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
-                           
                             {
                               //@ts-expect-error
                               (cell.column.isEdit == undefined ||
@@ -745,7 +744,6 @@ PaginationTableProps<T>) => {
                                 </Link>
                               )
                             }
-                            
                           </Flex>
                         </Td>
                       );
@@ -809,11 +807,14 @@ PaginationTableProps<T>) => {
                           paddingInlineEnd={restyleTable && 2}
                           pr="20px"
                           bg={
-                            cell.column.id === "timeslot"
+                            cell.column.id === "timeslot" &&
+                            !["6", "7", "8", "9", "10"].includes(
+                              row?.original?.job?.job_status?.id,
+                            )
                               ? (getTimeslotBgColor(
                                   row?.original?.job?.timeslot,
                                 ) ?? "transparent")
-                              : undefined
+                              : "transparent"
                           }
                         >
                           {
