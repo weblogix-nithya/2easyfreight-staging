@@ -36,7 +36,7 @@ import CustomInputField from "components/fields/CustomInputField";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import JobInputTable from "components/jobs/JobInputTable";
-import TruckVisualization from "components/jobs/TruckVisualization";
+import TruckVisualization from "components/jobs/TruckVisualization3D";
 import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
@@ -195,7 +195,7 @@ function JobPage() {
   const [_isDownloading, setIsDownloading] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isVehicleLoading, setIsVehicleLoading] = useState(false)
-
+  const selectedVehicleRef = useRef<Vehicle | null>(null);
   const onClose = () => setIsJobCreatedOpen(false);
 
   const getStateCode = (stateName: string) => {
@@ -1027,6 +1027,7 @@ function JobPage() {
       job.job_category_id,
       jobItems,
       companyWeight,
+      selectedVehicle,
     );
     setQuoteCalculationRes((prev) => ({
       ...prev,
@@ -1072,6 +1073,7 @@ function JobPage() {
       job.job_category_id,
       jobItems,
       companyWeight,
+      selectedVehicle,
     );
     setQuoteCalculationRes((prev) => ({
       ...prev,
@@ -1087,6 +1089,7 @@ function JobPage() {
         job.job_category_id,
         jobItems,
         companyWeight,
+        selectedVehicle,
       );
 
       setTempcalculation((prev) => ({
@@ -1098,7 +1101,7 @@ function JobPage() {
 
     calculateTotals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyWeight, job.job_category_id, jobItems]);
+  }, [companyWeight, job.job_category_id, jobItems, selectedVehicle]);
 
   const addToJobItems = () => {
     let nextId = jobItems[jobItems.length - 1].id + 1;
@@ -1402,6 +1405,7 @@ function JobPage() {
       onCompleted: (data) => {
         if (data?.findSuitableVehicle?.vehicle) {
           setSelectedVehicle(data.findSuitableVehicle.vehicle);
+          selectedVehicleRef.current = data.findSuitableVehicle.vehicle; // ← add
           setIsVehicleLoading(false);
         }
       },
@@ -1426,18 +1430,16 @@ function JobPage() {
     )) {
       setIsVehicleLoading(true);
 
-      console.log("Calculating totals for vehicle selection...", vehicleData);
-
-      const { totalCBM, totalWeight, occupiedSpaces } = calculateFinalWeightCBM(
-        job.job_category_id,
-        jobItems,
-        companyWeight || 0,
-        vehicleData?.findSuitableVehicle?.vehicle
-      );
-
       const validBoxes = extractBoxesFromJobItems(jobItems);
 
       if (validBoxes.length > 0) {
+        const { totalCBM, totalWeight, occupiedSpaces } = calculateFinalWeightCBM(
+          job.job_category_id,
+          jobItems,
+          companyWeight || 0,
+          selectedVehicleRef.current,  // ✅ ref — no re-render trigger
+        );
+
         const maxLength = Math.max(...validBoxes.map(b => b.length / 100));
         const maxWidth = Math.max(...validBoxes.map(b => b.width / 100));
         const maxHeight = Math.max(...validBoxes.map(b => b.height / 100));
@@ -1457,8 +1459,9 @@ function JobPage() {
       }
     } else {
       setSelectedVehicle(null);
+      selectedVehicleRef.current = null; // ← add
     }
-  }, [jobItems, job.job_category_id, companyWeight, findVehicle, vehicleData]);
+  }, [jobItems, job.job_category_id, companyWeight, findVehicle]);
   // const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
   const [handleCalculateSeaFreight] = useLazyQuery(
@@ -1620,6 +1623,7 @@ function JobPage() {
       job.job_category_id,
       jobItems,
       companyWeight,
+      selectedVehicle,
     );
 
     const finalCBM = parseFloat(totalCBM.toFixed(2));
