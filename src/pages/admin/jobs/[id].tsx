@@ -455,9 +455,9 @@ function JobEdit() {
         setIsSameDayJob(today === formatDate(data.job.ready_at));
         setIsTomorrowJob(
           new Date(formatDate(data.job.ready_at)).toDateString() ===
-            new Date(
-              new Date(today).setDate(new Date(today).getDate() + 1),
-            ).toDateString(),
+          new Date(
+            new Date(today).setDate(new Date(today).getDate() + 1),
+          ).toDateString(),
         );
 
         // ✅ Set destination data
@@ -662,7 +662,7 @@ function JobEdit() {
     });
   };
 
-  const [handleUpdateJob, {}] = useMutation(UPDATE_JOB_MUTATION, {
+  const [handleUpdateJob, { }] = useMutation(UPDATE_JOB_MUTATION, {
     variables: {
       input: {
         id: job.id,
@@ -842,7 +842,7 @@ function JobEdit() {
     },
   });
 
-  const [handleDeleteJob, {}] = useMutation(DELETE_JOB_MUTATION, {
+  const [handleDeleteJob, { }] = useMutation(DELETE_JOB_MUTATION, {
     variables: {
       id: id,
     },
@@ -1261,7 +1261,7 @@ function JobEdit() {
     //check if any job destination is_saved_address and populate setSavedAddresses
   };
   //handleDeleteJobItem
-  const [handleDeleteJobItem, {}] = useMutation(DELETE_JOB_ITEM_MUTATION, {
+  const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
     onCompleted: (_data) => {
       // console.log("Job Item Deleted", data);
     },
@@ -1270,7 +1270,7 @@ function JobEdit() {
     },
   });
   //handleDelete
-  const [handleDeleteJobDestination, {}] = useMutation(
+  const [handleDeleteJobDestination, { }] = useMutation(
     DELETE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (_data) => {
@@ -1310,7 +1310,7 @@ function JobEdit() {
   };
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
   //handleUpdateJobItems
-  const [handleUpdateJobItem, {}] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
+  const [handleUpdateJobItem, { }] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
     onCompleted: (_data) => {
       // console.log("Job item updated");
     },
@@ -1319,7 +1319,7 @@ function JobEdit() {
     },
   });
   //handleUpdateJobDestinations
-  const [handleUpdateJobDestination, {}] = useMutation(
+  const [handleUpdateJobDestination, { }] = useMutation(
     UPDATE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (_data) => {
@@ -1331,7 +1331,7 @@ function JobEdit() {
     },
   );
   //deleteMedia
-  const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
+  const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
     onCompleted: (_data) => {
       toast({
         title: "Attachment deleted",
@@ -1397,7 +1397,7 @@ function JobEdit() {
     },
     [re],
   );
-  const [handleCreateJobCcEmail, {}] = useMutation(
+  const [handleCreateJobCcEmail, { }] = useMutation(
     CREATE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
@@ -1454,13 +1454,13 @@ function JobEdit() {
     [jobCcEmailTags, jobCcEmails],
   );
 
-  const [handleDeleteJobCcEmail, {}] = useMutation(
+  const [handleDeleteJobCcEmail, { }] = useMutation(
     DELETE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
         id: deleteJobCcEmailId,
       },
-      onCompleted: (_data) => {},
+      onCompleted: (_data) => { },
       onError: (error) => {
         showGraphQLErrorToast(error);
       },
@@ -1591,11 +1591,11 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const _selectedCategoryName = jobCategories.find(
@@ -1634,6 +1634,7 @@ function JobEdit() {
       const response = await handleCalculateSeaFreight({
         variables: {
           input: {
+            company_id: job.company_id,
             transport_type: job.transport_type,
             state:
               refinedData.state ||
@@ -1644,15 +1645,15 @@ function JobEdit() {
             company_rates:
               ((job.job_category_id == 1 || job.job_category_id == 2) &&
                 selectedstate?.value === "QLD") ||
-              selectedstate?.value === "VIC"
+                selectedstate?.value === "VIC"
                 ? filteredCompanyRates?.map((rate) => ({
-                    company_id: rate.company_id,
-                    seafreight_id: rate.seafreight_id,
-                    area: rate.area,
-                    cbm_rate: rate.cbm_rate,
-                    minimum_charge: rate.minimum_charge,
-                    // toll_enabled: rate.toll_enabled,
-                  }))
+                  company_id: rate.company_id,
+                  seafreight_id: rate.seafreight_id,
+                  area: rate.area,
+                  cbm_rate: rate.cbm_rate,
+                  minimum_charge: rate.minimum_charge,
+                  // toll_enabled: rate.toll_enabled,
+                }))
                 : [],
             toll_enabled: refinedData.toll_enabled,
             job_pickup_address: {
@@ -1676,10 +1677,10 @@ function JobEdit() {
             job_destination_address:
               jobDestinations.length > 0
                 ? {
-                    suburb: jobDestinations[0]?.address_city,
-                    postcode: jobDestinations[0]?.address_postal_code,
-                    state: jobDestinations[0]?.address_state,
-                  }
+                  suburb: jobDestinations[0]?.address_city,
+                  postcode: jobDestinations[0]?.address_postal_code,
+                  state: jobDestinations[0]?.address_state,
+                }
                 : null,
 
             job_items: jobItems.map((item) => ({
@@ -2071,7 +2072,7 @@ function JobEdit() {
                   tabs={tabs}
                   onChange={handleTabChange}
 
-                  // onChange={(tabId) => setActiveTab(tabId)}
+                // onChange={(tabId) => setActiveTab(tabId)}
                 />
 
                 {/* Job Details */}
