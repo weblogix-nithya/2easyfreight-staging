@@ -20,6 +20,7 @@ import {
 import { faTimes } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
+import AirFreightRateTab from "components/companies/AirFreightRateTab";
 import {
   CompanyRate,
   CREATE_COMPANY_RATE_MUTATION,
@@ -28,13 +29,6 @@ import {
   GET_LIST_OF_SEAFREIGHTS,
   UPDATE_COMPANY_RATE_MUTATION,
 } from "graphql/CompanyRate";
-import {
-  AirFreightCompanyRate as CompanyRateAirFreight,
-  CREATE_AIR_FREIGHT_COMPANY_RATE,
-  DELETE_AIR_FREIGHT_COMPANY_RATE,
-  GET_AIR_RATES_BY_COMPANY,
-  UPDATE_AIR_FREIGHT_COMPANY_RATE,
-} from "graphql/CompanyRateAirFreight";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -64,7 +58,6 @@ type TabValue = (typeof TAB_VALUES)[number];
 
 function LCLRateTab({ company_id }: Props) {
   const toast = useToast();
-
   const [companyRates, setCompanyRates] = useState<CompanyRate[]>([]);
   const [prevCompanyRates, setPrevCompanyRates] = useState<CompanyRate[]>([]);
   const [groupedSeafreights, setGroupedSeafreights] = useState<GroupedSeafreights>({});
@@ -99,20 +92,11 @@ function LCLRateTab({ company_id }: Props) {
 
   useQuery(GET_LIST_OF_SEAFREIGHTS, {
     onCompleted(data) {
-      const grouped = data.allSeafreights.reduce(
-        (acc: GroupedSeafreights, item: any) => {
-          if (!acc[item.state]) acc[item.state] = [];
-          acc[item.state].push({
-            value: item.id,
-            label: item.location_name,
-            cbm_rate: item.cbm_rate,
-            min_charge: item.min_charge,
-            state: item.state,
-          });
-          return acc;
-        },
-        {},
-      );
+      const grouped = data.allSeafreights.reduce((acc: GroupedSeafreights, item: any) => {
+        if (!acc[item.state]) acc[item.state] = [];
+        acc[item.state].push({ value: item.id, label: item.location_name, cbm_rate: item.cbm_rate, min_charge: item.min_charge, state: item.state });
+        return acc;
+      }, {});
       setGroupedSeafreights(grouped);
       setStateOptions(Object.keys(grouped).map((s) => ({ value: s, label: s })));
     },
@@ -156,9 +140,7 @@ function LCLRateTab({ company_id }: Props) {
   };
 
   const hasValidChangesToSave = () => {
-    if (isAddingRate) {
-      return !!(companyRate.area && companyRate.state && companyRate.seafreight_id && companyRate.cbm_rate > 0 && companyRate.minimum_charge > 0);
-    }
+    if (isAddingRate) return !!(companyRate.area && companyRate.state && companyRate.seafreight_id && companyRate.cbm_rate > 0 && companyRate.minimum_charge > 0);
     return companyRates.some((rate) => {
       const prev = prevCompanyRates.find((p) => p.id === rate.id);
       return prev && (prev.area !== rate.area || prev.cbm_rate !== rate.cbm_rate || prev.minimum_charge !== rate.minimum_charge || prev.state !== rate.state || prev.seafreight_id !== rate.seafreight_id);
@@ -167,10 +149,7 @@ function LCLRateTab({ company_id }: Props) {
 
   const refreshRates = async () => {
     const { data } = await getCompanyRates({ company_id });
-    if (data?.getRatesByCompany) {
-      setCompanyRates(data.getRatesByCompany);
-      setPrevCompanyRates(data.getRatesByCompany);
-    }
+    if (data?.getRatesByCompany) { setCompanyRates(data.getRatesByCompany); setPrevCompanyRates(data.getRatesByCompany); }
   };
 
   const saveRates = async () => {
@@ -178,8 +157,7 @@ function LCLRateTab({ company_id }: Props) {
       setIsSaving(true);
       if (isAddingRate) {
         if (!companyRate.area || !companyRate.state || !companyRate.seafreight_id || companyRate.cbm_rate === 0 || companyRate.minimum_charge === 0) {
-          toast({ title: "Validation Error", description: "Please fill in all fields before saving", status: "error", duration: 3000, isClosable: true });
-          return;
+          toast({ title: "Validation Error", description: "Please fill in all fields before saving", status: "error", duration: 3000, isClosable: true }); return;
         }
         await createCompanyRate({ variables: { company_id: String(company_id), seafreight_id: String(companyRate.seafreight_id), area: companyRate.area, cbm_rate: Number(companyRate.cbm_rate), minimum_charge: Number(companyRate.minimum_charge), state: companyRate.state } });
       } else if (isEditMode) {
@@ -194,16 +172,11 @@ function LCLRateTab({ company_id }: Props) {
         }
       }
       await refreshRates();
-      setCompanyRate(emptyRate());
-      setSelectedState("");
-      setIsAddingRate(false);
-      setIsEditMode(false);
+      setCompanyRate(emptyRate()); setSelectedState(""); setIsAddingRate(false); setIsEditMode(false);
       toast({ title: isAddingRate ? "New rate added successfully" : "Rates updated successfully", status: "success", duration: 3000, isClosable: true });
     } catch (error) {
       toast({ title: "Error saving rates", description: error instanceof Error ? error.message : "Unknown error", status: "error", duration: 3000, isClosable: true });
-    } finally {
-      setIsSaving(false);
-    }
+    } finally { setIsSaving(false); }
   };
 
   const handleDeleteRate = async (rateId: string) => {
@@ -272,340 +245,6 @@ function LCLRateTab({ company_id }: Props) {
   );
 }
 
-// ─── Air Freight Rate Tab ─────────────────────────────────────────────────────
-
-function AirFreightRateTab({ company_id }: Props) {
-  const toast = useToast();
-
-  // ── Seafreight state/area data ────────────────────────────────────────────
-  const [groupedSeafreights, setGroupedSeafreights] = useState<GroupedSeafreights>({});
-  const [stateOptions, setStateOptions] = useState<{ value: string; label: string }[]>([]);
-
-  // State selected for the "Add New Rate" row
-  const [selectedNewState, setSelectedNewState] = useState("");
-
-  // Per-row state tracking for existing rates (index → selected state string)
-  const [rowStates, setRowStates] = useState<Record<number, string>>({});
-
-  // Same GET_LIST_OF_SEAFREIGHTS query — reused for Air Freight State/Area dropdowns
-  useQuery(GET_LIST_OF_SEAFREIGHTS, {
-    onCompleted(data) {
-      const grouped = data.allSeafreights.reduce(
-        (acc: GroupedSeafreights, item: any) => {
-          if (!acc[item.state]) acc[item.state] = [];
-          acc[item.state].push({
-            value: item.id,
-            label: item.location_name,
-            cbm_rate: item.cbm_rate,
-            min_charge: item.min_charge,
-            state: item.state,
-          });
-          return acc;
-        },
-        {},
-      );
-      setGroupedSeafreights(grouped);
-      setStateOptions(Object.keys(grouped).map((s) => ({ value: s, label: s })));
-    },
-    onError(error) {
-      toast({ title: "Error fetching states", description: error.message, status: "error", duration: 5000, isClosable: true });
-    },
-  });
-
-  const emptyRate = (): Partial<CompanyRateAirFreight> => ({
-    company_id: String(company_id),
-    state: "",
-    area: "",
-    min_weight: 0,
-    max_weight: 0,
-    per_kg_rate: 0,
-    per_km_rate: 0,
-    cbm_rate: 0,
-    minimum_charge: 0,
-    fuel_surcharge: 0,
-    is_active: true,
-  });
-
-  const [airRates, setAirRates] = useState<CompanyRateAirFreight[]>([]);
-  const [prevAirRates, setPrevAirRates] = useState<CompanyRateAirFreight[]>([]);
-  const [isAddingRate, setIsAddingRate] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [newRate, setNewRate] = useState<Partial<CompanyRateAirFreight>>(emptyRate());
-
-  const { refetch: refetchAirRates } = useQuery(GET_AIR_RATES_BY_COMPANY, {
-    variables: { company_id },
-    skip: !company_id,
-    fetchPolicy: "network-only",
-    onCompleted: (data) => {
-      if (data?.getAirRatesByCompany) {
-        const rates = [...data.getAirRatesByCompany];
-        setAirRates(rates);
-        setPrevAirRates(rates);
-        // seed rowStates from loaded data
-        const rs: Record<number, string> = {};
-        rates.forEach((r: CompanyRateAirFreight, i: number) => { if (r.state) rs[i] = r.state; });
-        setRowStates(rs);
-      }
-    },
-    onError: (error) => {
-      toast({ title: "Error fetching air rates", description: error.message, status: "error", duration: 5000, isClosable: true });
-    },
-  });
-
-  useEffect(() => {
-    if (company_id) refetchAirRates();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [company_id]);
-
-  const [createAirRate] = useMutation(CREATE_AIR_FREIGHT_COMPANY_RATE);
-  const [updateAirRate] = useMutation(UPDATE_AIR_FREIGHT_COMPANY_RATE);
-  const [deleteAirRate] = useMutation(DELETE_AIR_FREIGHT_COMPANY_RATE);
-
-  const parseNum = (v: any) => parseFloat(v) || 0;
-
-  const refreshRates = async () => {
-    const { data } = await refetchAirRates({ company_id });
-    if (data?.getAirRatesByCompany) {
-      const rates = [...data.getAirRatesByCompany];
-      setAirRates(rates);
-      setPrevAirRates(rates);
-      const rs: Record<number, string> = {};
-      rates.forEach((r: CompanyRateAirFreight, i: number) => { if (r.state) rs[i] = r.state; });
-      setRowStates(rs);
-    }
-  };
-
-  // Existing row — numeric field change
-  const handleInputChange = (index: number, field: keyof CompanyRateAirFreight, value: any) => {
-    const numericFields: (keyof CompanyRateAirFreight)[] = ["min_weight", "max_weight", "per_kg_rate", "per_km_rate", "cbm_rate", "minimum_charge", "fuel_surcharge"];
-    const updated = [...airRates];
-    updated[index] = { ...updated[index], [field]: numericFields.includes(field) ? parseNum(value) : value };
-    setAirRates(updated);
-    setIsEditMode(true);
-  };
-
-  // Existing row — state dropdown changed → reset area
-  const handleRowStateChange = (index: number, newState: string) => {
-    setRowStates({ ...rowStates, [index]: newState });
-    const updated = [...airRates];
-    updated[index] = { ...updated[index], state: newState, area: "" };
-    setAirRates(updated);
-    setIsEditMode(true);
-  };
-
-  // Existing row — area dropdown changed
-  const handleRowAreaChange = (index: number, selected: any) => {
-    const currentState = rowStates[index] ?? airRates[index]?.state;
-    const sf = groupedSeafreights[currentState]?.find((s) => s.value === selected.value);
-    if (!sf) return;
-    const updated = [...airRates];
-    updated[index] = {
-      ...updated[index],
-      area: sf.label,
-      seafreight_id: String(sf.value), // ← இதை add பண்ணு
-    };
-    setAirRates(updated);
-    setIsEditMode(true);
-  };
-
-  // New row — state dropdown changed → reset area
-  const handleNewStateChange = (selected: any) => {
-    setSelectedNewState(selected.value);
-    setNewRate({ ...newRate, state: selected.value, area: "" });
-  };
-
-  // New row — area dropdown changed
-  const handleNewAreaChange = (selected: any) => {
-    const sf = groupedSeafreights[selectedNewState]?.find((s) => s.value === selected.value);
-    if (!sf) return;
-    setNewRate({
-      ...newRate,
-      area: sf.label,
-      seafreight_id: String(sf.value), // ← இதை add பண்ணு
-    });
-  };
-
-  const isNewRateValid = () =>
-    !!(newRate.state && newRate.area && (newRate.per_kg_rate > 0 || newRate.cbm_rate > 0) && newRate.minimum_charge > 0);
-
-  const hasValidChangesToSave = () => {
-    if (isAddingRate) return isNewRateValid();
-    return airRates.some((rate) => {
-      const prev = prevAirRates.find((p) => p.id === rate.id);
-      return prev && JSON.stringify(prev) !== JSON.stringify(rate);
-    });
-  };
-
-  const buildInput = (rate: Partial<CompanyRateAirFreight>) => ({
-    company_id: String(company_id),
-    seafreight_id: rate.seafreight_id ?? null,
-    state: rate.state ?? "",
-    area: rate.area ?? "",
-    min_weight: parseNum(rate.min_weight),
-    max_weight: parseNum(rate.max_weight),
-    cbm_rate: parseNum(rate.cbm_rate),
-    minimum_charge: parseNum(rate.minimum_charge),
-    per_km_rate: parseNum(rate.per_km_rate),
-    per_kg_rate: parseNum(rate.per_kg_rate),
-    fuel_surcharge: parseNum(rate.fuel_surcharge),
-    is_active: rate.is_active ?? true,
-  });
-
-  const saveRates = async () => {
-    try {
-      setIsSaving(true);
-      if (isAddingRate) {
-        if (!isNewRateValid()) {
-          toast({ title: "Validation Error", description: "State, Area, Min Charge, and at least one rate (Per KG or CBM) are required", status: "error", duration: 3000, isClosable: true });
-          return;
-        }
-        await createAirRate({ variables: { input: buildInput(newRate) } });
-        toast({ title: "Air freight rate added successfully", status: "success", duration: 3000, isClosable: true });
-      } else if (isEditMode) {
-        const modified = airRates.filter((rate) => {
-          const prev = prevAirRates.find((p) => p.id === rate.id);
-          return prev && JSON.stringify(prev) !== JSON.stringify(rate);
-        });
-        for (const rate of modified) {
-          await updateAirRate({ variables: { id: rate.id, input: buildInput(rate) } });
-        }
-        toast({ title: "Air freight rates updated successfully", status: "success", duration: 3000, isClosable: true });
-      }
-      await refreshRates();
-      setNewRate(emptyRate());
-      setSelectedNewState("");
-      setIsAddingRate(false);
-      setIsEditMode(false);
-    } catch (error) {
-      toast({ title: "Error saving air freight rates", description: error instanceof Error ? error.message : "Unknown error", status: "error", duration: 3000, isClosable: true });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteAirRate({ variables: { id } });
-      await refreshRates();
-      toast({ title: "Air freight rate deleted", status: "success", duration: 3000, isClosable: true });
-    } catch (error) {
-      toast({ title: "Error deleting rate", description: error instanceof Error ? error.message : "Unknown error", status: "error", duration: 3000, isClosable: true });
-    }
-  };
-
-  return (
-    <Box>
-      <Flex justifyContent="flex-end" mb={4}>
-        <Button onClick={() => { setIsAddingRate(true); setNewRate(emptyRate()); setSelectedNewState(""); }} fontSize="sm" variant="brand" fontWeight="500" isDisabled={isAddingRate}>
-          + Add Rate
-        </Button>
-      </Flex>
-
-      {/* Table Header */}
-      <Grid templateColumns="1fr 1fr 1fr 1fr 1fr 1fr 1fr 40px" gap={3} mb={2} px={1}>
-        {["STATE", "AREA / AIRPORT", "MIN KG", "MAX KG", "PER KG", "MIN CHARGE", "FUEL SURCHARGE", ""].map((h, i) => (
-          <Text key={i} fontSize="xs" fontWeight="700" color="gray.500">{h}</Text>
-        ))}
-      </Grid>
-      <Divider mb={4} />
-
-      {airRates.length === 0 && !isAddingRate && (
-        <Text fontSize="sm" color="gray.400" textAlign="center" py={6}>
-          No air freight rates found. Click &quot;+ Add Rate&quot; to create one.
-        </Text>
-      )}
-
-      {/* Existing Rates */}
-      {airRates.map((rate, index) => {
-        const currentState = rowStates[index] ?? rate.state ?? "";
-        const areaOptions = groupedSeafreights[currentState] || [];
-        const selectedArea = areaOptions.find((o) => o.label === rate.area) || (rate.area ? { value: rate.area, label: rate.area } : null);
-
-        return (
-          <SimpleGrid key={rate.id || index} columns={8} spacing={3} mb={3} alignItems="center">
-            {/* State dropdown */}
-            <FormControl>
-              <Select
-                value={stateOptions.find((o) => o.value === currentState) || null}
-                options={stateOptions}
-                onChange={(selected) => handleRowStateChange(index, selected.value)}
-                placeholder="State"
-                size="sm"
-              />
-            </FormControl>
-
-            {/* Area dropdown — filtered by selected state */}
-            <FormControl>
-              <Select
-                value={selectedArea}
-                options={areaOptions}
-                onChange={(selected) => handleRowAreaChange(index, selected)}
-                placeholder="Area / Airport"
-                isDisabled={!currentState}
-                size="sm"
-              />
-            </FormControl>
-
-            <Input size="sm" type="number" value={rate.min_weight ?? ""} placeholder="0" onChange={(e) => handleInputChange(index, "min_weight", e.target.value)} />
-            <Input size="sm" type="number" value={rate.max_weight ?? ""} placeholder="0" onChange={(e) => handleInputChange(index, "max_weight", e.target.value)} />
-            <Input size="sm" type="number" value={rate.per_kg_rate ?? ""} placeholder="0.00" onChange={(e) => handleInputChange(index, "per_kg_rate", e.target.value)} />
-            <Input size="sm" type="number" value={rate.minimum_charge ?? ""} placeholder="0.00" onChange={(e) => handleInputChange(index, "minimum_charge", e.target.value)} />
-            <Input size="sm" type="number" value={rate.fuel_surcharge ?? ""} placeholder="0.00" onChange={(e) => handleInputChange(index, "fuel_surcharge", e.target.value)} />
-            <IconButton aria-label="Delete rate" icon={<FontAwesomeIcon icon={faTimes} />} size="sm" colorScheme="red" variant="ghost" sx={{ backgroundColor: "pink.50" }} onClick={() => rate.id && handleDelete(rate.id)} isDisabled={!rate.id} />
-          </SimpleGrid>
-        );
-      })}
-
-      {/* New Rate Row */}
-      {isAddingRate && (
-        <Box mt={4} p={4} borderRadius="md" border="1px dashed" borderColor="orange.300" bg="orange.50">
-          <Text fontSize="sm" fontWeight="600" mb={3} color="orange.600">New Air Freight Rate</Text>
-          <SimpleGrid columns={8} spacing={3} alignItems="center">
-            {/* State dropdown */}
-            <Select
-              value={stateOptions.find((o) => o.value === selectedNewState) || null}
-              options={stateOptions}
-              onChange={handleNewStateChange}
-              placeholder="Select State"
-              size="sm"
-            />
-
-            {/* Area dropdown — filtered by selected state */}
-            <Select
-              value={groupedSeafreights[selectedNewState]?.find((o) => o.label === newRate.area) || null}
-              options={groupedSeafreights[selectedNewState] || []}
-              onChange={handleNewAreaChange}
-              placeholder="Select Area"
-              isDisabled={!selectedNewState}
-              size="sm"
-            />
-
-            <Input size="sm" type="number" placeholder="Min KG" value={newRate.min_weight || ""} onChange={(e) => setNewRate({ ...newRate, min_weight: parseNum(e.target.value) })} />
-            <Input size="sm" type="number" placeholder="Max KG" value={newRate.max_weight || ""} onChange={(e) => setNewRate({ ...newRate, max_weight: parseNum(e.target.value) })} />
-            <Input size="sm" type="number" placeholder="Per KG Rate" value={newRate.per_kg_rate || ""} onChange={(e) => setNewRate({ ...newRate, per_kg_rate: parseNum(e.target.value) })} />
-            <Input size="sm" type="number" placeholder="Min Charge" value={newRate.minimum_charge || ""} onChange={(e) => setNewRate({ ...newRate, minimum_charge: parseNum(e.target.value) })} />
-            <Input size="sm" type="number" placeholder="Fuel Surcharge" value={newRate.fuel_surcharge || ""} onChange={(e) => setNewRate({ ...newRate, fuel_surcharge: parseNum(e.target.value) })} />
-            <IconButton aria-label="Cancel" icon={<FontAwesomeIcon icon={faTimes} />} size="sm" colorScheme="gray" variant="ghost" onClick={() => { setIsAddingRate(false); setNewRate(emptyRate()); setSelectedNewState(""); }} />
-          </SimpleGrid>
-        </Box>
-      )}
-
-      {/* Save / Cancel */}
-      {(isAddingRate || isEditMode) && (
-        <Flex mt={5} justifyContent="flex-end">
-          <Button variant="outline" size="sm" mr={3} onClick={() => { setIsAddingRate(false); setIsEditMode(false); setNewRate(emptyRate()); setSelectedNewState(""); setAirRates([...prevAirRates]); }}>
-            Cancel
-          </Button>
-          <Button onClick={saveRates} fontSize="sm" variant="brand" fontWeight="500" size="sm" isDisabled={!hasValidChangesToSave()} isLoading={isSaving}>
-            Save Rates
-          </Button>
-        </Flex>
-      )}
-    </Box>
-  );
-}
-
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 function CompanyRateTab({ company_id }: Props) {
@@ -635,8 +274,13 @@ function CompanyRateTab({ company_id }: Props) {
           <Tab fontWeight="600" fontSize="sm">✈️ Air Freight</Tab>
         </TabList>
         <TabPanels>
-          <TabPanel px={0} pt={6}><LCLRateTab company_id={company_id} /></TabPanel>
-          <TabPanel px={0} pt={6}><AirFreightRateTab company_id={company_id} /></TabPanel>
+          <TabPanel px={0} pt={6}>
+            <LCLRateTab company_id={company_id} />
+          </TabPanel>
+          <TabPanel px={0} pt={6}>
+            {/* Separate component — race condition fix, clean code */}
+            <AirFreightRateTab company_id={company_id} />
+          </TabPanel>
         </TabPanels>
       </Tabs>
     </Box>
